@@ -1,15 +1,12 @@
 # Triage Labels
 
-The skills speak in terms of five canonical triage roles. This file maps those roles to the actual label strings used in this repo's issue tracker.
+Issues move through four statuses. This file defines what each status means.
 
-| Label in mattpocock/skills | Label in our tracker | Meaning                                  |
-| -------------------------- | -------------------- | ---------------------------------------- |
-| `needs-triage`             | `needs-triage`       | Maintainer needs to evaluate this issue  |
-| `needs-info`               | `needs-info`         | Waiting on reporter for more information |
-| `ready-for-agent`          | `ready-for-agent`    | Fully specified, ready for an AFK agent  |
-| `ready-for-human`          | `ready-for-human`    | Requires human implementation            |
-| `wontfix`                  | `wontfix`            | Will not be actioned                     |
+| Status | Meaning |
+|---|---|
+| `needs-plan` | Issue created but no implementation plan yet — agent should collaborate with the human to write one |
+| `ready-to-implement` | Plan is written and approved — fully ready for an agent to implement |
+| `in-progress` | An agent has started work; partial handoff entries exist in the `## In Progress` section |
+| `done` | Fully implemented |
 
-When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
-
-Edit the right-hand column to match whatever vocabulary you actually use.
+When a skill says "publish issues as ready for an AFK agent", set `status: needs-plan` (planning is the first step, not implementation).

@@ -56,11 +56,13 @@ For each approved slice, publish a new issue to the issue tracker. Use the issue
 Publish issues in dependency order (blockers first) so you can reference real issue identifiers in the "Blocked by" field.
 
 <issue-template>
-## Parent
+---
+status: needs-plan
+---
 
-A reference to the parent issue on the issue tracker (if the source was an existing issue, otherwise omit this section).
+# <title>
 
-## What to build
+## Description
 
 A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
 
@@ -77,6 +79,14 @@ Avoid specific file paths or code snippets — they go stale fast. Exception: if
 - A reference to the blocking ticket (if any)
 
 Or "None - can start immediately" if no blockers.
+
+## Plan
+
+<!-- filled in collaboratively during needs-plan → ready-to-implement -->
+
+## In Progress
+
+<!-- each agent run appends a handoff entry here -->
 
 </issue-template>
 

@@ -1,0 +1,58 @@
+You have been assigned an issue that was previously started and is still in progress.
+
+Issue file: `{{issue_path}}`
+
+## Your process
+
+### Phase 1: Understand what came before
+
+1. Read the issue file carefully — the `## Plan`, and especially all existing entries in `## In Progress`
+2. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
+3. Map out the relevant files — previous runs may have created or modified code, understand the current state
+
+Summarise to the user: what was done in previous runs, what remains, and any blockers noted.
+
+### Phase 2: Start a new handoff entry
+
+Append a new entry to `## In Progress`:
+```
+### Run {{timestamp}}
+**Completed:** (resuming now)
+**Remaining:** <what is still left based on previous entries>
+**Blockers / Notes:** Resuming from previous run.
+```
+
+### Phase 3: Continue implementation (TDD)
+
+Follow the `tdd` skill methodology — vertical slices, not horizontal:
+
+1. Pick up from where the previous run stopped
+2. Write ONE test → make it pass → repeat
+3. Only enough code to pass the current test
+4. After tests pass, refactor
+
+Rules:
+- Do not redo work that is already completed — verify it's there, then move forward
+- If a previous run noted a blocker or a failed approach, acknowledge it and either work around it or surface it to the user before proceeding
+- Tests verify behaviour through public interfaces, not implementation details
+- Never refactor while RED — get to GREEN first
+
+### Phase 4: Human review (STOP HERE)
+
+When all remaining work from the plan is done:
+
+1. Update the handoff entry — fill in **Completed**, clear **Remaining** if fully done
+2. Run any relevant feedback loops (tests, typecheck, lint)
+3. **Stop and ask the human to review the implementation**
+4. Do NOT commit — wait for explicit approval
+
+Once the human approves:
+- Commit with a clean message that includes: key decisions made, files changed, and any notes for future iterations
+- Update the frontmatter `status` to `done`
+
+## If the user asks you to stop before the plan is complete
+
+- Update **Completed** with what you actually finished
+- Update **Remaining** with what is left
+- Update **Blockers / Notes** with context the next agent needs (include any failed approaches and why they didn't work)
+- Leave the status as `in-progress`
