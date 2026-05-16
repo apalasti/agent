@@ -18,7 +18,6 @@ Append a new entry to `## In Progress`:
 ```
 ### Run {{timestamp}}
 **Completed:** (resuming now)
-**Remaining:** <what is still left based on previous entries>
 **Blockers / Notes:** Resuming from previous run.
 ```
 
@@ -41,7 +40,7 @@ Rules:
 
 When all remaining work from the plan is done:
 
-1. Update the handoff entry — fill in **Completed**, clear **Remaining** if fully done
+1. Update the handoff entry — fill in **Completed** with what you did
 2. Run any relevant feedback loops (tests, typecheck, lint)
 3. **Stop and ask the human to review the implementation**
 4. Do NOT commit — wait for explicit approval
@@ -53,6 +52,5 @@ Once the human approves:
 ## If the user asks you to stop before the plan is complete
 
 - Update **Completed** with what you actually finished
-- Update **Remaining** with what is left
 - Update **Blockers / Notes** with context the next agent needs (include any failed approaches and why they didn't work)
 - Leave the status as `in-progress`

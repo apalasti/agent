@@ -34,7 +34,6 @@ Handoff entries (appended to `## In Progress` by the agent at the start and end 
 ```markdown
 ### Run <ISO timestamp>
 **Completed:** <what was done>
-**Remaining:** <what is left>
 **Blockers / Notes:** <why it stopped, anything the next agent needs to know>
 ```
 

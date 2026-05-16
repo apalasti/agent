@@ -18,7 +18,6 @@ Before writing any code:
    ```
    ### Run {{timestamp}}
    **Completed:** (starting now)
-   **Remaining:** <summarise what the plan calls for>
    **Blockers / Notes:** Starting fresh.
    ```
 2. Update the frontmatter `status` from `ready-to-implement` to `in-progress`
@@ -47,7 +46,7 @@ Continue implementing any remaining functionality from the plan that isn't alrea
 
 When all work from the plan is done:
 
-1. Update the handoff entry — fill in **Completed** with what you did, list what's **Remaining** (should be nothing if done)
+1. Update the handoff entry — fill in **Completed** with what you did
 2. Run any relevant feedback loops (tests, typecheck, lint)
 3. **Stop and ask the human to review the implementation**
 4. Do NOT commit — wait for explicit approval
@@ -59,6 +58,5 @@ Once the human approves:
 ## If the user asks you to stop before the plan is complete
 
 - Update **Completed** with what you actually finished
-- Update **Remaining** with what is left
 - Update **Blockers / Notes** with context the next agent needs
 - Leave the status as `in-progress`
