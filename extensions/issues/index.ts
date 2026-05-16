@@ -83,12 +83,19 @@ function buildPrompt(issue: Issue, promptDir: string): string | null {
     .replace(/\{\{timestamp\}\}/g, timestamp);
 }
 
+function appendUserPrompt(basePrompt: string, userPrompt?: string): string {
+  const extra = userPrompt?.trim();
+  if (!extra) return basePrompt;
+
+  return `${basePrompt}\n\n## Additional instructions from user\n${extra}`;
+}
+
 // ─── extension ────────────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("issue", {
-    description: "Pick an open issue and start working on it",
-    handler: async (_args, ctx) => {
+    description: "Pick an open issue and prepare the prompt in the editor",
+    handler: async (args, ctx) => {
       const root = await getRepoRoot(pi, ctx.cwd);
       const issues = findIssues(root);
 
@@ -113,7 +120,12 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      pi.sendUserMessage(prompt);
+      const finalPrompt = appendUserPrompt(prompt, args);
+      ctx.ui.setEditorText(`${finalPrompt}\n\n`);
+      ctx.ui.notify(
+        "Issue prompt added to editor. Add any extra context, then press Enter to run.",
+        "info",
+      );
     },
   });
 }
