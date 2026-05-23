@@ -7,9 +7,13 @@ description: Break a plan, spec, or PRD into independently-grabbable issues on t
 
 Break a plan into independently-grabbable issues using vertical slices (tracer bullets).
 
-The issue tracker and triage label vocabulary should have been provided to you — read `~/.pi/agent/skills/issue-tracker.md` if not.
+Before doing anything else, read `~/.pi/agent/skills/issue-tracker.md` in full to load issue tracker conventions and labels.
 
 ## Process
+
+### 0. Load issue tracker conventions (mandatory)
+
+Use the read tool to load `~/.pi/agent/skills/issue-tracker.md` at the start of every run.
 
 ### 1. Gather context
 

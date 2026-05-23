@@ -4,6 +4,11 @@ Issue file: `{{issue_path}}`
 
 ## Your process
 
+### Phase 0: Load issue tracker conventions (mandatory)
+
+1. Use the read tool to load `~/.pi/agent/skills/issue-tracker.md` in full
+2. Follow its issue template, status lifecycle, and handoff-entry conventions exactly
+
 ### Phase 1: Understand what came before
 
 1. Read the issue file carefully — the `## Plan`, and especially all existing entries in `## In Progress`

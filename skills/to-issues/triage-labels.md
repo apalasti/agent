@@ -1,5 +1,7 @@
 # Triage Labels
 
+Before using these labels, read `~/.pi/agent/skills/issue-tracker.md` (source of truth for issue tracker workflow).
+
 Issues move through four statuses. This file defines what each status means.
 
 | Status | Meaning |
