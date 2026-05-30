@@ -12,7 +12,8 @@ Issue file: `{{issue_path}}`
 ### Phase 1: Exploration & Understanding
 
 1. Read the issue file carefully
-2. **Do not guess the codebase structure.** Map out the relevant files, read their contents, and understand the execution flow before proposing anything
+2. Check for `.scratch/<feature>/context.md` and read it if it exists — it contains a pre-built codebase map for this feature. Only re-read files directly relevant to this issue rather than re-exploring everything.
+3. **Do not guess the codebase structure.** Map out the relevant files, read their contents, and understand the execution flow before proposing anything
 3. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
 
 ### Phase 2: High-level plan
@@ -54,7 +55,8 @@ Once the user approves:
 
 1. Write the finalised plan (including test design) into the `## Plan` section of the issue file
 2. Update the frontmatter `status` from `needs-plan` to `ready-to-implement`
-3. **Stop. Do not write any code or make any other file changes.**
+3. Write or update `.scratch/<feature>/context.md` with any codebase knowledge built up during this session that isn't already there
+4. **Stop. Do not write any code or make any other file changes.**
 
 ## Rules
 

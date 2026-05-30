@@ -12,8 +12,9 @@ Issue file: `{{issue_path}}`
 ### Phase 1: Understand what came before
 
 1. Read the issue file carefully — the `## Plan`, and especially all existing entries in `## In Progress`
-2. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
-3. Map out the relevant files — previous runs may have created or modified code, understand the current state
+2. Check for `.scratch/<feature>/context.md` and read it if it exists — skip re-exploring files already mapped there
+3. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
+4. Map out files not already covered by the feature context — previous runs may have created or modified code
 
 Summarise to the user: what was done in previous runs, what remains, and any blockers noted.
 
@@ -52,6 +53,7 @@ When all remaining work from the plan is done:
 
 Once the human approves:
 - Commit with a clean message that includes: key decisions made, files changed, and any notes for future iterations
+- Update `.scratch/<feature>/context.md` with anything discovered during this run that isn't already there
 - Update the frontmatter `status` to `done`
 
 ## If the user asks you to stop before the plan is complete

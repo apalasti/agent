@@ -12,8 +12,9 @@ Issue file: `{{issue_path}}`
 ### Phase 1: Understand the plan
 
 1. Read the issue file carefully, especially the `## Plan` section — it contains what to build, how to build it, and the test design
-2. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
-3. Map out the relevant files and understand the current execution flow — do not guess
+2. Check for `.scratch/<feature>/context.md` and read it if it exists — it has a pre-built map of the codebase for this feature
+3. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
+4. Map out any files not already covered by the feature context — do not guess
 
 ### Phase 2: Start the handoff entry
 
@@ -58,6 +59,7 @@ When all work from the plan is done:
 
 Once the human approves:
 - Commit with a clean message that includes: key decisions made, files changed, and any notes for future iterations
+- Update `.scratch/<feature>/context.md` with anything discovered during this run that isn't already there
 - Update the frontmatter `status` to `done`
 
 ## If the user asks you to stop before the plan is complete
