@@ -8,15 +8,42 @@ My personal [pi](https://github.com/earendil-works/pi) coding agent configuratio
 ./setup.sh
 ```
 
-This symlinks `skills/` and `extensions/` into the global pi config directories. Idempotent — safe to re-run after adding new items. Existing files are backed up as `*.bak`.
+This symlinks `skills/` and `extensions/` into the global pi config directories, checks out the submodules under `packages/`, installs their npm dependencies, and registers them with `pi install`. Idempotent — safe to re-run after adding new items. Existing files are backed up as `*.bak`.
+
+For a fresh clone, `git clone --recurse-submodules` is optional; `setup.sh` initializes submodules itself.
 
 ## Structure
 
 ```
 ├── setup.sh                        # Symlink installer
 ├── skills/                         # Global skills (→ ~/.pi/agent/skills/)
-└── extensions/                     # Global extensions (→ ~/.pi/agent/extensions/)
+├── extensions/                     # Global extensions (→ ~/.pi/agent/extensions/)
+└── packages/                       # Forked upstream extensions, as git submodules
 ```
+
+### packages/
+
+Forks of published pi extensions that we carry patches on top of. Each is a git
+submodule pinned to a commit on our fork, so the patch travels with the repo.
+They are not symlinked like `extensions/` — pi loads them from the `packages`
+list in `~/.pi/agent/settings.json`, pointing at the checkout.
+
+| Package | Fork | Upstream |
+|---------|------|----------|
+| `pi-claude-bridge` | [apalasti/pi-claude-bridge](https://github.com/apalasti/pi-claude-bridge) | [elidickinson/pi-claude-bridge](https://github.com/elidickinson/pi-claude-bridge) |
+
+To rebase a fork onto upstream:
+
+```bash
+cd packages/pi-claude-bridge
+git fetch upstream && git rebase upstream/main
+npm ci && npm run typecheck && npm run test:unit
+git push --force-with-lease origin HEAD
+cd ../.. && git commit packages/pi-claude-bridge -m "Bump pi-claude-bridge"
+```
+
+If `npm:pi-claude-bridge` is still in pi's `packages` list, remove it — otherwise
+the published build and the fork both register and the extension loads twice.
 
 ## Issue Workflow
 

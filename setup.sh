@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# setup.sh — symlink this repo's skills and extensions into pi's global config dirs
+# setup.sh — symlink this repo's skills and extensions into pi's global config dirs,
+# and install the forked extensions under packages/ as pi packages
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-PI_SKILLS_DIR="$HOME/.pi/agent/skills"
-PI_EXTENSIONS_DIR="$HOME/.pi/agent/extensions"
+PI_AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
+PI_SKILLS_DIR="$PI_AGENT_DIR/skills"
+PI_EXTENSIONS_DIR="$PI_AGENT_DIR/extensions"
 
 # ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -66,8 +68,53 @@ else
   done
 fi
 
+# ─── forked extensions (git submodules) ──────────────────────────────────────
+
+# These are full upstream repos with their own history and dependencies, so they
+# are not symlinked like the rest. pi loads them from the `packages` list in its
+# settings, pointing straight at the checkout.
+
+echo ""
+echo "Packages  ($PI_AGENT_DIR/settings.json)"
+
+git -C "$REPO_DIR" submodule update --init --recursive
+
+while read -r sub; do
+  dir="$REPO_DIR/$sub"
+  name="$(basename "$dir")"
+
+  # pi runs the extension's source in place, so its deps must be installed
+  if [[ -f "$dir/package-lock.json" ]]; then
+    if [[ ! -d "$dir/node_modules" || "$dir/package-lock.json" -nt "$dir/node_modules" ]]; then
+      echo "  ⇣ installing deps: $name"
+      (cd "$dir" && npm ci --silent)
+    else
+      echo "  ✓ deps up to date: $name"
+    fi
+  fi
+
+  if ! command -v pi >/dev/null; then
+    echo "  ⚠ pi not on PATH — run 'pi install $dir' once it is"
+    continue
+  fi
+
+  # Idempotent: pi rewrites the path relative to its config dir and won't duplicate
+  pi install "$dir" >/dev/null </dev/null
+  echo "  ↗ registered with pi: $name"
+
+  # The published build registering alongside the fork would load the extension twice
+  if [[ -f "$PI_AGENT_DIR/settings.json" ]] && node -e '
+    const [file, name] = process.argv.slice(1);
+    const pkgs = JSON.parse(require("fs").readFileSync(file, "utf8")).packages ?? [];
+    const sources = pkgs.map((p) => (typeof p === "string" ? p : p.source));
+    process.exit(sources.includes("npm:" + name) ? 0 : 1);
+  ' "$PI_AGENT_DIR/settings.json" "$name"; then
+    echo "  ⚠ 'npm:$name' is also in packages — remove it, or the extension loads twice"
+  fi
+done < <(git -C "$REPO_DIR" config -f .gitmodules --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
+
 echo ""
 echo "Done. Restart pi (or run /reload) to pick up changes."
 echo ""
 echo "Tip: once verified, remove stale backups with:"
-echo "  find ~/.pi/agent/skills ~/.pi/agent/extensions -maxdepth 1 -name '*.bak' | xargs rm -rf"
+echo "  find '$PI_SKILLS_DIR' '$PI_EXTENSIONS_DIR' -maxdepth 1 -name '*.bak' | xargs rm -rf"
