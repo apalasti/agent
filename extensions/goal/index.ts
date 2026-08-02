@@ -85,12 +85,23 @@ function buildPrompt(issue: Issue, promptDir: string): string | null {
 
 // ─── goal loop state ──────────────────────────────────────────────────────────
 
+// "working"  — monitoring context usage
+// "aborting" — abort() issued, waiting for the run to settle before prompting
+// "handoff"  — handoff prompt sent, waiting for it to finish before resuming
+type Phase = "idle" | "working" | "aborting" | "handoff";
+
 // ctx from the /goal command handler (or the withSession replacement ctx on
 // subsequent iterations). Only ExtensionCommandContext and ReplacedSessionContext
 // have newSession() — ExtensionContext from event handlers does not.
 let storedCtx: any = null;
 let currentIssuePath: string | null = null;
-let handoffPending = false;
+let phase: Phase = "idle";
+
+const HANDOFF_PROMPT =
+  "Context limit reached for this goal session — implementation work has been stopped.\n\n" +
+  "Invoke the `issue-handoff` skill now: write a handoff entry to the issue file you were " +
+  "working on, keep its status as `in-progress`, then stop. Do not resume implementation. " +
+  "A fresh session will pick the issue back up automatically.";
 
 // ─── extension ────────────────────────────────────────────────────────────────
 
@@ -149,44 +160,45 @@ export default function (pi: ExtensionAPI) {
 
       storedCtx = ctx;
       currentIssuePath = issuePath;
-      handoffPending = false;
+      phase = "working";
 
       ctx.ui.setEditorText(`${prompt}\n\n`);
       ctx.ui.notify("Goal prompt ready. Add any extra context, then press Enter to start.", "info");
     },
   });
 
-  // Steer the model to write a handoff entry when context approaches the limit.
+  // Hard-stop the run when context approaches the limit. The handoff prompt is
+  // deliberately not steered into the live turn — the agent is aborted first so it
+  // cannot keep implementing, then prompted from a clean idle state below.
   pi.on("turn_end", (_event: any, ctx: any) => {
-    if (handoffPending || !currentIssuePath) return;
+    if (phase !== "working" || !currentIssuePath) return;
 
     const usage = ctx.getContextUsage();
     if (!usage || usage.tokens === null) return;
 
     const threshold = Math.min((usage.contextWindow ?? 200_000) * 0.5, 100_000);
-    if (usage.tokens >= threshold) {
-      handoffPending = true;
-      pi.sendUserMessage(
-        "⚠️ Context limit reached for this goal session. " +
-          "Stop all implementation work immediately. " +
-          "Invoke the `issue-handoff` skill to write a handoff entry to the current issue file " +
-          "and update the status to `in-progress`, then stop. " +
-          "A fresh session will resume automatically.",
-        { deliverAs: "steer" },
-      );
-    }
+    if (usage.tokens < threshold) return;
+
+    phase = "aborting";
+    ctx.abort();
+    ctx.ui.notify("Context limit reached — stopping work to write a handoff.", "info");
   });
 
-  // After the model writes the handoff, switch to a new session and auto-resume.
-  // Must use withSession + newCtx.sendUserMessage — after newSession(), the old pi
-  // reference is stale for all extensions. Deferred so agent_end returns first.
-  pi.on("agent_end", async (_event: any, _ctx: any) => {
-    if (!handoffPending || !storedCtx || !currentIssuePath) return;
+  // Drives the two post-abort steps: prompt for the handoff, then start the
+  // successor session once the handoff run has settled.
+  pi.on("agent_settled", async (_event: any, _ctx: any) => {
+    if (phase === "aborting") {
+      phase = "handoff";
+      setTimeout(() => pi.sendUserMessage(HANDOFF_PROMPT), 0);
+      return;
+    }
+
+    if (phase !== "handoff" || !storedCtx || !currentIssuePath) return;
 
     const issuePath = currentIssuePath;
     const savedCtx = storedCtx;
 
-    handoffPending = false;
+    phase = "idle";
     storedCtx = null;
     currentIssuePath = null;
 
@@ -209,9 +221,9 @@ export default function (pi: ExtensionAPI) {
       savedCtx.newSession({
         withSession: async (newCtx: any) => {
           // Re-arm monitoring for the new session.
-          // newCtx (ReplacedSessionContext) is stored so agent_end can call newSession() again.
+          // newCtx (ReplacedSessionContext) is stored so the next handoff can call newSession() again.
           currentIssuePath = issuePath;
-          handoffPending = false;
+          phase = "working";
           storedCtx = newCtx;
           newCtx.sendUserMessage(resumeMsg);
         },
