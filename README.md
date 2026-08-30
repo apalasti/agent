@@ -8,42 +8,31 @@ My personal [pi](https://github.com/earendil-works/pi) coding agent configuratio
 ./setup.sh
 ```
 
-This symlinks `skills/` and `extensions/` into the global pi config directories, checks out the submodules under `packages/`, installs their npm dependencies, and registers them with `pi install`. Idempotent — safe to re-run after adding new items. Existing files are backed up as `*.bak`.
-
-For a fresh clone, `git clone --recurse-submodules` is optional; `setup.sh` initializes submodules itself.
+This symlinks `skills/` and `extensions/` into the global pi config directories. Idempotent — safe to re-run after adding new items. Existing files are backed up as `*.bak`.
 
 ## Structure
 
 ```
 ├── setup.sh                        # Symlink installer
 ├── skills/                         # Global skills (→ ~/.pi/agent/skills/)
-├── extensions/                     # Global extensions (→ ~/.pi/agent/extensions/)
-└── packages/                       # Forked upstream extensions, as git submodules
+└── extensions/                     # Global extensions (→ ~/.pi/agent/extensions/)
 ```
 
-### packages/
+## Wayfinding
 
-Forks of published pi extensions that we carry patches on top of. Each is a git
-submodule pinned to a commit on our fork, so the patch travels with the repo.
-They are not symlinked like `extensions/` — pi loads them from the `packages`
-list in `~/.pi/agent/settings.json`, pointing at the checkout.
+For an idea too big and too foggy to plan in one session, `wayfinder` charts it as a map of
+decision tickets under `.scratch/<effort>/`, worked one per session until the way is clear:
 
-| Package | Fork | Upstream |
-|---------|------|----------|
-| `pi-claude-bridge` | [apalasti/pi-claude-bridge](https://github.com/apalasti/pi-claude-bridge) | [elidickinson/pi-claude-bridge](https://github.com/elidickinson/pi-claude-bridge) |
-
-To rebase a fork onto upstream:
-
-```bash
-cd packages/pi-claude-bridge
-git fetch upstream && git rebase upstream/main
-npm ci && npm run typecheck && npm run test:unit
-git push --force-with-lease origin HEAD
-cd ../.. && git commit packages/pi-claude-bridge -m "Bump pi-claude-bridge"
+```
+loose idea → wayfinder → to-prd → to-issues → /goal
 ```
 
-If `npm:pi-claude-bridge` is still in pi's `packages` list, remove it — otherwise
-the published build and the fork both register and the extension loads twice.
+The map is `MAP.md`; its tickets are `tickets/<NN>-<slug>.md`, typed `research` / `prototype` /
+`grilling` / `task` and blocked via `blocked-by` frontmatter. They live apart from `issues/` so the
+`/issue` and `/goal` pickers don't try to implement them. When the map is exhausted, `to-prd` reads
+it and the closed tickets into a PRD, and the effort rejoins the issue workflow below.
+
+Skip it when the way is already clear — go straight to `to-prd`.
 
 ## Issue Workflow
 

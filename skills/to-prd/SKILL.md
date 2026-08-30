@@ -13,6 +13,17 @@ Before doing anything else, read `~/.pi/agent/skills/issue-tracker.md` in full t
 
 Use the read tool to load `~/.pi/agent/skills/issue-tracker.md` at the start of every run.
 
+0b. Load the map, if there is one
+
+If `.scratch/<effort-slug>/MAP.md` exists, this PRD is the destination of a wayfinder map, and its decisions are on disk rather than in your context — they were resolved in sessions you never saw. Read `MAP.md` and the full body of every closed ticket before writing anything. Then:
+
+- The map's **Destination** and **Decisions so far** are the raw material for Problem Statement, Solution, and Implementation Decisions
+- The map's **Out of scope** carries into the PRD's Out of scope, near-verbatim
+- Prototype branches linked from tickets are the source for the prototype-snippet exception below
+- Research notes under `research/` get cited in Further Notes
+
+Still do not interview the user: the interviewing already happened, ticket by ticket.
+
 1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
 
 2. Sketch out the major modules you will need to build or modify to complete the implementation. Actively look for opportunities to extract deep modules that can be tested in isolation.

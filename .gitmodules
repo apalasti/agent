@@ -1,3 +1,0 @@
-[submodule "packages/pi-claude-bridge"]
-	path = packages/pi-claude-bridge
-	url = https://github.com/apalasti/pi-claude-bridge.git
