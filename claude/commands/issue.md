@@ -17,7 +17,7 @@ Once resolved, read the issue file and read its frontmatter `status`. Then follo
 
 ## Step 0 (all flows) — Load issue tracker conventions (mandatory)
 
-Use the read tool to load `~/.claude/skills/issue-tracker.md` in full and follow its issue template, status lifecycle, and handoff-entry conventions exactly. (The `to-issues`, `to-prd`, `issue-handoff`, and `tdd` skills are also available if relevant.)
+Use the read tool to load `~/.claude/skills/issue-tracker.md` in full and follow its issue template, status lifecycle, and handoff-entry conventions exactly. (The `to-tickets`, `to-spec`, `issue-handoff`, `tdd`, and `code-review` skills are also available if relevant.)
 
 ---
 

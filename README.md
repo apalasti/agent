@@ -8,14 +8,15 @@ My personal [pi](https://github.com/earendil-works/pi) coding agent configuratio
 ./setup.sh
 ```
 
-This symlinks `skills/` and `extensions/` into the global pi config directories. Idempotent — safe to re-run after adding new items. Existing files are backed up as `*.bak`.
+This symlinks `skills/`, `extensions/` and `agents/` into the global pi config directories. Idempotent — safe to re-run after adding new items. Existing files are backed up as `*.bak`.
 
 ## Structure
 
 ```
 ├── setup.sh                        # Symlink installer
 ├── skills/                         # Global skills (→ ~/.pi/agent/skills/)
-└── extensions/                     # Global extensions (→ ~/.pi/agent/extensions/)
+├── extensions/                     # Global extensions (→ ~/.pi/agent/extensions/)
+└── agents/                         # Subagent definitions (→ ~/.pi/agent/agents/)
 ```
 
 ## Wayfinding
@@ -63,8 +64,8 @@ Watch an Azure DevOps PR for build errors and unresolved comments, and auto-depl
 
 See [`extensions/watch-pr/README.md`](extensions/watch-pr/README.md) for details.
 
-## Adding new skills/extensions
+## Adding new skills/extensions/agents
 
-1. Create the skill directory in `skills/` or extension in `extensions/`
+1. Create the skill directory in `skills/`, extension in `extensions/`, or agent `.md` in `agents/`
 2. Run `./setup.sh` to symlink
 3. Run `/reload` in pi

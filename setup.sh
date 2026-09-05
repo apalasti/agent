@@ -8,6 +8,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PI_AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 PI_SKILLS_DIR="$PI_AGENT_DIR/skills"
 PI_EXTENSIONS_DIR="$PI_AGENT_DIR/extensions"
+PI_AGENTS_DIR="$PI_AGENT_DIR/agents"
 
 # ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -68,8 +69,20 @@ else
   done
 fi
 
+# ─── agents ──────────────────────────────────────────────────────────────────
+
+echo ""
+echo "Agents  ($PI_AGENTS_DIR)"
+mkdir -p "$PI_AGENTS_DIR"
+
+for item in "$REPO_DIR/agents/"*.md; do
+  [[ -e "$item" ]] || continue
+  name="$(basename "$item")"
+  link_item "$item" "$PI_AGENTS_DIR/$name"
+done
+
 echo ""
 echo "Done. Restart pi (or run /reload) to pick up changes."
 echo ""
 echo "Tip: once verified, remove stale backups with:"
-echo "  find '$PI_SKILLS_DIR' '$PI_EXTENSIONS_DIR' -maxdepth 1 -name '*.bak' | xargs rm -rf"
+echo "  find '$PI_SKILLS_DIR' '$PI_EXTENSIONS_DIR' '$PI_AGENTS_DIR' -maxdepth 1 -name '*.bak' | xargs rm -rf"

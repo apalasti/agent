@@ -8,6 +8,8 @@ interface Issue {
   path: string;
   feature: string;
   slug: string;
+  number: string;
+  title: string;
   status: string;
   label: string;
 }
@@ -63,6 +65,8 @@ function findIssues(root: string): Issue[] {
         path: filePath,
         feature: feature.name,
         slug,
+        number: slug.match(/^(\d+)/)?.[1] ?? "",
+        title: content.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? slug,
         status,
         label: `${feature.name} / [${status}] ${slug}`,
       });
@@ -81,6 +85,26 @@ function buildPrompt(issue: Issue, promptDir: string): string | null {
   return readFileSync(templatePath, "utf8")
     .replace(/\{\{issue_path\}\}/g, issue.path)
     .replace(/\{\{timestamp\}\}/g, timestamp);
+}
+
+function buildOrchestratorPrompt(batch: Issue[], promptDir: string): string {
+  const list = batch
+    .map((i) => `- ${i.number} — ${i.title} — status: ${i.status} — \`${i.path}\``)
+    .join("\n");
+
+  return readFileSync(join(promptDir, "orchestrate.md"), "utf8")
+    .replace(/\{\{issues\}\}/g, list)
+    .replace(/\{\{plan_prompt_path\}\}/g, join(promptDir, "plan-auto.md"))
+    .replace(/\{\{implement_prompt_path\}\}/g, join(promptDir, "ready-to-implement.md"))
+    .replace(/\{\{in_progress_prompt_path\}\}/g, join(promptDir, "in-progress.md"));
+}
+
+function parseNumbers(args: string): string[] {
+  return args
+    .split(/[\s,]+/)
+    .map((n) => n.trim())
+    .filter(Boolean)
+    .map((n) => n.padStart(2, "0"));
 }
 
 function appendUserPrompt(basePrompt: string, userPrompt?: string): string {
@@ -124,6 +148,54 @@ export default function (pi: ExtensionAPI) {
       ctx.ui.setEditorText(`${finalPrompt}\n\n`);
       ctx.ui.notify(
         "Issue prompt added to editor. Add any extra context, then press Enter to run.",
+        "info",
+      );
+    },
+  });
+
+  pi.registerCommand("orchestrate", {
+    description: "Run a batch of issues unattended: /orchestrate 01 03 04",
+    handler: async (args, ctx) => {
+      const root = await getRepoRoot(pi, ctx.cwd);
+      const issues = findIssues(root);
+
+      if (issues.length === 0) {
+        ctx.ui.notify("No open issues found in .scratch/", "info");
+        return;
+      }
+
+      const features = [...new Set(issues.map((i) => i.feature))];
+      const feature =
+        features.length === 1
+          ? features[0]
+          : await ctx.ui.select("Which feature?", features);
+      if (!feature) return;
+
+      const candidates = issues
+        .filter((i) => i.feature === feature)
+        .sort((a, b) => a.number.localeCompare(b.number));
+
+      const raw =
+        args?.trim() ||
+        (await ctx.ui.input(
+          `Which issues, in order? (open: ${candidates.map((i) => i.number).join(", ")})`,
+          candidates.map((i) => i.number).join(" "),
+        ));
+      if (!raw?.trim()) return;
+
+      const batch: Issue[] = [];
+      for (const number of parseNumbers(raw)) {
+        const issue = candidates.find((i) => i.number === number);
+        if (!issue) {
+          ctx.ui.notify(`No open issue ${number} in ${feature}`, "error");
+          return;
+        }
+        batch.push(issue);
+      }
+
+      ctx.ui.setEditorText(`${buildOrchestratorPrompt(batch, __dirname)}\n\n`);
+      ctx.ui.notify(
+        `Batch of ${batch.length} ready. Press Enter to run.`,
         "info",
       );
     },
