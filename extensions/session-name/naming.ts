@@ -3,6 +3,8 @@
  * No pi imports beyond types, so `/sn eval` can replay old sessions through it.
  */
 
+import { readFileSync } from "node:fs";
+
 export interface NamingConfig {
   /** Max words a generated title may have. */
   maxWords: number;
@@ -15,8 +17,8 @@ export interface NamingConfig {
 }
 
 export const DEFAULTS: NamingConfig = {
-  maxWords: 6,
-  maxLength: 60,
+  maxWords: 8,
+  maxLength: 80,
   thinInputWords: 15,
   maxExchanges: 3,
 };
@@ -188,6 +190,59 @@ export function validateTitle(title: string, config: NamingConfig): string | nul
   const words = wordCount(title);
   if (words < 2 || words > config.maxWords) return null;
   return title;
+}
+
+// ── Issue sessions ────────────────────────────────────────────────────────
+
+export interface IssueRef {
+  path: string;
+  feature: string;
+  number: string;
+  slug: string;
+}
+
+const ISSUE_PATH =
+  /([^\s`'"]*\.scratch\/([A-Za-z0-9._-]+)\/(?:issues|tickets)\/(\d{1,4})-([A-Za-z0-9._-]+)\.md)/g;
+
+/** Issue files the user pointed the session at, in the order they were mentioned. */
+export function detectIssueRefs(branch: readonly EntryLike[]): IssueRef[] {
+  const refs = new Map<string, IssueRef>();
+  for (const text of userTexts(branch)) {
+    for (const [, path, feature, number, slug] of text.matchAll(ISSUE_PATH)) {
+      if (!refs.has(path!)) {
+        refs.set(path!, { path: path!, feature: feature!, number: number!, slug: slug! });
+      }
+    }
+  }
+  return [...refs.values()];
+}
+
+/** The issue's own `# ` heading, falling back to its slug when the file is gone. */
+function issueTitle(ref: IssueRef): string {
+  try {
+    const heading = readFileSync(ref.path, "utf8").match(/^#\s+(.+)$/m)?.[1]?.trim();
+    if (heading) return heading;
+  } catch {}
+  const words = ref.slug.replace(/[-_]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/**
+ * A session working a known issue is named after it, so the session list and
+ * the issue tracker can be read against each other. Beats a generated title:
+ * the issue already has the canonical wording.
+ */
+export function issueName(branch: readonly EntryLike[], config: NamingConfig): string | null {
+  const refs = detectIssueRefs(branch);
+  if (refs.length === 0) return null;
+  if (refs.length === 1) {
+    const ref = refs[0]!;
+    const prefix = `#${ref.number} `;
+    return prefix + truncate(issueTitle(ref), config.maxLength - prefix.length);
+  }
+  const numbers = refs.map((r) => `#${r.number}`).join(" ");
+  const features = [...new Set(refs.map((r) => r.feature))].join(", ");
+  return truncate(`Batch ${numbers} (${features})`, config.maxLength);
 }
 
 /** Last-resort name once generation has failed its budget: the user's opening line. */

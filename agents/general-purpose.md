@@ -1,7 +1,7 @@
 ---
 description: General-purpose agent for complex, multi-step tasks
 display_name: Agent
-model: claude-bridge/claude-opus-5
-thinking: medium
+model: ollama-cloud/glm-5.3
+thinking: xhigh
 prompt_mode: append
 ---

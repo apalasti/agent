@@ -34,6 +34,7 @@ import {
   DEFAULTS,
   buildNamingInput,
   heuristicName,
+  issueName,
   parseTitle,
   systemPrompt,
   userPrompt,
@@ -219,9 +220,9 @@ export default function sessionNameExtension(pi: ExtensionAPI): void {
     }
 
     const branch = ctx.sessionManager.getBranch();
-    let name: string | null = null;
+    let name: string | null = issueName(branch, naming);
 
-    if (config.autoName === "llm" && attempts < config.maxAttempts) {
+    if (!name && config.autoName === "llm" && attempts < config.maxAttempts) {
       attempts++;
       name = await generate(ctx, branch);
       if (!name && attempts < config.maxAttempts) return; // retry on the next settled turn
@@ -275,7 +276,7 @@ export default function sessionNameExtension(pi: ExtensionAPI): void {
     handler: async (_args, ctx) => {
       ctx.ui.setWidget("session-name", ["▸ naming…"], { placement: "aboveEditor" });
       const branch = ctx.sessionManager.getBranch();
-      let name: string | null = null;
+      let name: string | null = issueName(branch, naming);
       for (let i = 0; i < config.maxAttempts && !name; i++) {
         name = await generate(ctx, branch);
       }

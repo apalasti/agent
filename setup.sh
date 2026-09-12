@@ -81,6 +81,12 @@ for item in "$REPO_DIR/agents/"*.md; do
   link_item "$item" "$PI_AGENTS_DIR/$name"
 done
 
+# ─── global context file ─────────────────────────────────────────────────────
+
+echo ""
+echo "Context  ($PI_AGENT_DIR)"
+link_item "$REPO_DIR/AGENTS.md" "$PI_AGENT_DIR/AGENTS.md"
+
 echo ""
 echo "Done. Restart pi (or run /reload) to pick up changes."
 echo ""

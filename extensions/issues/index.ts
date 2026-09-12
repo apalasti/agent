@@ -1,6 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, basename } from "node:path";
+import { MultiSelectComponent, type PickerRow } from "./picker.ts";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -92,11 +93,7 @@ function buildOrchestratorPrompt(batch: Issue[], promptDir: string): string {
     .map((i) => `- ${i.number} — ${i.title} — status: ${i.status} — \`${i.path}\``)
     .join("\n");
 
-  return readFileSync(join(promptDir, "orchestrate.md"), "utf8")
-    .replace(/\{\{issues\}\}/g, list)
-    .replace(/\{\{plan_prompt_path\}\}/g, join(promptDir, "plan-auto.md"))
-    .replace(/\{\{implement_prompt_path\}\}/g, join(promptDir, "ready-to-implement.md"))
-    .replace(/\{\{in_progress_prompt_path\}\}/g, join(promptDir, "in-progress.md"));
+  return readFileSync(join(promptDir, "orchestrate.md"), "utf8").replace(/\{\{issues\}\}/g, list);
 }
 
 function parseNumbers(args: string): string[] {
@@ -105,6 +102,63 @@ function parseNumbers(args: string): string[] {
     .map((n) => n.trim())
     .filter(Boolean)
     .map((n) => n.padStart(2, "0"));
+}
+
+function byFeatureThenNumber(a: Issue, b: Issue): number {
+  return a.feature.localeCompare(b.feature) || a.number.localeCompare(b.number);
+}
+
+function pickBatchInteractively(ctx: any, issues: Issue[]): Promise<Issue[] | undefined> {
+  const sorted = [...issues].sort(byFeatureThenNumber);
+  const rows: PickerRow[] = sorted.map((i) => ({
+    key: i.path,
+    group: i.feature,
+    primary: `${i.number}  ${i.title}`,
+    secondary: i.status,
+  }));
+
+  return ctx.ui
+    .custom<PickerRow[] | undefined>(
+      (_tui: any, theme: any, _kb: any, done: (r: PickerRow[] | undefined) => void) =>
+        new MultiSelectComponent(theme, "Which issues should run, in order?", rows, done),
+    )
+    .then((picked: PickerRow[] | undefined) =>
+      picked?.map((row) => sorted.find((i) => i.path === row.key)!),
+    );
+}
+
+async function pickBatchByNumbers(
+  ctx: any,
+  issues: Issue[],
+  args: string,
+): Promise<Issue[] | undefined> {
+  const features = [...new Set(issues.map((i) => i.feature))];
+  const feature =
+    features.length === 1 ? features[0] : await ctx.ui.select("Which feature?", features);
+  if (!feature) return undefined;
+
+  const candidates = issues
+    .filter((i) => i.feature === feature)
+    .sort((a, b) => a.number.localeCompare(b.number));
+
+  const raw =
+    args?.trim() ||
+    (await ctx.ui.input(
+      `Which issues, in order? (open: ${candidates.map((i) => i.number).join(", ")})`,
+      candidates.map((i) => i.number).join(" "),
+    ));
+  if (!raw?.trim()) return undefined;
+
+  const batch: Issue[] = [];
+  for (const number of parseNumbers(raw)) {
+    const issue = candidates.find((i) => i.number === number);
+    if (!issue) {
+      ctx.ui.notify(`No open issue ${number} in ${feature}`, "error");
+      return undefined;
+    }
+    batch.push(issue);
+  }
+  return batch;
 }
 
 function appendUserPrompt(basePrompt: string, userPrompt?: string): string {
@@ -164,34 +218,11 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      const features = [...new Set(issues.map((i) => i.feature))];
-      const feature =
-        features.length === 1
-          ? features[0]
-          : await ctx.ui.select("Which feature?", features);
-      if (!feature) return;
-
-      const candidates = issues
-        .filter((i) => i.feature === feature)
-        .sort((a, b) => a.number.localeCompare(b.number));
-
-      const raw =
-        args?.trim() ||
-        (await ctx.ui.input(
-          `Which issues, in order? (open: ${candidates.map((i) => i.number).join(", ")})`,
-          candidates.map((i) => i.number).join(" "),
-        ));
-      if (!raw?.trim()) return;
-
-      const batch: Issue[] = [];
-      for (const number of parseNumbers(raw)) {
-        const issue = candidates.find((i) => i.number === number);
-        if (!issue) {
-          ctx.ui.notify(`No open issue ${number} in ${feature}`, "error");
-          return;
-        }
-        batch.push(issue);
-      }
+      const interactive = !args?.trim() && ctx.mode === "tui" && typeof ctx.ui.custom === "function";
+      const batch = interactive
+        ? await pickBatchInteractively(ctx, issues)
+        : await pickBatchByNumbers(ctx, issues, args);
+      if (!batch?.length) return;
 
       ctx.ui.setEditorText(`${buildOrchestratorPrompt(batch, __dirname)}\n\n`);
       ctx.ui.notify(

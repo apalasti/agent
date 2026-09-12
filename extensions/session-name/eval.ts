@@ -11,6 +11,7 @@ import {
   DEFAULTS,
   buildNamingInput,
   heuristicName,
+  issueName,
   parseTitle,
   systemPrompt,
   userPrompt,
@@ -70,6 +71,13 @@ for (const { path } of files.slice(0, N)) {
   const branch = loadBranch(path);
   const transcript = buildNamingInput(branch, DEFAULTS);
   if (!transcript) continue;
+  const issue = issueName(branch, DEFAULTS);
+  if (issue) {
+    console.log("─".repeat(70));
+    console.log("file      :", path.split("/").slice(-1)[0].slice(0, 40));
+    console.log("issue     :", issue);
+    continue;
+  }
   const { raw, title } = await call(transcript);
   console.log("─".repeat(70));
   console.log("file      :", path.split("/").slice(-1)[0].slice(0, 40));
