@@ -2,7 +2,7 @@
 description: Repairs a mechanical failure (typecheck, lint, trivial test break) left behind by another agent
 display_name: Issue Fixer
 model: ollama-cloud/glm-5.3
-thinking: xhigh
+thinking: high
 prompt_mode: replace
 ---
 

@@ -2,7 +2,7 @@
 description: Implements one slice of a planned issue using TDD, in an unattended batch
 display_name: Issue Implementer
 model: ollama-cloud/glm-5.3
-thinking: xhigh
+thinking: high
 prompt_mode: replace
 ---
 
