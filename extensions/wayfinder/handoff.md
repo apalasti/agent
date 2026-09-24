@@ -20,7 +20,10 @@ A softer signal fires first and it is the one to trust: when two or three ticket
 1. Invoke `to-prd`. It reads `MAP.md` and every closed ticket, so the decisions carry over without re-interviewing the user — the interviewing already happened, ticket by ticket.
 2. Carry the map's **Out of scope** section straight into the PRD's own Out of scope section.
 3. Then invoke `to-issues` as normal, and the effort leaves the map for `issues/`.
+4. Put a banner at the top of `MAP.md`: `> Handed off to [PRD.md](PRD.md) on <date>. From here the PRD and issues are the record; the map and tickets are history.`
 
 ## Phase 3: Leave the map in place
 
 Do not delete or archive the map or its tickets. They are the primary sources behind the PRD, and the PRD links back to them.
+
+From here on, a decision reversed during or after implementation is written back to the PRD (with one line naming what it replaced) and to the issue it touched, not to the tickets.

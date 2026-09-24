@@ -36,10 +36,7 @@ If the user's answer **settles a design** rather than just informing one — "th
 1. Write the answer into the ticket's `## Resolution` section
 2. Set the ticket frontmatter `status` to `closed`
 3. Append one line to the map's **Decisions so far**: the ticket title as a link, then a one-line gist of the answer. Gist it — never restate the decision in the map. If the ticket settled a design, say so in that line and name the transcript as the thing that carries it — prose cannot reconstruct a design, so the map must not read as though it could.
-4. Add any newly-surfaced tickets: create them first, then wire `blocked-by` in a second pass
-5. Graduate any fog the answer has made specifiable into fresh tickets, and clear each graduated patch from **Not yet specified**
-6. If the answer shows a ticket sits past the destination, close it and add one line to **Out of scope** instead of resolving it
-7. If the decision invalidates other tickets, update or delete them
+{{map_bookkeeping}}
 
 ## Phase 5: Stop
 

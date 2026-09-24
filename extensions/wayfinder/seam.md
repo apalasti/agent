@@ -41,10 +41,7 @@ This is a HITL ticket. Show both candidates and settle the ticket's `## Question
 1. Write into the ticket's `## Resolution`: **the chosen shape as code, verbatim** — never a description of it — then the rejected candidate and one line on why it lost. The loser is worth keeping: it is what lets the next reader re-examine the choice instead of re-deriving it.
 2. Set the ticket frontmatter `status` to `closed`
 3. Append one line to the map's **Decisions so far**: the ticket title as a link, then a one-line gist. Gist it — the shape lives in the ticket, never restated in the map.
-4. Add any newly-surfaced tickets: create them first, then wire `blocked-by` in a second pass
-5. Graduate any fog the answer has made specifiable, and clear each graduated patch from **Not yet specified**
-6. If the answer shows a ticket sits past the destination, close it and add one line to **Out of scope** instead of resolving it
-7. If the decision invalidates other tickets, update or delete them
+{{map_bookkeeping}}
 
 ## Phase 5: Stop
 

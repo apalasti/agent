@@ -34,10 +34,8 @@ Before writing anything, state the decision you heard back to the user in one sh
 1. Write the answer into the ticket's `## Resolution` section
 2. Set the ticket frontmatter `status` to `closed`
 3. Append one line to the map's **Decisions so far**: the ticket title as a link, then a one-line gist of the answer. Gist it — never restate the decision in the map.
-4. Add any newly-surfaced tickets: create them first, then wire `blocked-by` in a second pass. Each shape question you parked in Phase 2 becomes a `seam` ticket blocked by this one — **but only if it meets the seam bar**: expensive to reverse (persisted shape or migration, a wire contract, an existing interface with outside callers), or something more than one issue will pin itself to. A shape that is reversible inside one session and internal to a single issue never reaches the map; leave it out and let the issue's plan settle it.
-5. Graduate any fog the answer has made specifiable into fresh tickets, and clear each graduated patch from **Not yet specified**
-6. If the answer shows a ticket sits past the destination, close it and add one line to **Out of scope** instead of resolving it
-7. If the decision invalidates other tickets, update or delete them
+3a. Each shape question you parked in Phase 2 becomes a `seam` ticket blocked by this one — **but only if it meets the seam bar**: expensive to reverse (persisted shape or migration, a wire contract, an existing interface with outside callers), or something more than one issue will pin itself to. A shape that is reversible inside one session and internal to a single issue never reaches the map; leave it out and let the issue's plan settle it.
+{{map_bookkeeping}}
 
 ## Phase 5: Stop
 

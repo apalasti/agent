@@ -54,6 +54,15 @@ The whole map at low resolution, loaded once per session. Open tickets are **not
 effort is finding its way to. One or two lines; every session orients to it
 before choosing a ticket.>
 
+## Approach
+
+<the chosen approach in two or three lines>
+
+Premises:
+- <briefing claim this approach depends on> (briefing.md#anchor)
+
+Rejected: <other approach>: <one-line why>
+
 ## Notes
 
 <domain; skills every session should consult; standing preferences for this effort>
@@ -100,6 +109,8 @@ blocked-by: []
 <!-- filled in on close -->
 ```
 
+A question lives in exactly one ticket. When two tickets need it, it becomes its own ticket blocking both: frontier tickets may run in parallel sessions, and a shared question gets answered differently in each.
+
 A ticket is **unblocked** when every ticket in its `blocked-by` is closed; the **frontier** is the open, unblocked tickets — the edge of the known.
 
 Assets created while resolving a ticket are **linked** from the ticket, not pasted into it: a research note under `research/`, a prototype on its own branch. The answer goes in `## Resolution` when the ticket closes, not in the body while it's open.
@@ -143,6 +154,12 @@ When a ticket that already exists turns out to sit past the destination (mis-sco
 
 The **Out of scope** section carries straight into the PRD's own Out of scope section when the map is handed off.
 
+## Premises
+
+The approach stands on the premises listed under **Approach**, each a claim from `briefing.md`. When a ticket's resolution, a research finding, or the user contradicts one, **do not absorb it as a new constraint** and carry on. Stop, tell the user which premise fell and what it costs the approach, and open a grilling ticket "Re-choose the approach" that blocks every open ticket.
+
+The same applies when resolving a ticket would need new infrastructure the approach did not price, or when the user cuts scope twice in a row: say so, and ask whether the approach still holds.
+
 ## Sessions
 
 **Never resolve more than one ticket per session**, with the exception of `research` tickets, which run as background agents and cost you nothing.
@@ -162,11 +179,13 @@ The boundary is a ticket:
 The user invokes with a loose idea.
 
 1. **Name the destination.** Invoke `grill-me` to pin down what this map is finding its way to: the PRD, decision, or change. The destination fixes the scope, so it's settled first.
-2. **Map the frontier.** Grill again, **breadth-first** this time: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way is already clear, the whole journey small enough for one session — you don't need a map. Stop, say so, and point at `to-prd`.
-3. **Create the map**: Destination and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
-4. **Create the tickets you can specify now**, then wire `blocked-by` in a **second pass** (tickets need numbers before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog.
-5. **Fire the research tickets.** Invoke the `research` skill for each one so they resolve in parallel while the rest of the map waits.
-6. **Stop.** Charting is one session's work; it hand-resolves nothing.
+2. **Brief the user.** Explore how the system works today where the idea touches it, and wait for the exploration. Write `briefing.md` for the user: every claim anchored by path + symbol and marked verified or inferred. Stop until the user has corrected it.
+3. **Choose the approach.** Lay out 2–3 approaches that differ in something expensive to change later, each with a rough cost and the briefing claims it depends on. Recommend one when the facts decide it. The user chooses.
+4. **Map the frontier.** Grill again, **breadth-first** this time, within the chosen approach: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way is already clear, the whole journey small enough for one session — you don't need a map. Stop, say so, and point at `to-prd`.
+5. **Create the map**: Destination, Approach and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
+6. **Create the tickets you can specify now**, making sure no question appears in two of them, then wire `blocked-by` in a **second pass** (tickets need numbers before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog.
+7. **Fire the research tickets.** Invoke the `research` skill for each one so they resolve in parallel while the rest of the map waits.
+8. **Stop.** Charting is one session's work; it hand-resolves nothing.
 
 ### Work through the map
 
@@ -176,7 +195,7 @@ The user invokes with an effort slug or a map path. A ticket is **optional**: wi
 2. Choose the ticket. If the user named one, use it; otherwise take the first frontier ticket in number order.
 3. Resolve it. **Zoom as needed**: read the full body of any related or closed ticket on demand, and invoke whichever skills the ticket's type and the map's `## Notes` call for.
 4. Record the resolution: write the answer into the ticket's `## Resolution`, set `status: closed`, and append a one-line gist plus link to the map's **Decisions so far**.
-5. Add newly-surfaced tickets (create, then wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket sits beyond the destination, **rule it out of scope** rather than resolving it. If the decision invalidates other tickets, update or delete them.
+5. Add newly-surfaced tickets (create, then wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket sits beyond the destination, **rule it out of scope** rather than resolving it. If the decision invalidates other tickets, update or delete them. If it contradicts a premise under **Approach**, follow "Premises" instead of recording around it.
 
 ### Reach the destination
 
@@ -187,4 +206,8 @@ Either way, hand off — don't keep wayfinding:
 1. Invoke `to-prd`. It reads `MAP.md` and every closed ticket, so the decisions carry over without re-interviewing the user; the interviewing already happened, ticket by ticket.
 2. Then `to-issues` as normal, and the effort leaves the map for `issues/`.
 
+3. Put a banner at the top of `MAP.md`: `> Handed off to [PRD.md](PRD.md) on <date>. From here the PRD and issues are the record; the map and tickets are history.`
+
 Leave the map and its tickets in place. They're the primary sources behind the PRD, and the PRD links back to them.
+
+After handoff, a decision reversed during or after implementation is written back to the PRD (with one line naming what it replaced) and to the issue it touched, not to the tickets. The PRD is the one place a reader goes to learn what stands.

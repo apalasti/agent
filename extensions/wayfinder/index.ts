@@ -188,7 +188,10 @@ function buildPrompt(choice: Choice, promptDir: string): string | null {
     .replace(/\{\{ticket_path\}\}/g, choice.ticket?.path ?? "")
     .replace(/\{\{ticket_title\}\}/g, choice.ticket?.title ?? "")
     .replace(/\{\{ticket_type\}\}/g, choice.ticket?.type ?? "")
-    .replace(/\{\{timestamp\}\}/g, timestamp);
+    .replace(/\{\{timestamp\}\}/g, timestamp)
+    .replace(/\{\{map_bookkeeping\}\}/g, () =>
+      readFileSync(join(promptDir, "map-bookkeeping.md"), "utf8").trim(),
+    );
 }
 
 function buildChartPrompt(idea: string, root: string, promptDir: string): string | null {
