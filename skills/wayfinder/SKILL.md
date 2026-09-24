@@ -59,7 +59,7 @@ before choosing a ticket.>
 <the chosen approach in two or three lines>
 
 Premises:
-- <briefing claim this approach depends on> (briefing.md#anchor)
+- <briefing finding this approach depends on> (briefing F3)
 
 Rejected: <other approach>: <one-line why>
 
@@ -156,7 +156,7 @@ The **Out of scope** section carries straight into the PRD's own Out of scope se
 
 ## Premises
 
-The approach stands on the premises listed under **Approach**, each a claim from `briefing.md`. When a ticket's resolution, a research finding, or the user contradicts one, **do not absorb it as a new constraint** and carry on. Stop, tell the user which premise fell and what it costs the approach, and open a grilling ticket "Re-choose the approach" that blocks every open ticket.
+The approach stands on the premises listed under **Approach**, each a finding from `briefing.md`. When a ticket's resolution, a research finding, or the user contradicts one, **do not absorb it as a new constraint** and carry on. Stop, tell the user which premise fell and what it costs the approach, and open a grilling ticket "Re-choose the approach" that blocks every open ticket.
 
 The same applies when resolving a ticket would need new infrastructure the approach did not price, or when the user cuts scope twice in a row: say so, and ask whether the approach still holds.
 
@@ -179,8 +179,8 @@ The boundary is a ticket:
 The user invokes with a loose idea.
 
 1. **Name the destination.** Invoke `grill-me` to pin down what this map is finding its way to: the PRD, decision, or change. The destination fixes the scope, so it's settled first.
-2. **Brief the user.** Explore how the system works today where the idea touches it, and wait for the exploration. Write `briefing.md` for the user: every claim anchored by path + symbol and marked verified or inferred. Stop until the user has corrected it.
-3. **Choose the approach.** Lay out 2–3 approaches that differ in something expensive to change later, each with a rough cost and the briefing claims it depends on. Recommend one when the facts decide it. The user chooses.
+2. **Brief the user.** Explore how the system works today where the idea touches it, and wait for the exploration. Write `briefing.md` for the user in the shape given in [BRIEFING.md](BRIEFING.md) — read it in full first. Stop until the user has corrected it.
+3. **Choose the approach.** Lay out 2–3 approaches that differ in something expensive to change later, each with a rough cost and the briefing findings it depends on. Recommend one when the facts decide it. The user chooses.
 4. **Map the frontier.** Grill again, **breadth-first** this time, within the chosen approach: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way is already clear, the whole journey small enough for one session — you don't need a map. Stop, say so, and point at `to-prd`.
 5. **Create the map**: Destination, Approach and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
 6. **Create the tickets you can specify now**, making sure no question appears in two of them, then wire `blocked-by` in a **second pass** (tickets need numbers before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog.
