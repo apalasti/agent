@@ -20,6 +20,8 @@ If `.scratch/<effort-slug>/MAP.md` exists, this PRD is the destination of a wayf
 - The map's **Destination** and **Decisions so far** are the raw material for Problem Statement, Solution, and Implementation Decisions
 - The map's **Out of scope** carries into the PRD's Out of scope, near-verbatim
 - Prototype branches linked from tickets are the source for the prototype-snippet exception below
+- Closed **`seam`** tickets have already settled their interfaces. Their `## Resolution` holds the chosen shape as code — copy it into Implementation Decisions verbatim. Do not re-describe a settled interface in prose; the prose version is the one that gets reversed.
+- Where a ticket settled a design, it links a **design transcript** under `## Assets`. That transcript is the spec for the surface it covers. Cite it by path from the relevant Implementation Decision and say plainly that it is binding — do not paraphrase it into the PRD, and do not restate its details in prose, which is exactly how they get lost
 - Research notes under `research/` get cited in Further Notes
 
 Still do not interview the user: the interviewing already happened, ticket by ticket.
@@ -29,6 +31,8 @@ Still do not interview the user: the interviewing already happened, ticket by ti
 2. Sketch out the major modules you will need to build or modify to complete the implementation. Actively look for opportunities to extract deep modules that can be tested in isolation.
 
 A deep module (as opposed to a shallow module) is one which encapsulates a lot of functionality in a simple, testable interface which rarely changes.
+
+Where a `seam` ticket settled an interface, that shape is already decided — carry it, don't re-open it. Where one didn't and the interface is expensive to reverse, show the user the **signature**, not a description of it, and the call sites it produces. A sentence about where a field sits or how a parameter threads is not a settled interface, however confident it sounds.
 
 Check with the user that these modules match their expectations. Check with the user which modules they want tests written for.
 
@@ -70,7 +74,12 @@ A list of implementation decisions that were made. This can include:
 
 Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
 
-Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it within the relevant decision and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits.
+Two exceptions, both for decisions prose cannot carry precisely:
+
+- **A settled interface is carried as its shape, verbatim.** Signatures, type declarations, endpoint contracts, table-and-column sketches — from a `seam` ticket's resolution where there is one. Never re-describe it in prose.
+- **A prototype snippet that encodes a decision more precisely than prose can** (state machine, reducer, schema, type shape) is inlined within the relevant decision, noting briefly that it came from a prototype.
+
+In both cases trim to the decision-rich parts — not a working demo, just the important bits.
 
 ## Testing Decisions
 

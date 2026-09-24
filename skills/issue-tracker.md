@@ -100,7 +100,7 @@ blocked-by: [02, 05]
 
 | Field | Values |
 |---|---|
-| `type` | `research`, `prototype`, `grilling`, `task` |
+| `type` | `research`, `prototype`, `seam`, `grilling`, `task` |
 | `status` | `open`, `closed` |
 | `blocked-by` | ticket numbers, `[]` if none |
 | `claimed` | ISO timestamp, optional — only needed when running parallel sessions |
@@ -122,3 +122,14 @@ There are no comments, so the resolution is written into the ticket's own `## Re
 3. Append one line to the map's **Decisions so far**: `- [<title>](tickets/NN-slug.md): <gist>`
 
 Assets are linked from `## Assets`, never pasted in: research notes as paths under `research/`, prototypes as the branch name the `prototype` skill produced.
+
+A `seam` ticket is the exception to "linked, not pasted": its resolution **is** the shape, so the signature, type declaration or table sketch is written into `## Resolution` as code, along with the rejected candidate and one line on why it lost.
+
+### When a decision is reversed later
+
+Decisions get reversed downstream — the code gets built, the call sites become real, and the shape turns out wrong. When that happens, **do not edit the closed ticket's `## Resolution`**. Instead:
+
+1. Add one line at the top of that section: `> Superseded by <link to where the new decision lives>`
+2. Record the new decision where the reversal happened, and update the map's **Decisions so far** gist to point at it
+
+The ticket is the primary source for what was believed at the time, and the PRD links back to it. Rewriting it destroys the record — and the reason the first answer turned out wrong is usually the most useful thing in it. An artifact left carrying a superseded design as settled is worse than either: the next agent reads it and inherits a contract the code does not have.

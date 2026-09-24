@@ -29,7 +29,7 @@ interface Choice {
   ticket?: Ticket;
 }
 
-const TICKET_TYPES = ["research", "prototype", "grilling", "task"];
+const TICKET_TYPES = ["research", "prototype", "seam", "grilling", "task"];
 
 // ─── parsing ──────────────────────────────────────────────────────────────────
 

@@ -35,6 +35,8 @@ Slices may be 'HITL' or 'AFK'. HITL slices require human interaction, such as an
 - Prefer many thin slices over few thick ones
 </vertical-slice-rules>
 
+If you cannot draw a vertical slice because the structure it would cut through does not exist yet — the tables aren't settled, the wire contract isn't settled — that is a **missing seam decision, not a slicing problem**. Do not invent the shape here: every slice would pin itself to it, unreviewed, and it is expensive to reverse by the time anyone notices. Name what is undecided and stop; it needs a `seam` ticket before the breakdown can be drawn.
+
 ### 4. Quiz the user
 
 Present the proposed breakdown as a numbered list. For each slice, show:
@@ -71,6 +73,8 @@ status: needs-plan
 A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
 
 Avoid specific file paths or code snippets — they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it here and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits.
+
+If a **design transcript** covers a surface this slice builds, link it by path and state that its markup, classes and copy are the spec, verbatim. Do not summarise it, and do not write "per the prototype" and leave it there — an appeal to a reference is not a specification, and what the issue does not carry is what gets reinvented. If this slice deliberately departs from the transcript, write the departure down as a departure; silence reads as an oversight and gets faithfully implemented as one.
 
 ## Acceptance criteria
 
