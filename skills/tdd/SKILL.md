@@ -13,6 +13,25 @@ description: Test-driven development with red-green-refactor loop. Use when user
 
 **Bad tests** are coupled to implementation. They mock internal collaborators, test private methods, or verify through external means (like querying a database directly instead of using the interface). The warning sign: your test breaks when you refactor, but behavior hasn't changed. If you rename an internal function and tests fail, those tests were testing implementation, not behavior.
 
+## Every test must be able to fail
+
+The rule above says where assertions point. It says nothing about whether they can ever redden, and a test that cannot redden passes it comfortably. So there is a second bar, and it is the one that decides whether a test is worth its lines:
+
+**A test must carry an assertion able to contradict the code.** Name the change to production code that would make it fail. If you cannot name one, the test has no value — delete it rather than keeping it for the coverage.
+
+The genres that pass the first bar and fail this one, all through public interfaces, all surviving any refactor:
+
+- **Fixture echoes** — asserting a value lands somewhere unchanged. It cannot fail while the code is self-consistent.
+- **Round trips through a matched pair** — mint then parse, serialise then deserialise. Catches only self-inconsistency. Assert against a hand-written literal instead.
+- **Strict subsets** — every assertion already made by another test. It reddens only when that one does.
+- **Framework guarantees** dressed as product behaviour — that the dropdown closes on outside click is the library's test, not yours.
+- **Assertions that match nothing** — a regex no component renders, a negative assertion about something the fixture never contained. Vacuously green forever.
+
+Two habits that keep this honest:
+
+- **Build the fixture hostile to the assertion.** A test claiming an ordering builds its input in the wrong order; one claiming something is filtered out puts it in. A pre-sorted fixture leaves the production sort unpinned, and a comparison blind to ordering (a dict `==`, an unordered contains) pins nothing at all.
+- **Check subsumption before adding a tier.** A page-level test that re-proves what the component test already proved buys nothing and costs a second thing to maintain. Test each decision at the tier that owns it.
+
 See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
 
 ## Anti-Pattern: Horizontal Slices

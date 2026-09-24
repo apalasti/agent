@@ -43,6 +43,10 @@ Do this reasoning in full even though no one is reviewing it — it is what make
 
 **Test design.** Invoke the `tdd` skill first, then: the list of behaviours to test, phrased as what the system does rather than as implementation steps. Note which behaviours matter most and which you are deliberately not testing. Each test must be expressible through a public interface and must survive an internal refactor.
 
+For every behaviour you list, **name the change to production code that would make it fail.** If you cannot name one, cut the item — you are about to prescribe a test that cannot redden, and the implementer will write it faithfully because you asked for it. This kills the usual suspects at the point they are cheapest to kill: pinning a value that is copied through unchanged, round-tripping a mint against its own parser, re-proving at the page tier what the module tier already proves.
+
+The same question applies to the harness you prescribe. If your test design stubs out the seam the issue's central promise travels through, then nothing anywhere witnesses that promise, however many tests come out green. Say which test drives the real path.
+
 **Implementation slices.** The agent implementing this has a 120k context and cannot recover if it runs out mid-issue. Split the work into numbered, ordered slices where each one:
 
 - is a **vertical** slice — a behaviour working end to end, never a layer ("add the types", "wire the UI" are wrong shapes)
