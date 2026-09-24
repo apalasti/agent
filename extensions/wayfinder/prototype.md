@@ -29,17 +29,21 @@ This is a HITL ticket. Show the prototype to the user and settle the ticket's `#
 
 Link the branch under the ticket's `## Assets` before you close.
 
+If the user's answer **settles a design** rather than just informing one — "this should be the fixed design", or anything downstream will be built to match — the branch link is not sufficient capture. Write the design transcript the `prototype` skill's rule 7 describes, save the screenshots next to it, and link both under `## Assets` by path. Nobody downstream will open the branch; they will read what you wrote.
+
 ## Phase 4: Record the resolution
 
 1. Write the answer into the ticket's `## Resolution` section
 2. Set the ticket frontmatter `status` to `closed`
-3. Append one line to the map's **Decisions so far**: the ticket title as a link, then a one-line gist of the answer. Gist it — never restate the decision in the map.
+3. Append one line to the map's **Decisions so far**: the ticket title as a link, then a one-line gist of the answer. Gist it — never restate the decision in the map. If the ticket settled a design, say so in that line and name the transcript as the thing that carries it — prose cannot reconstruct a design, so the map must not read as though it could.
 4. Add any newly-surfaced tickets: create them first, then wire `blocked-by` in a second pass
 5. Graduate any fog the answer has made specifiable into fresh tickets, and clear each graduated patch from **Not yet specified**
 6. If the answer shows a ticket sits past the destination, close it and add one line to **Out of scope** instead of resolving it
 7. If the decision invalidates other tickets, update or delete them
 
 ## Phase 5: Stop
+
+**Switch the checkout back to the branch you started on** before you stop, and say which branch that is. A session that ends parked on the prototype branch is how its commits become the ancestry of the implementation branch.
 
 **Stop when the ticket is recorded.** Do not start the next ticket, even one this resolution just unblocked. Your judgement on it is now soaked in this ticket's specifics. Tell the user what is now on the frontier, and stop.
 

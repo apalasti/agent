@@ -95,7 +95,17 @@ Put the switcher in a single shared component so both sub-shapes can reuse it. L
 
 Surface the URL (and the `?variant=` keys). The user will flip through whenever they get to it. The interesting feedback is usually **"I want the header from B with the sidebar from C"**, which is the actual design they want.
 
-### 6. Capture the answer and clean up
+### 6. Transcribe the winner
+
+A UI prototype almost always *settles* a design rather than merely informing one, so rule 7 of the [SKILL](SKILL.md) applies: write the design transcript before you close.
+
+Work down the winning variant's rendered surface and record, per element: the prototype file and component that holds it, its markup shape (what wraps what — grid, columns, rows, dividers), its exact class strings, and its exact copy. Include the states the variant renders differently (off, empty, disabled, overflowing) — those are the ones prose reliably loses. An element you deliberately do not want carried forward is written down as a drop, not left out.
+
+The test for the transcript: an implementer who never opens the prototype can rebuild the surface from it. If they would have to guess a class, a column or a word, it is not finished.
+
+Save the screenshots next to it. They outlive the branch and they are what a reader checks the built thing against.
+
+### 7. Capture the answer and clean up
 
 Once a variant has won, capture the answer (which variant and why), then capture the prototype the way the [SKILL](SKILL.md) describes. Fold the winner into the real code and move the rest onto the throwaway branch, not into main:
 

@@ -24,3 +24,11 @@ The two branches produce very different artifacts, so getting this wrong wastes 
 4. **Skip the polish.** No tests, no error handling beyond what makes the prototype _runnable_, no abstractions. The point is to learn something fast.
 5. **Surface the state.** After every action (logic) or on every variant switch (UI), print or render the full relevant state so the user can see what changed.
 6. **Capture it when done.** Fold any validated decision into the real code, then capture the prototype itself as a **primary source**: commit it to a throwaway branch, out of main, and leave a context pointer to that branch on the implementation issue. Capture the answer too (the verdict and the question it settled) in the issue or a commit. The main branch keeps only the validated decision.
+
+   **Then switch back to the branch you started on**, before anything else happens. Leaving the checkout on the prototype branch is how prototype commits end up as the base of the implementation branch: the next person cuts a branch from wherever they are standing, and four throwaway commits are now ancestors of everything that ships, bound for main. The implementation branch is cut from the **base** branch — the prototype is consumed by pointer, never inherited as ancestry. Say out loud which branch you are on when you hand back.
+
+7. **If the prototype settled a design, transcribe it.** A branch pointer is enough for a prototype that raised the fidelity of a discussion. It is not enough for one whose output is now the spec. Downstream everybody reads prose, and prose cannot carry pixels: an implementer ports the details the plan happens to cite and treats the rest as out of scope, so "none of its code ships" gets read as "none of its classes matter".
+
+   So before you close, write a **design transcript** alongside the effort's other artifacts — `.scratch/<effort-slug>/design/<slug>.md` — and link it everywhere the branch is linked. Element by element: the prototype file that holds it, and the markup shape, classes and copy it settles. Persist the screenshots there too rather than leaving them in `/tmp`.
+
+   Downstream, the transcript is the spec, verbatim; the branch is just where its code happens to live. Writing it costs under an hour. Not writing it costs the same hour later, after the wrong thing has shipped.
