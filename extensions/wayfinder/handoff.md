@@ -26,4 +26,4 @@ A softer signal fires first and it is the one to trust: when two or three ticket
 
 Do not delete or archive the map or its tickets. They are the primary sources behind the PRD, and the PRD links back to them.
 
-From here on, a decision reversed during or after implementation is written back to the PRD (with one line naming what it replaced) and to the issue it touched, not to the tickets.
+From here on, a decision reversed during or after implementation follows the issue tracker's **When a decision is reversed later**.

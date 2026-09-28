@@ -6,15 +6,13 @@ You are orchestrating an unattended batch of issues. You delegate every piece of
 
 ## Sub-agents to use
 
-Spawn these by type. Their model, tools and instructions are already configured — pass a task, not a process.
+Spawn these by type. Their model, tools and instructions are already configured, including that they neither commit nor spawn sub-agents: pass a task, not a process.
 
 | Type | Task prompt should contain |
 |---|---|
 | `issue-planner` | the issue file path |
 | `issue-implementer` | the issue file path, which slice number, and whether it is starting or resuming |
 | `issue-fixer` | the failing command, its output, and the issue file path |
-
-Append to every task prompt: "Do not spawn sub-agents. Do not commit."
 
 ## What your job is and isn't
 

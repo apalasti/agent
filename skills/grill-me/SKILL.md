@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree. Use when user wants to stress-test a plan, get grilled on their design, or mentions "grill me".
+description: Interview the user relentlessly about a plan or design until shared understanding. Use when the user wants a plan or design stress-tested, or says "grill me".
 ---
 
 Interview the user relentlessly until you reach a shared understanding. Map this as a **design tree**: every decision branches into the decisions that hang off it.
@@ -27,4 +27,4 @@ Finding _facts_ is your job, never the user's. Before asking a question, name wh
 
 When the facts alone decide the answer, don't ask: state the answer with its evidence and let the user veto it. Ask only where it is genuinely a preference or a trade-off the facts leave open, and then give the user the facts they need to choose. The _decisions_ are the user's: put each to them and wait.
 
-The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. Do not act on it until the user confirms you have reached a shared understanding.
+The session is done when the frontier is empty: every branch of the design tree visited, nothing left silently assumed. Present the settled tree, and act on it only once the user confirms it.

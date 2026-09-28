@@ -3,15 +3,10 @@
 Mock at **system boundaries** only:
 
 - External APIs (payment, email, etc.)
-- Databases (sometimes - prefer test DB)
 - Time/randomness
-- File system (sometimes)
+- Databases and the file system, only when a test database or temp directory is impractical
 
-Don't mock:
-
-- Your own classes/modules
-- Internal collaborators
-- Anything you control
+Everything you control, your own modules and their internal collaborators, runs for real.
 
 ## Designing for Mockability
 

@@ -1,8 +1,8 @@
 ---
 description: Implements one slice of a planned issue using TDD, in an unattended batch
 display_name: Issue Implementer
-model: ollama-cloud/glm-5.3
-thinking: high
+model: ollama-cloud/kimi-k3
+thinking: xhigh
 prompt_mode: replace
 ---
 
@@ -12,12 +12,12 @@ You will be given the issue file path, which slice of the plan to implement, and
 
 ## First, load your instructions
 
-Read the file matching your situation and follow it exactly:
+Before anything else, read the file matching your situation and follow it exactly:
 
 - Starting the issue (status `ready-to-implement`): `~/.pi/agent/extensions/issues/ready-to-implement.md`
 - Resuming (status `in-progress`, earlier slices already done): `~/.pi/agent/extensions/issues/in-progress.md`
 
-Those files define the process — handoff entries, the TDD loop, and the conventions to follow. Read the one that applies before doing anything else.
+Those files define the process: handoff entries, the TDD loop, and the conventions to follow.
 
 ## How the batch changes those instructions
 

@@ -1,30 +1,19 @@
 ---
 name: to-prd
-description: Turn the current conversation context into a PRD and publish it to the project issue tracker. Use when user wants to create a PRD from the current context.
+description: Turn the current conversation context, or a finished wayfinder map, into a PRD and publish it to the project issue tracker. Use when the user wants a PRD written, or a wayfinder map handed off.
 ---
 
-This skill takes the current conversation context and codebase understanding and produces a PRD. Do NOT interview the user — just synthesize what you already know.
-
-Before doing anything else, read `~/.pi/agent/skills/issue-tracker.md` in full to load issue tracker conventions and labels.
+Synthesize what you already know; do not interview the user.
 
 ## Process
 
 0. Load issue tracker conventions (mandatory)
 
-Use the read tool to load `~/.pi/agent/skills/issue-tracker.md` at the start of every run.
+Read `~/.pi/agent/skills/issue-tracker.md` in full at the start of every run.
 
 0b. Load the map, if there is one
 
-If `.scratch/<effort-slug>/MAP.md` exists, this PRD is the destination of a wayfinder map, and its decisions are on disk rather than in your context — they were resolved in sessions you never saw. Read `MAP.md` and the full body of every closed ticket before writing anything. Then:
-
-- The map's **Destination** and **Decisions so far** are the raw material for Problem Statement, Solution, and Implementation Decisions
-- The map's **Out of scope** carries into the PRD's Out of scope, near-verbatim
-- Prototype branches linked from tickets are the source for the prototype-snippet exception below
-- Closed **`seam`** tickets have already settled their interfaces. Their `## Resolution` holds the chosen shape as code — copy it into Implementation Decisions verbatim. Do not re-describe a settled interface in prose; the prose version is the one that gets reversed.
-- Where a ticket settled a design, it links a **design transcript** under `## Assets`. That transcript is the spec for the surface it covers. Cite it by path from the relevant Implementation Decision and say plainly that it is binding — do not paraphrase it into the PRD, and do not restate its details in prose, which is exactly how they get lost
-- Research notes under `research/` get cited in Further Notes
-
-Still do not interview the user: the interviewing already happened, ticket by ticket.
+If `.scratch/<effort-slug>/MAP.md` exists, read [from-map.md](from-map.md) and follow it before step 1.
 
 1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
 
@@ -36,7 +25,7 @@ Where a `seam` ticket settled an interface, that shape is already decided — ca
 
 Check with the user that these modules match their expectations. Check with the user which modules they want tests written for.
 
-3. Write the PRD using the template below, then publish it to the project issue tracker. Apply the `ready-for-agent` triage label - no need for additional triage.
+3. Write the PRD using the template below, then publish it to the project issue tracker.
 
 <prd-template>
 
@@ -50,15 +39,13 @@ The solution to the problem, from the user's perspective.
 
 ## User Stories
 
-A LONG, numbered list of user stories. Each user story should be in the format of:
+An exhaustive, numbered list of user stories covering every aspect of the feature, each in the format:
 
 1. As an <actor>, I want a <feature>, so that <benefit>
 
 <user-story-example>
 1. As a mobile bank customer, I want to see balance on my accounts, so that I can make better informed decisions about my spending
 </user-story-example>
-
-This list of user stories should be extremely extensive and cover all aspects of the feature.
 
 ## Implementation Decisions
 
@@ -72,14 +59,7 @@ A list of implementation decisions that were made. This can include:
 - API contracts
 - Specific interactions
 
-Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
-
-Two exceptions, both for decisions prose cannot carry precisely:
-
-- **A settled interface is carried as its shape, verbatim.** Signatures, type declarations, endpoint contracts, table-and-column sketches — from a `seam` ticket's resolution where there is one. Never re-describe it in prose.
-- **A prototype snippet that encodes a decision more precisely than prose can** (state machine, reducer, schema, type shape) is inlined within the relevant decision, noting briefly that it came from a prototype.
-
-In both cases trim to the decision-rich parts — not a working demo, just the important bits.
+Leave out file paths and code, except for the decisions the issue tracker's **Decisions prose cannot carry** lists.
 
 ## Testing Decisions
 

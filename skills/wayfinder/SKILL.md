@@ -1,20 +1,20 @@
 ---
 name: wayfinder
-description: Chart a huge chunk of work (more than one agent session can hold) as a map of decision tickets, and resolve them one at a time until the way to the destination is clear. Use when an idea is too big and too foggy to plan in a single session.
+description: Chart an idea too big and foggy for one session as a map of decision tickets, resolved one per session.
 disable-model-invocation: true
 ---
 
 # Wayfinder
 
-A loose idea has arrived, too big for one agent session, and wrapped in fog: the way from here to the **destination** isn't visible yet. Wayfinding is about finding that way, not charging at the destination. This skill charts the way as a **map** under `.scratch/`, then works its **decision tickets** (questions whose resolution is a decision, not slices of a build to execute) one at a time until the route is clear.
+A loose idea has arrived, too big for one agent session, and wrapped in fog: the way from here to the **destination** isn't visible yet. This skill charts the way as a **map** under `.scratch/`, then works its **decision tickets** (questions whose resolution is a decision, not slices of a build to execute) one at a time until the route is clear.
 
 The destination varies per effort, and naming it is the first act of charting: it shapes every ticket. Most often here it's a PRD to hand to `to-prd`; it might also be a decision to lock before planning starts, or a change made in place like a data-structure migration.
 
-Before doing anything else, use the read tool to load `~/.pi/agent/skills/issue-tracker.md` in full — its **Wayfinding operations** section defines where the map, tickets, blocking, and the frontier physically live.
+Before doing anything else, read `~/.pi/agent/skills/issue-tracker.md` in full — its **Wayfinding operations** section defines where the map, tickets, blocking, and the frontier physically live.
 
 ## Where this sits in the workflow
 
-Wayfinder runs **before** `to-prd`, and only when the idea won't fit in one session:
+Wayfinder runs **before** `to-prd`:
 
 ```
 loose idea → wayfinder map (decisions, HITL, one ticket per session)
@@ -24,8 +24,6 @@ loose idea → wayfinder map (decisions, HITL, one ticket per session)
 ```
 
 If the way to the destination is already clear enough to hold in one head, skip this skill and go straight to `to-prd`.
-
-Wayfinder tickets live in `tickets/`, never in `issues/`. The `/issue` and `/goal` pickers scan `issues/` and will try to TDD-implement anything they find there — a decision ticket landing in that directory is a bug, not a shortcut.
 
 ## Plan, don't do
 
@@ -85,35 +83,9 @@ Rejected: <other approach>: <one-line why>
 
 ### Tickets
 
-Each ticket is a file in `tickets/`, and its body is the question, sized to **one session**:
-
-```markdown
----
-type: grilling
-status: open
-blocked-by: []
----
-
-# <title>
-
-## Question
-
-<the decision or investigation this ticket resolves>
-
-## Assets
-
-<!-- links to prototype branches and research notes, added while resolving -->
-
-## Resolution
-
-<!-- filled in on close -->
-```
+Each ticket is a file in `tickets/`, and its body is the question, sized to **one session**. The ticket template, blocking, the **frontier**, closing, and how assets are linked are the issue tracker's **Wayfinding operations**.
 
 A question lives in exactly one ticket. When two tickets need it, it becomes its own ticket blocking both: frontier tickets may run in parallel sessions, and a shared question gets answered differently in each.
-
-A ticket is **unblocked** when every ticket in its `blocked-by` is closed; the **frontier** is the open, unblocked tickets — the edge of the known.
-
-Assets created while resolving a ticket are **linked** from the ticket, not pasted into it: a research note under `research/`, a prototype on its own branch. The answer goes in `## Resolution` when the ticket closes, not in the body while it's open.
 
 ## Ticket types
 
@@ -133,7 +105,7 @@ Every ticket is either **HITL** (worked _with_ a human who speaks for themselves
 
 ## Fog of war
 
-The map is _deliberately_ incomplete: don't chart what you can't yet see. Beyond the live tickets lies the **fog of war**: the dim view of decisions you can tell are coming but can't yet pin down, because they hang on questions still open. Resolving a ticket clears the fog ahead of it, graduating whatever's now specifiable into fresh tickets, until the way to the destination is clear and no tickets remain.
+The map is _deliberately_ incomplete: chart only what you can already see. Beyond the live tickets lies the **fog of war**: the dim view of decisions you can tell are coming but can't yet pin down, because they hang on questions still open. Resolving a ticket clears the fog ahead of it, graduating whatever's now specifiable into fresh tickets, until the way to the destination is clear and no tickets remain.
 
 The map's **Not yet specified** section is where that dim view is written down: the suspected question, the area to revisit later. Everything there is in scope, just not sharp enough to ticket. It doubles as a signpost for anyone reading where the effort is headed.
 
@@ -199,7 +171,7 @@ The user invokes with an effort slug or a map path. A ticket is **optional**: wi
 
 ### Reach the destination
 
-The map is done when the frontier is empty and **Not yet specified** is empty. In practice a softer signal fires first, and it's the one to trust: when two or three tickets in a row resolve into "that's an implementation detail, whoever builds it can call it," you're done deciding. That remaining fog is implementation unknown, not decision, and it belongs in an issue's plan, not in more tickets. Charting past that point pre-empts decisions the implementer should be making with the code in front of them.
+The map is done when the frontier is empty and **Not yet specified** is empty. In practice a softer signal fires first, and it's the one to trust: when two or three tickets in a row resolve into "that's an implementation detail, whoever builds it can call it," you're done deciding. The remaining fog falls below the seam bar (see `seam` under Ticket types) and belongs in issue plans.
 
 Either way, hand off — don't keep wayfinding:
 
@@ -210,4 +182,4 @@ Either way, hand off — don't keep wayfinding:
 
 Leave the map and its tickets in place. They're the primary sources behind the PRD, and the PRD links back to them.
 
-After handoff, a decision reversed during or after implementation is written back to the PRD (with one line naming what it replaced) and to the issue it touched, not to the tickets. The PRD is the one place a reader goes to learn what stands.
+After handoff, a decision reversed during or after implementation follows the issue tracker's **When a decision is reversed later**. The PRD is the one place a reader goes to learn what stands.

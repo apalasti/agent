@@ -4,32 +4,23 @@ Generate **several radically different UI variations** on a single route, switch
 
 If the question is about logic/state rather than what something looks like, this is the wrong branch. Use [LOGIC.md](LOGIC.md).
 
-## When this is the right shape
+## Embedded or standalone: strongly prefer embedded
 
-- "What should this page look like?"
-- "I want to see a few options for this dashboard before committing."
-- "Try a different layout for the settings screen."
-- Any time the user would otherwise spend a day picking between three vague mockups in their head.
+A UI prototype is much easier to judge when it's **butting up against the rest of the app**: real header, real sidebar, real data, real density. A throwaway route on its own is a vacuum: every variant looks fine in isolation. Embed the variants whenever there's a plausible existing page to host them. Only go standalone if the prototype genuinely has no nearby home.
 
-## Two sub-shapes: strongly prefer sub-shape A
-
-A UI prototype is much easier to judge when it's **butting up against the rest of the app**: real header, real sidebar, real data, real density. A throwaway route on its own is a vacuum: every variant looks fine in isolation. Default to sub-shape A whenever there's a plausible existing page to host the variants. Only reach for sub-shape B if the prototype genuinely has no nearby home.
-
-### Sub-shape A: adjustment to an existing page (preferred)
+### Embedded: variants inside an existing page (preferred)
 
 The route already exists. Variants are rendered **on the same route**, gated by a `?variant=` URL search param. The existing data fetching, params, and auth all stay. Only the rendering swaps. This is the default; pick it unless there's a specific reason not to.
 
-If the prototype is for something that doesn't yet have a page but *would naturally live inside one* (a new section of the dashboard, a new card on the settings screen, a new step in an existing flow), it's still sub-shape A. Mount the variants inside the host page.
+If the prototype is for something that doesn't yet have a page but *would naturally live inside one* (a new section of the dashboard, a new card on the settings screen, a new step in an existing flow), it's still embedded. Mount the variants inside the host page.
 
-### Sub-shape B: a new page (last resort)
+### Standalone: a new page (last resort)
 
 Only use this when the thing being prototyped genuinely has no existing page to live inside (e.g. an entirely new top-level surface, or a flow that can't be embedded anywhere sensible).
 
 Create a **throwaway route** following whatever routing convention the project already uses. Don't invent a new top-level structure. Name it so it's obviously a prototype (e.g. include the word `prototype` in the path or filename). Same `?variant=` pattern.
 
-Before committing to sub-shape B, sanity-check: is there really no existing page this could be embedded in? An empty route hides design problems that a populated one would expose.
-
-In both sub-shapes the floating bottom bar is identical.
+Before going standalone, sanity-check: is there really no existing page this could be embedded in? An empty route hides design problems that a populated one would expose.
 
 ## Process
 
@@ -70,9 +61,9 @@ return (
 );
 ```
 
-For sub-shape A (existing page): keep all the existing data fetching above the switcher; only the rendered subtree changes per variant.
+Embedded: keep all the existing data fetching above the switcher; only the rendered subtree changes per variant.
 
-For sub-shape B (new page): the throwaway route under `/prototype/<name>` mounts the same switcher.
+Standalone: the throwaway route under `/prototype/<name>` mounts the same switcher.
 
 ### 4. Build the floating switcher
 
@@ -89,7 +80,7 @@ Behaviour:
 - Visually distinct from the page (e.g. high-contrast pill, subtle shadow) so it's obviously not part of the design being evaluated.
 - Hidden in production builds: gate on `process.env.NODE_ENV !== 'production'` or an equivalent check, so a stray prototype merge can't ship the bar to users.
 
-Put the switcher in a single shared component so both sub-shapes can reuse it. Locate it wherever shared UI lives in the project.
+Put the switcher in a single shared component so embedded and standalone prototypes reuse the same bar. Locate it wherever shared UI lives in the project.
 
 ### 5. Hand it over
 
@@ -109,8 +100,8 @@ Save the screenshots next to it. They outlive the branch and they are what a rea
 
 Once a variant has won, capture the answer (which variant and why), then capture the prototype the way the [SKILL](SKILL.md) describes. Fold the winner into the real code and move the rest onto the throwaway branch, not into main:
 
-- **Sub-shape A**: fold the winner into the existing page; drop the losing variants and the switcher from main.
-- **Sub-shape B**: promote the winning variant to a real route; drop the throwaway route and the switcher from main.
+- **Embedded**: fold the winner into the existing page; drop the losing variants and the switcher from main.
+- **Standalone**: rebuild the winning variant as a real route, a rewrite rather than a move (see anti-patterns); drop the throwaway route and the switcher from main.
 
 The full set of variants is the primary source, so it lands on the throwaway branch, not the bin, since variant components and the switcher left in the main branch rot fast and confuse the next reader.
 

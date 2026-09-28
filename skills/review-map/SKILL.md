@@ -1,11 +1,11 @@
 ---
 name: review-map
-description: "Turn a large diff into a guided reading order for a human reviewer: an orientation brief explaining what the change does and how its pieces interact, then an outside-in tour of stops (contracts and seams first, internals last), each saying what the thing is, what changed, and what to watch for. Use when a diff or PR is too big to read linearly, or the user asks where to start reviewing, for a review map, plan or tour."
+description: "Turn a large diff into a review map: a guided, outside-in reading order for a human reviewer. Use when a diff or PR is too big to read linearly, or the user asks where to start reviewing."
 ---
 
 A big diff read in `git diff` order is read in alphabetical order, which is no order at all. This skill produces a **route through the change**: first an orientation brief, then a short ordered list of stops, outside-in, so the reviewer meets every contract and seam before the code that honours it.
 
-It is **navigational only**. It says "read this next, and watch this" — never "this is a bug". Judgement belongs to the human reading, or to the `code-review` skill afterwards.
+It is **navigational only**. It says "read this next, and watch this" — never "this is a bug". Judgement belongs to the human reading, or to a code review afterwards.
 
 The reading legwork runs in **Explore sub-agents**, so this session holds the map and not the diff.
 
@@ -108,9 +108,7 @@ State the assumption the order rests on, in one line, so a reviewer who knows be
 
 ## Keep it a map
 
-- **No unexplained names.** First mention of anything carries what it is. This applies to your own output as much as the sub-agents'; if one returns symbol soup, send it back or expand it yourself from the files.
-- **Reread before sending.** Any sentence you would have to re-pitch if the user said "wait, what?" gets split or simplified now, not later.
-- **No verdicts.** "Watch for" points at a risk; it never asserts a defect. If a sub-agent returns a judgement, strip it.
+- **Hold sub-agents to the rules.** If one returns symbol soup, send it back or expand it yourself from the files. If one returns a judgement, strip it: "watch for" points at a risk, never asserts a defect.
 - **Targets, not inventories.** A stop is a concern, not a file list. Ten files under one concern is one stop — but the concern still names the file to open first, and never hides a path the reviewer needs.
 - **Every stop earns its place.** If you can't say what the reviewer would miss by skipping it, it belongs in Skim.
-- **Hand off, don't merge.** When the user wants findings rather than direction, that's `code-review`; point at it instead of drifting into it.
+- **Hand off, don't merge.** When the user wants findings rather than direction, that is a code review; say so instead of drifting into it.

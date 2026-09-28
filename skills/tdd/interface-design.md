@@ -1,31 +1,27 @@
 # Interface Design for Testability
 
-Good interfaces make testing natural:
+## Deep modules
 
-1. **Accept dependencies, don't create them**
+From "A Philosophy of Software Design": a **deep module** has a small interface over a lot of implementation. A **shallow module** has a large interface over little implementation; avoid it, since every method and parameter is one more thing to test and set up.
 
-   ```typescript
-   // Testable
-   function processOrder(order, paymentGateway) {}
+When designing an interface, ask:
 
-   // Hard to test
-   function processOrder(order) {
-     const gateway = new StripeGateway();
-   }
-   ```
+- Can I reduce the number of methods?
+- Can I simplify the parameters?
+- Can I hide more complexity inside?
 
-2. **Return results, don't produce side effects**
+## Return results rather than producing side effects
 
-   ```typescript
-   // Testable
-   function calculateDiscount(cart): Discount {}
+```typescript
+// Testable
+function calculateDiscount(cart): Discount {}
 
-   // Hard to test
-   function applyDiscount(cart): void {
-     cart.total -= discount;
-   }
-   ```
+// Hard to test
+function applyDiscount(cart): void {
+  cart.total -= discount;
+}
+```
 
-3. **Small surface area**
-   - Fewer methods = fewer tests needed
-   - Fewer params = simpler test setup
+## Accept dependencies rather than creating them
+
+At a system boundary, pass the dependency in so a test can substitute it: see [mocking.md](mocking.md).

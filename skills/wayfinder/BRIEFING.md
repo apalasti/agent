@@ -9,7 +9,7 @@
 
 ## In short
 
-<one paragraph, no code symbols: how the area works today, told as what happens, and the one
+<one paragraph: how the area works today, told as what happens, and the one
 or two facts that most shape the idea>
 
 ## What matters for this idea
@@ -29,7 +29,7 @@ or two facts that most shape the idea>
 
 ## Not yet confirmed
 
-<!-- every inferred claim, gathered in one place, each with how to confirm it -->
+<!-- for each finding marked inferred under Evidence, how to confirm it: `F3: run X, expect Y` -->
 
 ## Evidence
 
@@ -42,5 +42,5 @@ or two facts that most shape the idea>
 
 - Plain language above **Evidence**. A code symbol appears there only when the reader needs the name, e.g. a table or endpoint they will see again. Paths, verified/inferred marks and anchors live in **Evidence** only.
 - No raw HTML. Findings are headings, so `briefing.md#f1-...` links work natively.
-- Two screens at most. A fact that doesn't move the approach, and isn't needed to follow the walkthrough, stays out; the explore report holds it.
+- About 60 lines at most. A fact that doesn't move the approach, and isn't needed to follow the walkthrough, stays out; the explore report holds it.
 - When a later session corrects a finding, edit it in place and mark it `(corrected: <what was wrong>)`, since premises point at it.

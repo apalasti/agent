@@ -22,6 +22,12 @@ status: needs-plan
 ## Description
 <what needs to be done>
 
+## Acceptance criteria
+- [ ] <criterion>
+
+## Blocked by
+<links to blocking issues, or "None - can start immediately">
+
 ## Plan
 <!-- filled in collaboratively during needs-plan → ready-to-implement -->
 
@@ -34,6 +40,7 @@ Handoff entries (appended to `## In Progress` by the agent at the start and end 
 ```markdown
 ### Run <ISO timestamp>
 **Completed:** <what was done>
+**Remaining:** <what is left, as a short checklist; omit when the run finished its work>
 **Blockers / Notes:** <why it stopped, anything the next agent needs to know>
 ```
 
@@ -52,7 +59,15 @@ needs-plan → ready-to-implement → in-progress → done
 
 ## When a skill says "publish to the issue tracker"
 
-Create a new file under `.scratch/<feature-slug>/issues/` (creating the directory if needed) using the issue template above. New issues start with `status: needs-plan`.
+Create a new file under `.scratch/<feature-slug>/issues/` (creating the directory if needed) using the issue template above. New issues start with `status: needs-plan`, including issues described as "ready for an AFK agent": planning is their first step.
+
+## Decisions prose cannot carry
+
+PRDs and issues leave out file paths and code, which go stale. The exceptions are decisions prose cannot carry precisely:
+
+- **A settled interface is carried as its shape, verbatim**: signature, type declaration, endpoint contract, table-and-column sketch. Where a `seam` ticket settled it, copy its `## Resolution`. A prose re-description is the version that gets reversed.
+- **A prototype snippet that encodes a decision** (state machine, reducer, schema, type shape) is inlined within the decision it supports, noting it came from a prototype. Trim it to the decision-rich parts, not a working demo.
+- **A design transcript** (`design/<slug>.md`, written by the `prototype` skill) is linked by path and named as binding: its markup, classes and copy are the spec, verbatim. Summarising it, or writing "per the prototype", loses exactly the details that get reinvented. A deliberate departure from it is written down as a departure; silence reads as an oversight and gets implemented as one.
 
 ## When a skill says "fetch the relevant ticket"
 
@@ -69,12 +84,14 @@ The `wayfinder` skill charts a large, foggy effort as a map of decision tickets.
 │   └── <NN>-<slug>.md
 ├── research/
 │   └── <slug>.md   # findings from research tickets
+├── design/
+│   └── <slug>.md   # design transcripts from prototypes that settled a design
 ├── PRD.md          # the usual destination, written by to-prd once the map is done
 └── issues/
     └── <NN>-<slug>.md
 ```
 
-**Never put a wayfinder ticket in `issues/`.** The `/issue` and `/goal` pickers scan `issues/` and treat everything not `done` as implementable, so a decision ticket there gets picked up and TDD-implemented.
+**Wayfinder tickets live in `tickets/`, never `issues/`.** The `/issue` and `/goal` pickers scan `issues/` and treat everything not `done` as implementable, so a decision ticket there gets picked up and TDD-implemented.
 
 ### The map
 
@@ -121,7 +138,7 @@ There are no comments, so the resolution is written into the ticket's own `## Re
 2. Set `status: closed`
 3. Append one line to the map's **Decisions so far**: `- [<title>](tickets/NN-slug.md): <gist>`
 
-Assets are linked from `## Assets`, never pasted in: research notes as paths under `research/`, prototypes as the branch name the `prototype` skill produced.
+Assets are linked from `## Assets`, never pasted in: research notes as paths under `research/`, prototypes as the branch name the `prototype` skill produced, design transcripts and their screenshots as paths under `design/`.
 
 A `seam` ticket is the exception to "linked, not pasted": its resolution **is** the shape, so the signature, type declaration or table sketch is written into `## Resolution` as code, along with the rejected candidate and one line on why it lost.
 
@@ -130,6 +147,6 @@ A `seam` ticket is the exception to "linked, not pasted": its resolution **is** 
 Decisions get reversed downstream — the code gets built, the call sites become real, and the shape turns out wrong. When that happens, **do not edit the closed ticket's `## Resolution`**. Instead:
 
 1. Add one line at the top of that section: `> Superseded by <link to where the new decision lives>`
-2. Record the new decision where the reversal happened, and update the map's **Decisions so far** gist to point at it
+2. Record the new decision where it now stands. Before hand-off, that is a new ticket, and the map's **Decisions so far** gist points at it. After hand-off (the map carries the `Handed off` banner), it is the PRD, with one line naming what it replaced, and the issue it touched; the map stays as history.
 
 The ticket is the primary source for what was believed at the time, and the PRD links back to it. Rewriting it destroys the record — and the reason the first answer turned out wrong is usually the most useful thing in it. An artifact left carrying a superseded design as settled is worse than either: the next agent reads it and inherits a contract the code does not have.

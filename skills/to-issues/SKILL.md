@@ -1,19 +1,17 @@
 ---
 name: to-issues
-description: Break a plan, spec, or PRD into independently-grabbable issues on the project issue tracker using tracer-bullet vertical slices. Use when user wants to convert a plan into issues, create implementation tickets, or break down work into issues.
+description: Break a plan, spec, or PRD into independently-grabbable issues on the project issue tracker using tracer-bullet vertical slices. Use when the user wants a plan, spec, or PRD broken down into implementable issues.
 ---
 
 # To Issues
 
 Break a plan into independently-grabbable issues using vertical slices (tracer bullets).
 
-Before doing anything else, read `~/.pi/agent/skills/issue-tracker.md` in full to load issue tracker conventions and labels.
-
 ## Process
 
 ### 0. Load issue tracker conventions (mandatory)
 
-Use the read tool to load `~/.pi/agent/skills/issue-tracker.md` at the start of every run.
+Read `~/.pi/agent/skills/issue-tracker.md` in full at the start of every run.
 
 ### 1. Gather context
 
@@ -57,45 +55,9 @@ Iterate until the user approves the breakdown.
 
 ### 5. Publish the issues to the issue tracker
 
-For each approved slice, publish a new issue to the issue tracker. Use the issue body template below. These issues are considered ready for AFK agents, so publish them with the correct triage label unless instructed otherwise.
+For each approved slice, publish a new issue using the issue tracker's template, with `status: needs-plan` unless instructed otherwise. Publish in dependency order (blockers first) so **Blocked by** can reference real issues.
 
-Publish issues in dependency order (blockers first) so you can reference real issue identifiers in the "Blocked by" field.
+- **Description**: the slice's end-to-end behaviour, not layer-by-layer implementation. Leave out file paths and code, except for the decisions the issue tracker's **Decisions prose cannot carry** lists; a design transcript covering a surface this slice builds is always linked.
+- **Acceptance criteria**: each one checkable on the finished slice.
 
-<issue-template>
----
-status: needs-plan
----
-
-# <title>
-
-## Description
-
-A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
-
-Avoid specific file paths or code snippets — they go stale fast. Exception: if a prototype produced a snippet that encodes a decision more precisely than prose can (state machine, reducer, schema, type shape), inline it here and note briefly that it came from a prototype. Trim to the decision-rich parts — not a working demo, just the important bits.
-
-If a **design transcript** covers a surface this slice builds, link it by path and state that its markup, classes and copy are the spec, verbatim. Do not summarise it, and do not write "per the prototype" and leave it there — an appeal to a reference is not a specification, and what the issue does not carry is what gets reinvented. If this slice deliberately departs from the transcript, write the departure down as a departure; silence reads as an oversight and gets faithfully implemented as one.
-
-## Acceptance criteria
-
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
-
-## Blocked by
-
-- A reference to the blocking ticket (if any)
-
-Or "None - can start immediately" if no blockers.
-
-## Plan
-
-<!-- filled in collaboratively during needs-plan → ready-to-implement -->
-
-## In Progress
-
-<!-- each agent run appends a handoff entry here -->
-
-</issue-template>
-
-Do NOT close or modify any parent issue.
+Leave any parent issue open and unmodified.
