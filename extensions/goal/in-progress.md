@@ -34,13 +34,11 @@ Follow the `tdd` skill methodology — vertical slices, not horizontal:
 1. Pick up from where the previous run stopped
 2. Write ONE test → make it pass → repeat
 3. Only enough code to pass the current test
-4. After tests pass, refactor
 
 Rules:
 - Do not redo work that is already completed — verify it's there, then move forward
 - If a previous run noted a blocker or a failed approach, acknowledge it and either work around it or surface it to the user before proceeding
 - Tests verify behaviour through public interfaces, not implementation details
-- Never refactor while RED — get to GREEN first
 
 ### Phase 4: Human review (STOP HERE)
 

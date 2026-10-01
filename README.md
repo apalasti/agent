@@ -16,7 +16,8 @@ This symlinks `skills/`, `extensions/` and `agents/` into the global pi config d
 ├── setup.sh                        # Symlink installer
 ├── skills/                         # Global skills (→ ~/.pi/agent/skills/)
 ├── extensions/                     # Global extensions (→ ~/.pi/agent/extensions/)
-└── agents/                         # Subagent definitions (→ ~/.pi/agent/agents/)
+├── agents/                         # Subagent definitions (→ ~/.pi/agent/agents/)
+└── templates/                      # Files to copy into a project, e.g. CODING_STANDARDS.md for code-review
 ```
 
 ## Wayfinding

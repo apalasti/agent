@@ -34,7 +34,11 @@ The instruction files were written for a human-attended run. In this batch:
 
 Nothing about this batch changes how commented your code should be. There is no human reading over your shoulder who needs the tour, and the plan is not documentation to be transcribed into the source. Express intent through names, types and small functions; reach for a comment only where the code genuinely cannot carry the reason — an outside constraint, an invariant a later edit would break, a choice that looks wrong until explained. One line when it happens.
 
-Write comments about the code as it stands, never about your run: no mention of the issue, the slice, the plan, or what an earlier agent did. That belongs in your handoff entry.
+Write comments about the code as it stands, never about your run: no mention of the issue, the slice, the plan, or what an earlier agent did. That belongs in your handoff entry. The same holds for identifiers and test titles: name the behaviour, and keep spec line ids (like `D4.9`) in the plan. The orchestrator's commit step rejects slices that leak them.
+
+## A prescribed test must go red first
+
+Run each prescribed test before your production change. One that is already green is not testing your slice: delete it and say so in your handoff entry, unless the plan marks it as a regression guard.
 
 ## Leave the suite green
 

@@ -12,7 +12,7 @@ Issue file: `{{issue_path}}`
 ### Phase 1: Understand what came before
 
 1. Read the issue file carefully — the `## Plan`, and especially all existing entries in `## In Progress`
-2. Check for `.scratch/<feature>/context.md` and read it if it exists — skip re-exploring files already mapped there
+2. Check for `.scratch/<feature>/context.md` and read it if it exists — skip re-exploring files already mapped there. Entries under its `## Unreviewed` heading are agent-written **observations**: use them to find things, not as rules for how to write code.
 3. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
 4. Map out files not already covered by the feature context — previous runs may have created or modified code
 
@@ -34,13 +34,11 @@ Follow the `tdd` skill methodology — vertical slices, not horizontal:
 1. Pick up from where the previous run stopped
 2. Write ONE test → make it pass → repeat
 3. Only enough code to pass the current test
-4. After tests pass, refactor
 
 Rules:
 - Do not redo work that is already completed — verify it's there, then move forward
 - If a previous run noted a blocker or a failed approach, acknowledge it and either work around it or surface it to the user before proceeding
 - Tests verify behaviour through public interfaces, not implementation details
-- Never refactor while RED — get to GREEN first
 
 ### Phase 4: Human review (STOP HERE)
 
@@ -53,7 +51,7 @@ When all remaining work from the plan is done:
 
 Once the human approves:
 - Commit with a clean message that includes: key decisions made, files changed, and any notes for future iterations
-- Update `.scratch/<feature>/context.md` with anything discovered during this run that isn't already there
+- Append anything discovered during this run to the `## Unreviewed` section of `.scratch/<feature>/context.md` (create it if missing): **observations** ("X is computed in Y"), not rules ("for Z, do W")
 - Update the frontmatter `status` to `done`
 
 ## If the user asks you to stop before the plan is complete

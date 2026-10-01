@@ -1,31 +1,37 @@
 ---
 name: to-prd
-description: Turn the current conversation context, or a finished wayfinder map, into a PRD and publish it to the project issue tracker. Use when the user wants a PRD written, or a wayfinder map handed off.
+description: Turn the current conversation context, or a finished wayfinder map, into a PRD. Use when the user wants a PRD written, or a wayfinder map handed off.
 ---
 
 Synthesize what you already know; do not interview the user.
 
 ## Process
 
-0. Load issue tracker conventions (mandatory)
+### 0. Load issue tracker conventions (mandatory)
 
 Read `~/.pi/agent/skills/issue-tracker.md` in full at the start of every run.
 
-0b. Load the map, if there is one
+### 1. Load the map, if there is one
 
-If `.scratch/<effort-slug>/MAP.md` exists, read [from-map.md](from-map.md) and follow it before step 1.
+If `.scratch/<effort-slug>/MAP.md` exists, read [from-map.md](from-map.md) and follow it before step 2.
 
-1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
+### 2. Explore the codebase
 
-2. Sketch out the major modules you will need to build or modify to complete the implementation. Actively look for opportunities to extract deep modules that can be tested in isolation.
+Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
 
-A deep module (as opposed to a shallow module) is one which encapsulates a lot of functionality in a simple, testable interface which rarely changes.
+### 3. Sketch the modules and the seams under test
 
-Where a `seam` ticket settled an interface, that shape is already decided — carry it, don't re-open it. Where one didn't and the interface is expensive to reverse, show the user the **signature**, not a description of it, and the call sites it produces. A sentence about where a field sits or how a parameter threads is not a settled interface, however confident it sounds.
+Sketch the major modules you will build or modify. Look for opportunities to extract **deep modules**: a lot of behaviour behind a small interface that rarely changes.
 
-Check with the user that these modules match their expectations. Check with the user which modules they want tests written for.
+Where a `seam` ticket settled an interface, that shape is already decided: carry it, don't re-open it. Where one didn't and the interface is expensive to reverse, show the user the **signature**, not a description of it, and the call sites it produces. A sentence about where a field sits or how a parameter threads is not a settled interface, however confident it sounds.
 
-3. Write the PRD using the template below, then publish it to the project issue tracker.
+Then pick the **seams under test**: the interfaces the tests will drive. Prefer existing seams to new ones, and the highest seam that reaches the behaviour. The fewer the better; the ideal is one.
+
+Show the user the modules and the seams under test, and adjust until they match the user's expectations. This is a checkpoint on your synthesis, not an interview, so it runs after a map too.
+
+### 4. Write the PRD
+
+Write the PRD using the template below to `.scratch/<feature-slug>/PRD.md`. It is not an issue: it goes beside `issues/`, never inside it.
 
 <prd-template>
 
@@ -63,11 +69,8 @@ Leave out file paths and code, except for the decisions the issue tracker's **De
 
 ## Testing Decisions
 
-A list of testing decisions that were made. Include:
-
-- A description of what makes a good test (only test external behavior, not implementation details)
-- Which modules will be tested
-- Prior art for the tests (i.e. similar types of tests in the codebase)
+- The seams under test from step 3, and why each is the highest one that reaches its behaviour
+- Prior art for the tests (similar tests already in the codebase)
 
 ## Out of Scope
 

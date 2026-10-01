@@ -35,14 +35,12 @@ Follow the `tdd` skill methodology — vertical slices, not horizontal:
 1. Write ONE test that confirms ONE behaviour → verify it fails (RED)
 2. Write minimal code to make it pass (GREEN)
 3. Repeat for the next behaviour from the plan's test design
-4. After all tests pass, refactor: extract duplication, deepen modules, apply SOLID where natural
 
 Rules:
 - One test at a time — don't write all tests first
 - Only enough code to pass the current test
 - Tests verify behaviour through public interfaces, not implementation details
 - Tests should survive internal refactors
-- Never refactor while RED — get to GREEN first
 
 ### Phase 4: Implementation
 

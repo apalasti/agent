@@ -14,7 +14,7 @@ The deliverable is an agreed plan. You reach agreement through **three review ro
 ### Phase 1: Exploration & understanding (silent)
 
 1. Read the issue file carefully
-2. Check for `.scratch/<feature>/context.md` and read it if it exists — it contains a pre-built codebase map for this feature. Only re-read files directly relevant to this issue rather than re-exploring everything.
+2. Check for `.scratch/<feature>/context.md` and read it if it exists — it contains a pre-built codebase map for this feature. Only re-read files directly relevant to this issue rather than re-exploring everything. Entries under its `## Unreviewed` heading are agent-written **observations**: use them to find things, not as rules for how to write code.
 3. **Do not guess the codebase structure.** Map out the relevant files, read their contents, and understand the execution flow before proposing anything
 4. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
 
@@ -51,7 +51,7 @@ Rules for this round:
 
 ### Phase 3 — ROUND 2: Detailed plan
 
-Only after the direction is settled. Post this **as a message in the chat**, again not a file.
+Only after the direction is settled. Post this **as a message in the chat**, again not a file. Invoke the `codebase-design` skill for the vocabulary these notes use.
 
 ```
 ## Detailed plan
@@ -88,7 +88,7 @@ Only once the user has **explicitly approved** the test list (an affirmative lik
 
 1. Write the agreed plan (detailed plan + design notes + test design) into the `## Plan` section of the issue file
 2. Update the frontmatter `status` from `needs-plan` to `ready-to-implement`
-3. Write or update `.scratch/<feature>/context.md` with any codebase knowledge built up during this session that isn't already there
+3. Append codebase knowledge built up during this session to the `## Unreviewed` section of `.scratch/<feature>/context.md` (create it if missing): **observations** ("X is computed in Y"), not rules ("for Z, do W")
 4. **Stop. Do not write any code or make any other file changes.**
 
 ## Rules

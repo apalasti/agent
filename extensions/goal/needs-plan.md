@@ -27,7 +27,7 @@ Propose an initial plan that covers **what** needs to be done AND **how** to do 
 - What the test surface looks like — tests should verify behaviour through public interfaces, not implementation details
 - Any trade-offs or alternatives considered
 
-Use the project's domain vocabulary. Apply the deletion test to any module you're introducing — if deleting it would just move complexity to callers, it's earning its keep. If complexity vanishes, it's a pass-through.
+Use the project's domain vocabulary, and invoke the `codebase-design` skill for the design vocabulary. Apply the deletion test to any module you're introducing — if deleting it would just move complexity to callers, it's earning its keep. If complexity vanishes, it's a pass-through.
 
 ### Phase 3: Refine with the human
 
