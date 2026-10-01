@@ -90,18 +90,22 @@ Surface the URL (and the `?variant=` keys). The user will flip through whenever 
 
 A UI prototype almost always *settles* a design rather than merely informing one, so rule 7 of the [SKILL](SKILL.md) applies: write the design transcript before you close.
 
-Work down the winning variant's rendered surface and record, per element: the prototype file and component that holds it, its markup shape (what wraps what — grid, columns, rows, dividers), its exact class strings, and its exact copy. Include the states the variant renders differently (off, empty, disabled, overflowing) — those are the ones prose reliably loses. An element you deliberately do not want carried forward is written down as a drop, not left out.
+Work down the winning variant's rendered surface and record, per element, what the user sees:
 
-The test for the transcript: an implementer who never opens the prototype can rebuild the surface from it. If they would have to guess a class, a column or a word, it is not finished.
+- **Placement**: where it sits and what it groups with — columns, rows, dividers, order.
+- **Emphasis and sizing**: what dominates, what recedes, spacing and type size in the design system's terms (a scale step, a token).
+- **Copy**, exact.
+- **States** the variant renders differently (off, empty, disabled, overflowing) — those are the ones prose reliably loses.
+
+An element you deliberately do not want carried forward is written down as a drop, not left out.
+
+The test for the transcript: an implementer who never opens the prototype can build a surface that matches the screenshots, in the codebase's own components. If they would have to guess a column, a state or a word, it is not finished.
 
 Save the screenshots next to it. They outlive the branch and they are what a reader checks the built thing against.
 
 ### 7. Capture the answer and clean up
 
-Once a variant has won, capture the answer (which variant and why), then capture the prototype the way the [SKILL](SKILL.md) describes. Fold the winner into the real code and move the rest onto the throwaway branch, not into main:
-
-- **Embedded**: fold the winner into the existing page; drop the losing variants and the switcher from main.
-- **Standalone**: rebuild the winning variant as a real route, a rewrite rather than a move (see anti-patterns); drop the throwaway route and the switcher from main.
+Once a variant has won, capture the answer (which variant and why), then capture the prototype the way the [SKILL](SKILL.md) describes. Every variant, the winner included, and the switcher go onto the throwaway branch, and main is left as it was before the prototype. The winning design reaches main later, built from the transcript.
 
 The full set of variants is the primary source, so it lands on the throwaway branch, not the bin, since variant components and the switcher left in the main branch rot fast and confuse the next reader.
 
@@ -110,4 +114,4 @@ The full set of variants is the primary source, so it lands on the throwaway bra
 - **Variants that differ only in colour or copy.** That's a tweak, not a prototype. Real variants disagree about structure.
 - **Sharing too much code between variants.** A shared `<Header>` is fine; a shared `<Layout>` defeats the point. Each variant should be free to throw out the layout.
 - **Wiring variants to real mutations.** Read-only prototypes are fine. If a variant needs to mutate, point it at a stub: the question is "what should this look like", not "does the backend work".
-- **Promoting the prototype directly to production.** The variant code was written under prototype constraints (no tests, minimal error handling). Rewrite it properly when you fold it in.
+- **Porting the winning variant into production.** Its code was written under prototype constraints (no tests, minimal error handling) and outside the codebase's components. Build the real surface from the transcript.

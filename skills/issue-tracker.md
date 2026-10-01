@@ -66,8 +66,11 @@ Create a new file under `.scratch/<feature-slug>/issues/` (creating the director
 PRDs and issues leave out file paths and code, which go stale. The exceptions are decisions prose cannot carry precisely:
 
 - **A settled interface is carried as its shape, verbatim**: signature, type declaration, endpoint contract, table-and-column sketch. Where a `seam` ticket settled it, copy its `## Resolution`. A prose re-description is the version that gets reversed.
-- **A prototype snippet that encodes a decision** (state machine, reducer, schema, type shape) is inlined within the decision it supports, noting it came from a prototype. Trim it to the decision-rich parts, not a working demo.
-- **A design transcript** (`design/<slug>.md`, written by the `prototype` skill) is linked by path and named as binding: its markup, classes and copy are the spec, verbatim. Summarising it, or writing "per the prototype", loses exactly the details that get reinvented. A deliberate departure from it is written down as a departure; silence reads as an oversight and gets implemented as one.
+- **A prototype is a spec written in code, never a source of code.** It shows what to build; its code, markup and component structure are not reused, and nothing is copied out of it. What it settled is carried in words:
+  - a settled **design** by its design transcript (`design/<slug>.md`, written by the `prototype` skill), linked by path and named as binding: what the user sees (placement, emphasis, copy, states), with the screenshots settling any disagreement;
+  - a settled **behaviour** as the states, transitions and rules the walkthroughs proved, written into the decision it supports.
+
+  Summarising either, or writing "per the prototype", loses exactly the details that get reinvented. A deliberate departure is written down as a departure; silence reads as an oversight and gets implemented as one.
 
 ## When a skill says "fetch the relevant ticket"
 

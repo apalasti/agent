@@ -29,7 +29,7 @@ This is a HITL ticket. Show the prototype to the user and settle the ticket's `#
 
 Link the branch under the ticket's `## Assets` before you close.
 
-If the user's answer **settles a design** rather than just informing one — "this should be the fixed design", or anything downstream will be built to match — the branch link is not sufficient capture. Write the design transcript the `prototype` skill's rule 7 describes, save the screenshots next to it, and link both under `## Assets` by path. Nobody downstream will open the branch; they will read what you wrote.
+If the user's answer **settles a design** rather than just informing one — "this should be the fixed design", or anything downstream will be built to match — the branch link is not sufficient capture. Write the design transcript the `prototype` skill's rule 7 describes, save the screenshots next to it, and link both under `## Assets` by path. Nobody downstream will open the branch; they will read what you wrote. Transcribe what the user settled (layout, copy, states, behaviour), not the prototype's markup or class strings.
 
 ## Phase 4: Record the resolution
 

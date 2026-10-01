@@ -12,9 +12,9 @@ If the question is "what should this look like," this is the wrong branch. Use [
 
 Before writing code, write down what state model and what question you're prototyping. One paragraph, at the top of the demo (in a visible intro, not just a comment). A logic prototype that answers the wrong question is pure waste, so make the question explicit so it can be checked later, whether the user is watching now or returning to it AFK.
 
-### 2. Isolate the logic in a portable module
+### 2. Isolate the logic in a pure module
 
-Put the actual logic (the bit that's answering the question) in a single `<script>` block written as a small, pure module that could be lifted out and dropped into the real codebase later. The page around it is throwaway; this module isn't.
+Put the actual logic (the bit that's answering the question) in a single `<script>` block written as a small, pure module, so the rules it encodes can be read and stated on their own, apart from the page.
 
 The right shape depends on the question:
 
@@ -23,7 +23,7 @@ The right shape depends on the question:
 - **A small set of pure functions** over a plain data type. Good when there's no implicit current state, just transformations.
 - **A class or module with a clear method surface** when the logic genuinely owns ongoing internal state.
 
-Pick whichever shape best fits the question being asked, *not* whichever is easiest to wire to a page. Keep it pure: no DOM, no `document`, no button handlers reaching inside it. The page calls into it; nothing flows the other direction. This is what makes the prototype useful past its own lifetime: once the question's answered, the validated reducer / machine / function set lifts into the real module on its own.
+Pick whichever shape best fits the question being asked, *not* whichever is easiest to wire to a page. Keep it pure: no DOM, no `document`, no button handlers reaching inside it. The page calls into it; nothing flows the other direction. This is what makes the prototype useful past its own lifetime: once the question's answered, the states, transitions and rules can be read straight off the module and written down.
 
 ### 3. Build the shareable HTML file
 
@@ -48,9 +48,9 @@ Send them the file, or open it for them. They'll click through the walkthroughs 
 
 ### 5. Capture the answer and the prototype
 
-Once the prototype has answered its question, capture the answer, then capture the prototype the way the [SKILL](SKILL.md) describes. The logic-specific mapping: the validated reducer / machine / function set lifts into the real module (the decision, absorbed); the HTML shell rides along to the throwaway branch that keeps the prototype as a primary source, and being one self-contained file, it stays trivially re-runnable there.
+Once the prototype has answered its question, capture the answer, then capture the prototype the way the [SKILL](SKILL.md) describes. The logic-specific mapping: the decision is the states, transitions and rules the walkthroughs proved, written into the issue in those terms, and the real module is written fresh from them; the whole file, module and shell alike, rides along to the throwaway branch that keeps the prototype as a primary source, and being one self-contained file, it stays trivially re-runnable there.
 
 ## Anti-patterns
 
 - **Generalising.** No "what if we wanted to support X later." The prototype answers one question.
-- **Shipping the HTML shell into production.** The page is optimised for being clicked through by hand. The logic module behind it is the bit worth keeping.
+- **Porting the module into production.** It was written to be clicked through, under prototype constraints. Build the real module from the written-down rules.
