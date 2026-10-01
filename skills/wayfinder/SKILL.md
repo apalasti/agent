@@ -20,7 +20,7 @@ Wayfinder runs **before** `to-prd`:
 loose idea → wayfinder map (decisions, HITL, one ticket per session)
            → to-prd → PRD.md
            → to-issues → .scratch/<effort>/issues/
-           → /issue or /orchestrate (execution)
+           → /orchestrate (execution)
 ```
 
 If the way to the destination is already clear enough to hold in one head, skip this skill and go straight to `to-prd`.
@@ -83,7 +83,7 @@ Rejected: <other approach>: <one-line why>
 
 ### Tickets
 
-Each ticket is a file in `tickets/`, and its body is the question, sized to **one session**. The ticket template, blocking, the **frontier**, closing, and how assets are linked are the issue tracker's **Wayfinding operations**.
+Each ticket is a file in `tickets/`, and its body is the question, sized to **one session of about 100K tokens**, conversation included. The ticket template, blocking, the **frontier**, closing, and how assets are linked are the issue tracker's **Wayfinding operations**.
 
 A question lives in exactly one ticket. When two tickets need it, it becomes its own ticket blocking both: frontier tickets may run in parallel sessions, and a shared question gets answered differently in each.
 
@@ -91,7 +91,7 @@ A question lives in exactly one ticket. When two tickets need it, it becomes its
 
 Every ticket is either **HITL** (worked _with_ a human who speaks for themselves) or **AFK**, driven by the agent alone. A HITL ticket only resolves through that live exchange; the agent never stands in for the human's side of it. A grilling session that answers its own questions has broken this.
 
-- **`research`** (AFK) — Reading documentation, third-party APIs, or local resources to surface a fact a decision waits on. Resolved by invoking the `research` skill, which backgrounds the reading. Use when knowledge outside the working directory is required.
+- **`research`** (AFK reading, closed with the human) — Reading documentation, third-party APIs, or local resources to surface a fact a decision waits on. The `research` skill does the reading in the background, fired at charting; the ticket stays open until a session walks the user through the findings and they agree the answer, so a human has read every finding a decision rests on. Use when knowledge outside the working directory is required.
 - **`prototype`** (HITL) — Raise the fidelity of the discussion by making a cheap, rough, concrete artifact to react to. Invoke the `prototype` skill; link the branch it produces under `## Assets`, and the design transcript too when the answer settled a design. The resolution is the design or behaviour the user chose, never the prototype's code. Use when "how should it look" or "how should it behave" is the key question.
 - **`seam`** (HITL) — An interface question: what shape should this function, type, endpoint, table or repository have, and what calls it. The same fidelity move as `prototype`, aimed at an interface — resolved by **rendering** it (the shape as code, two candidates, and the call sites or access patterns each produces) and reacting to it with the user, never by prose about where a field sits or how a parameter threads. Its resolution is the contract `to-prd` carries verbatim.
 
@@ -132,7 +132,7 @@ The same applies when resolving a ticket would need new infrastructure the appro
 
 ## Sessions
 
-**Never resolve more than one ticket per session**, with the exception of `research` tickets, which run as background agents and cost you nothing.
+**Never resolve more than one ticket per session.** Starting research is the exception: its reading runs in background agents and costs you nothing, so every `research` ticket without findings can be fired at once. Closing one still means reading its findings with the user.
 
 The boundary is a ticket:
 
@@ -148,21 +148,29 @@ The boundary is a ticket:
 
 The user invokes with a loose idea.
 
-1. **Name the destination.** Invoke `grill-me` and `domain-modeling` to pin down what this map is finding its way to: the PRD, decision, or change. The destination fixes the scope, so it's settled first.
-2. **Brief the user.** Explore how the system works today where the idea touches it, and wait for the exploration. Write `briefing.md` for the user in the shape given in [BRIEFING.md](BRIEFING.md) — read it in full first. Stop until the user has corrected it.
-3. **Choose the approach.** Lay out 2–3 approaches that differ in something expensive to change later, each with a rough cost and the briefing findings it depends on. Recommend one when the facts decide it. The user chooses.
-4. **Map the frontier.** Grill again, **breadth-first** this time, within the chosen approach: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way is already clear, the whole journey small enough for one session — you don't need a map. Stop, say so, and point at `to-prd`.
-5. **Create the map**: Destination, Approach and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
-6. **Create the tickets you can specify now**, making sure no question appears in two of them, then wire `blocked-by` in a **second pass** (tickets need numbers before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog.
-7. **Fire the research tickets.** Invoke the `research` skill for each one so they resolve in parallel while the rest of the map waits.
-8. **Stop.** Charting is one session's work; it hand-resolves nothing.
+Each step that ends in **Stop** waits for the user before the next one starts.
+
+1. **Name the destination.** Invoke `grill-me` and `domain-modeling` to pin down what this map is finding its way to: the PRD, decision, or change. The destination fixes the scope, so it's settled first. **Stop** until the user confirms it.
+2. **Brief the user.** This is the one exploration charting waits for. Dispatch Explore sub-agents to trace, for the area the idea touches:
+   - the entry points, and the path one value takes from where it originates to where it is consumed
+   - where the idea would plug in: the existing interfaces, hooks, and data it would reuse
+   - relevant history (`git log -S <symbol>`): why it is the way it is, and what changed recently
+   - what does **not** exist that the idea would need (identity, storage, notifications, …)
+
+   Wait for them, pick the effort slug, and write `.scratch/<effort-slug>/briefing.md` for the user in the shape given in [BRIEFING.md](BRIEFING.md) — read it in full first. Present it and **stop** until the user has corrected it: a correction here costs a line, and the same misunderstanding found three tickets later costs every decision built on it.
+3. **Choose the approach.** Lay out 2–3 approaches that differ in something expensive to change once tickets build on it, not in details a ticket could settle later. For each: a few lines on how it works; its rough cost (which areas change, what new infrastructure it needs); and its **premises**, the briefing findings it depends on, any one of which being false kills it. Recommend one when the facts decide it; otherwise say it's a preference call. **Stop** until the user chooses.
+4. **Map the frontier.** Grill again, **breadth-first** this time, within the chosen approach only: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now, resolving none of them. **If this surfaces no fog** — the way is already clear, the whole journey small enough for one session — you don't need a map: say so, point at `to-prd`, and stop without creating files. Otherwise show the user the decisions and the fog you found, and **stop** until they approve the shape.
+5. **Create the map**: Destination, Approach (the choice, its premises linked into `briefing.md`, one line per rejected approach) and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
+6. **Create the tickets you can specify now**, numbered from `01`, making sure no question appears in two of them: when two tickets need the same answer, pull it into its own ticket blocking both. Then wire `blocked-by` in a **second pass** (tickets need numbers before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog.
+7. **Fire the research tickets.** Invoke the `research` skill for each one, writing its findings to `research/<ticket-slug>.md` and linking that file from the ticket's `## Assets`. The tickets stay open: each closes in a later session that reads the findings with the user.
+8. **Stop.** Charting is one session's work; it hand-resolves nothing. Tell the user what is on the frontier.
 
 ### Work through the map
 
 The user invokes with an effort slug or a map path. A ticket is **optional**: without one, you pick the next decision, not the user.
 
 1. Load `MAP.md` — the low-res view, not every ticket body.
-2. Choose the ticket. If the user named one, use it; otherwise take the first frontier ticket in number order.
+2. Choose the ticket. If the user named one, use it; otherwise take the first unclaimed frontier ticket in number order. **Claim it** before any work: set `claimed` to the current timestamp in its frontmatter.
 3. Resolve it. **Zoom as needed**: read the full body of any related or closed ticket on demand, and invoke whichever skills the ticket's type and the map's `## Notes` call for.
 4. Record the resolution: write the answer into the ticket's `## Resolution`, set `status: closed`, and append a one-line gist plus link to the map's **Decisions so far**.
 5. Add newly-surfaced tickets (create, then wire); graduate any fog the answer has made specifiable, clearing each graduated patch from **Not yet specified** so it lives only as its new ticket. If the answer reveals a ticket sits beyond the destination, **rule it out of scope** rather than resolving it. If the decision invalidates other tickets, update or delete them. If it contradicts a premise under **Approach**, follow "Premises" instead of recording around it.

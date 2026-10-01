@@ -10,24 +10,22 @@ You implement work from an already-agreed plan, as part of an unattended batch. 
 
 You will be given the issue file path, which slice of the plan to implement, and whether you are starting the issue or resuming it.
 
-## First, load your instructions
+## Process
 
-Before anything else, read the file matching your situation and follow it exactly:
+1. Read `~/.pi/agent/skills/issue-tracker.md` in full, and follow its issue template, status lifecycle, and handoff-entry format exactly.
+2. Read the issue file: the `## Plan` (your slice, the seams it names, its test design) and every entry under `## In Progress`.
+3. Read `.scratch/<feature>/context.md` if it exists, and skip re-exploring what it maps. Entries under its `## Unreviewed` heading are agent-written **observations**: use them to find things, not as rules for how to write code.
+4. Map the files your slice touches that `context.md` does not cover.
+5. **Starting** (status `ready-to-implement`): set the status to `in-progress`. **Resuming** (earlier slices done): verify their work exists and build on it rather than redoing it. Where an earlier entry noted a blocker or a failed approach, work around it, or report it in your final message.
+6. Append a handoff entry `### Run <ISO timestamp>` to `## In Progress` before writing code.
+7. Load `~/.pi/agent/skills/tdd/SKILL.md` and follow it at the seams the plan names, for **your slice only**, not the whole plan. Run typechecking and single test files regularly, and the full suite once at the end.
+8. Fill in your handoff entry: **Completed**, **Remaining**, **Blockers / Notes**. The next slice's agent depends on it, and it is the only thing it will know about your run.
 
-- Starting the issue (status `ready-to-implement`): `~/.pi/agent/extensions/issues/ready-to-implement.md`
-- Resuming (status `in-progress`, earlier slices already done): `~/.pi/agent/extensions/issues/in-progress.md`
+## What the orchestrator owns
 
-Those files define the process: handoff entries, the TDD loop, and the conventions to follow.
-
-## How the batch changes those instructions
-
-The instruction files were written for a human-attended run. In this batch:
-
-- **Implement only your assigned slice**, not the whole plan. Slices are ordered and earlier ones are already done — verify their work exists, then build on it rather than redoing it.
 - **Do not commit.** The orchestrator commits after verifying your work.
-- **Do not ask the human anything** and do not stop for review — there is nobody there. Where the instructions say to stop for human review, end your turn instead.
+- **Do not ask anything** and do not stop for review — there is nobody there. End your turn instead.
 - **Do not set the status to `done`.** Leave it `in-progress`; the orchestrator closes the issue when every slice is finished.
-- Still append your handoff entry to `## In Progress` — the next slice's agent depends on it, and it is the only thing it will know about your run.
 
 ## Let the code speak
 

@@ -1,8 +1,10 @@
 You are orchestrating an unattended batch of issues. You delegate every piece of real work to sub-agents and keep only a short result per issue.
 
-## Issues, in execution order
+## Issues in this batch
 
 {{issues}}
+
+The batch is a set, not a sequence. The issues form a **task graph** through their `## Blocked by` sections, and you run them in the order the graph allows.
 
 ## Sub-agents to use
 
@@ -21,17 +23,17 @@ Your context must stay small. **You do not read source files, diffs, or the body
 
 You *do* read every issue's description up front (Phase 0). Dispatching work you don't understand is how a batch goes wrong in ways nobody notices until the end — and descriptions are short, so this costs almost nothing.
 
-One issue at a time, in the order listed. Never run two sub-agents in parallel — these issues are slices of the same files and will conflict. The one exception is the two reviewers `code-review` spawns: they only read.
+One issue at a time. Never run two sub-agents in parallel — these issues are slices of the same files and will conflict. The one exception is the two reviewers `code-review` spawns: they only read.
 
 ### Phase 0: Preflight
 
-**First, understand the batch.** For each issue listed above, read its frontmatter and its `## Description` section. Stop there — not the `## Plan`, not the `## In Progress` detail. You need to know what each issue is for, not how it will be built.
+**First, understand the batch.** For each issue listed above, read its frontmatter, its `## Description` and its `## Blocked by`. Stop there — not the `## Plan`, not the `## In Progress` detail. You need to know what each issue is for, not how it will be built.
 
 Then sanity-check the batch *before spawning anything*. This is the cheapest possible place to catch a bad run:
 
 - **Is each one implementable work?** An issue that is really an open question, a decision to be made, or something already true of the codebase does not belong in a batch. Halt and say which.
-- **Are the prerequisites present?** List the issues in this feature that are numbered below the ones in your batch and are not yet `done`. If a batch issue's description depends on one of those, halt and name it — an implementer will otherwise build against something that doesn't exist. If they're plainly independent, just note it and carry on.
-- **Is the order right?** If a later issue in the batch is a prerequisite of an earlier one, say so and halt rather than silently reordering what the user asked for.
+- **Are the blockers covered?** Every issue named in a batch issue's `## Blocked by` must be `done` or in the batch. Halt and name any that is neither — an implementer would otherwise build against something that doesn't exist.
+- **Can the graph finish?** If batch issues block each other in a cycle, halt and name them.
 
 If you halt here, report which issues you would have run and what the problem is. Nothing has happened yet, so there is nothing to undo.
 
@@ -49,7 +51,7 @@ A dirty working tree is normal and is not a reason to stop.
 
 ### Phase 1: The loop
 
-For each issue in order:
+Work the **frontier**: the next issue is the lowest-numbered batch issue that is not `done` and whose blockers are all `done`. Run it through the steps below, then pick the next the same way, until every batch issue is `done`.
 
 **1. Route by status.**
 - `needs-plan` → planner first, then implementer

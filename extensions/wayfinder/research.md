@@ -12,18 +12,20 @@ Map file: `{{map_path}}`
 
 1. Read `{{map_path}}` — the low-resolution view. Note the **Destination**: every choice in this session serves it.
 2. Read the **Notes** section and consult any skills it names
-3. Read the ticket file
+3. Read the ticket file, then claim it: set `claimed: {{timestamp}}` in its frontmatter, so a parallel session sees it is taken. Overwrite an existing claim; the user picked this ticket knowing it was marked.
 4. Zoom only where you must: read the full body of a closed ticket when this ticket depends on its decision. Do not read every ticket.
 
 Refer to the map and to each ticket by its **title**, never by a bare number, path, or slug.
 
 ## Phase 2: Research
 
-Invoke the `research` skill with the ticket's `## Question`. It backgrounds the reading and writes its findings to a Markdown file.
+If `## Assets` already links a findings file, charting fired this research: read that file and go to Phase 3. Do not research again.
 
-Put the findings under `{{effort_dir}}/research/` and link that file from the ticket's `## Assets`. Do not paste the findings into the ticket.
+Otherwise invoke the `research` skill with the ticket's `## Question`. It backgrounds the reading and writes its findings to a Markdown file. Put the findings at `{{effort_dir}}/research/<ticket-slug>.md` and link that file from the ticket's `## Assets`. Do not paste the findings into the ticket.
 
-## Phase 3: Answer the question
+## Phase 3: Answer the question with the user
+
+The ticket stays open until a human has read what the decision rests on. Point the user at the findings file, give them the answer you draw from it in a few lines, and **stop until they have read it** and agreed or corrected the answer.
 
 Write the answer to the question, not a summary of the reading. The resolution must be short enough that a later session can act on it without opening the research note.
 
@@ -47,4 +49,4 @@ Write the answer to the question, not a summary of the reading. The resolution m
 
 ## One exception to the one-ticket rule
 
-Research tickets run as background agents and cost you no context, so **several may run in parallel**. If other research tickets sit on the frontier, fire them too. This exception covers research tickets only: a `grilling`, `seam`, `prototype`, or `task` ticket still ends the session.
+Research reading runs in background agents and costs you no context, so **several may run in parallel**. If other research tickets on the frontier have no findings file yet, fire them too, each writing to its own `research/<ticket-slug>.md` linked from its `## Assets`. They stay open for their own sessions. Closing a research ticket, like any other, ends the session.

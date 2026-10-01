@@ -12,7 +12,7 @@ Map file: `{{map_path}}`
 
 1. Read `{{map_path}}` — the low-resolution view. Note the **Destination**: every choice in this session serves it.
 2. Read the **Notes** section and consult any skills it names
-3. Read the ticket file
+3. Read the ticket file, then claim it: set `claimed: {{timestamp}}` in its frontmatter, so a parallel session sees it is taken. Overwrite an existing claim; the user picked this ticket knowing it was marked.
 4. Zoom only where you must: read the full body of a closed ticket when this ticket depends on its decision. Do not read every ticket.
 
 Refer to the map and to each ticket by its **title**, never by a bare number, path, or slug.

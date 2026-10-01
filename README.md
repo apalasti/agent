@@ -26,12 +26,12 @@ For an idea too big and too foggy to plan in one session, `wayfinder` charts it 
 decision tickets under `.scratch/<effort>/`, worked one per session until the way is clear:
 
 ```
-loose idea → wayfinder → to-prd → to-issues → /issue or /orchestrate
+loose idea → wayfinder → to-prd → to-issues → /orchestrate
 ```
 
 The map is `MAP.md`; its tickets are `tickets/<NN>-<slug>.md`, typed `research` / `prototype` /
 `grilling` / `seam` / `task` and blocked via `blocked-by` frontmatter. They live apart from `issues/` so the
-`/issue` and `/orchestrate` pickers don't try to implement them. When the map is exhausted, `to-prd` reads
+`/orchestrate` picker doesn't try to implement them. When the map is exhausted, `to-prd` reads
 it and the closed tickets into a PRD, and the effort rejoins the issue workflow below.
 
 Skip it when the way is already clear — go straight to `to-prd`.
@@ -44,12 +44,15 @@ Issues live in `.scratch/<feature>/issues/<NN>-<slug>.md` with YAML frontmatter:
 needs-plan → ready-to-implement → in-progress → done
 ```
 
-| Command | What happens |
-|---------|-------------|
-| `/issue [extra instructions]` | Pick an open issue from the selector and prefill the editor with the generated prompt (optionally appending inline extra instructions) |
-| Select a `needs-plan` issue | Collaborative planning: explore codebase, design plan + tests with human, write to file |
-| Select a `ready-to-implement` issue | TDD implementation: tests first, then code, stop for human review before commit |
-| Select an `in-progress` issue | Resume: read previous handoff entries, continue where last agent left off |
+`/orchestrate [01 03 04]` picks a batch of open issues (one is fine) and prefills the editor with an unattended run. The batch runs serially in the order its `## Blocked by` sections allow, each issue routed by status:
+
+| Status | What happens |
+|--------|-------------|
+| `needs-plan` | `issue-planner` writes the plan and its slices, or stops the batch with one question |
+| `ready-to-implement` | `issue-implementer` builds each slice by TDD; the orchestrator runs the checks and commits per slice |
+| `in-progress` | A resuming `issue-implementer` picks up from the handoff entries |
+
+Finished issues are reviewed in chunks by `code-review`. The run ends with a report and a `git reset --soft` undo; it never pushes.
 
 ## Watch PR Workflow
 

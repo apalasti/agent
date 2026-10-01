@@ -12,7 +12,7 @@ Map file: `{{map_path}}`
 
 1. Read `{{map_path}}` — the low-resolution view. Note the **Destination**: every choice in this session serves it.
 2. Read the **Notes** section and consult any skills it names
-3. Read the ticket file
+3. Read the ticket file, then claim it: set `claimed: {{timestamp}}` in its frontmatter, so a parallel session sees it is taken. Overwrite an existing claim; the user picked this ticket knowing it was marked.
 4. **Read the closed ticket this one was graduated from**, in full. It carries the requirement this interface has to serve. Quote the line that forces this interface to exist, and weigh it: **hard** (the destination fails without it) or **nice-to-have** (a bonus someone mentioned). Open the session by showing the user that quote and your weighing; every candidate is judged against the hard requirements only.
 5. Zoom only where you must: read the full body of a closed ticket when this ticket depends on its decision.
 

@@ -12,7 +12,6 @@ interface Issue {
   number: string;
   title: string;
   status: string;
-  label: string;
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -69,23 +68,11 @@ function findIssues(root: string): Issue[] {
         number: slug.match(/^(\d+)/)?.[1] ?? "",
         title: content.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? slug,
         status,
-        label: `${feature.name} / [${status}] ${slug}`,
       });
     }
   }
 
   return issues;
-}
-
-function buildPrompt(issue: Issue, promptDir: string): string | null {
-  const templatePath = join(promptDir, `${issue.status}.md`);
-  if (!existsSync(templatePath)) return null;
-
-  const timestamp = new Date().toISOString().slice(0, 16).replace("T", "T") + "Z";
-
-  return readFileSync(templatePath, "utf8")
-    .replace(/\{\{issue_path\}\}/g, issue.path)
-    .replace(/\{\{timestamp\}\}/g, timestamp);
 }
 
 function buildOrchestratorPrompt(batch: Issue[], promptDir: string): string {
@@ -120,7 +107,7 @@ function pickBatchInteractively(ctx: any, issues: Issue[]): Promise<Issue[] | un
   return ctx.ui
     .custom<PickerRow[] | undefined>(
       (_tui: any, theme: any, _kb: any, done: (r: PickerRow[] | undefined) => void) =>
-        new MultiSelectComponent(theme, "Which issues should run, in order?", rows, done),
+        new MultiSelectComponent(theme, "Which issues should run?", rows, done),
     )
     .then((picked: PickerRow[] | undefined) =>
       picked?.map((row) => sorted.find((i) => i.path === row.key)!),
@@ -144,7 +131,7 @@ async function pickBatchByNumbers(
   const raw =
     args?.trim() ||
     (await ctx.ui.input(
-      `Which issues, in order? (open: ${candidates.map((i) => i.number).join(", ")})`,
+      `Which issues? (open: ${candidates.map((i) => i.number).join(", ")})`,
       candidates.map((i) => i.number).join(" "),
     ));
   if (!raw?.trim()) return undefined;
@@ -161,52 +148,9 @@ async function pickBatchByNumbers(
   return batch;
 }
 
-function appendUserPrompt(basePrompt: string, userPrompt?: string): string {
-  const extra = userPrompt?.trim();
-  if (!extra) return basePrompt;
-
-  return `${basePrompt}\n\n## Additional instructions from user\n${extra}`;
-}
-
 // ─── extension ────────────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
-  pi.registerCommand("issue", {
-    description: "Pick an open issue and prepare the prompt in the editor",
-    handler: async (args, ctx) => {
-      const root = await getRepoRoot(pi, ctx.cwd);
-      const issues = findIssues(root);
-
-      if (issues.length === 0) {
-        ctx.ui.notify("No open issues found in .scratch/", "info");
-        return;
-      }
-
-      const labels = issues.map((i) => i.label);
-      const selected = await ctx.ui.select("Select an issue to work on:", labels);
-      if (!selected) return;
-
-      const issue = issues.find((i) => i.label === selected);
-      if (!issue) return;
-
-      const prompt = buildPrompt(issue, __dirname);
-      if (!prompt) {
-        ctx.ui.notify(
-          `No prompt template found for status "${issue.status}" — expected ${issue.status}.md next to the extension`,
-          "error",
-        );
-        return;
-      }
-
-      const finalPrompt = appendUserPrompt(prompt, args);
-      ctx.ui.setEditorText(`${finalPrompt}\n\n`);
-      ctx.ui.notify(
-        "Issue prompt added to editor. Add any extra context, then press Enter to run.",
-        "info",
-      );
-    },
-  });
-
   pi.registerCommand("orchestrate", {
     description: "Run a batch of issues unattended: /orchestrate 01 03 04",
     handler: async (args, ctx) => {

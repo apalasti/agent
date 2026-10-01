@@ -29,7 +29,7 @@ status: needs-plan
 <links to blocking issues, or "None - can start immediately">
 
 ## Plan
-<!-- filled in collaboratively during needs-plan → ready-to-implement -->
+<!-- filled in by issue-planner during needs-plan → ready-to-implement -->
 
 ## In Progress
 <!-- each agent run appends a handoff entry here -->
@@ -94,7 +94,7 @@ The `wayfinder` skill charts a large, foggy effort as a map of decision tickets.
     └── <NN>-<slug>.md
 ```
 
-**Wayfinder tickets live in `tickets/`, never `issues/`.** The `/issue` and `/orchestrate` pickers scan `issues/` and treat everything not `done` as implementable, so a decision ticket there gets picked up and TDD-implemented.
+**Wayfinder tickets live in `tickets/`, never `issues/`.** The `/orchestrate` picker scans `issues/` and treats everything not `done` as implementable, so a decision ticket there gets picked up and TDD-implemented.
 
 ### The map
 
@@ -123,13 +123,13 @@ blocked-by: [02, 05]
 | `type` | `research`, `prototype`, `seam`, `grilling`, `task` |
 | `status` | `open`, `closed` |
 | `blocked-by` | ticket numbers, `[]` if none |
-| `claimed` | ISO timestamp, optional — only needed when running parallel sessions |
+| `claimed` | ISO timestamp, written by the session that takes the ticket before any other work; absent until then |
 
 Ticket numbers are their `NN` prefix, numbered from `01`, in a sequence separate from `issues/`.
 
 ### Blocking and the frontier
 
-A ticket is **unblocked** when every number in its `blocked-by` refers to a `status: closed` ticket. The **frontier** is the open, unblocked tickets — computed by reading `tickets/` and checking each one's blockers.
+A ticket is **unblocked** when every number in its `blocked-by` refers to a `status: closed` ticket. The **frontier** is the open, unblocked tickets — computed by reading `tickets/` and checking each one's blockers. A claimed ticket stays on the frontier, marked as taken: a session that dies never releases its claim, so the user decides whether to take it over.
 
 ### Resolving a ticket
 

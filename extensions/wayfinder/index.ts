@@ -12,6 +12,7 @@ interface Ticket {
   type: string;
   status: string;
   blockedBy: string[];
+  claimed?: string;
 }
 
 interface Effort {
@@ -77,6 +78,7 @@ function readTicket(path: string): Ticket {
     type: frontmatter.type ?? "grilling",
     status: frontmatter.status ?? "open",
     blockedBy: parseBlockedBy(frontmatter["blocked-by"]),
+    claimed: frontmatter.claimed || undefined,
   };
 }
 
@@ -141,6 +143,7 @@ function partitionOpen(effort: Effort): { frontier: Ticket[]; blocked: Ticket[] 
  * One row per frontier ticket, so the user selects the ticket itself. Blocked
  * tickets are left out: pi's `select` takes plain strings and cannot render a
  * row the user is unable to choose. Their count goes in the picker title.
+ * Claimed tickets stay selectable, since a crashed session never releases its claim.
  */
 function buildChoices(efforts: Effort[]): { choices: Choice[]; blockedCount: number } {
   const choices: Choice[] = [];
@@ -152,8 +155,9 @@ function buildChoices(efforts: Effort[]): { choices: Choice[]; blockedCount: num
 
     for (const ticket of frontier) {
       const template = TICKET_TYPES.includes(ticket.type) ? ticket.type : "grilling";
+      const claim = ticket.claimed ? `  ⏳ claimed ${ticket.claimed}` : "";
       choices.push({
-        label: `${effort.slug} / #${ticket.number} [${ticket.type}] ${ticket.title}`,
+        label: `${effort.slug} / #${ticket.number} [${ticket.type}] ${ticket.title}${claim}`,
         template,
         effort,
         ticket,
