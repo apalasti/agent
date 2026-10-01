@@ -7,5 +7,3 @@ This PRD is the destination of a wayfinder map, and its decisions are on disk ra
 - Closed **`seam`** tickets have already settled their interfaces: carry each `## Resolution` shape into Implementation Decisions verbatim
 - Closed `prototype` tickets carry their settled design or behaviour per the issue tracker's **Decisions prose cannot carry**: design transcripts linked under `## Assets` are cited as binding, and proved rules are written into the decision they support
 - Research notes under `research/` get cited in Further Notes
-
-The interviewing already happened, ticket by ticket, so synthesize from the tickets rather than asking the user again.

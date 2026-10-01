@@ -6,7 +6,7 @@ Issues and PRDs for this repo live as markdown files in `.scratch/`.
 
 - One feature per directory: `.scratch/<feature-slug>/`
 - The PRD is `.scratch/<feature-slug>/PRD.md`
-- Implementation issues are `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01`
+- Implementation issues are one file per issue at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01`, never a single combined file
 - Status is tracked in the YAML frontmatter of each issue file (see below)
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
 
@@ -94,7 +94,7 @@ The `wayfinder` skill charts a large, foggy effort as a map of decision tickets.
     └── <NN>-<slug>.md
 ```
 
-**Wayfinder tickets live in `tickets/`, never `issues/`.** The `/issue` and `/goal` pickers scan `issues/` and treat everything not `done` as implementable, so a decision ticket there gets picked up and TDD-implemented.
+**Wayfinder tickets live in `tickets/`, never `issues/`.** The `/issue` and `/orchestrate` pickers scan `issues/` and treat everything not `done` as implementable, so a decision ticket there gets picked up and TDD-implemented.
 
 ### The map
 
@@ -129,9 +129,7 @@ Ticket numbers are their `NN` prefix, numbered from `01`, in a sequence separate
 
 ### Blocking and the frontier
 
-There is no native dependency relationship here, so `blocked-by` in the frontmatter is the fallback convention. A ticket is **unblocked** when every number in its `blocked-by` refers to a `status: closed` ticket. The **frontier** is the open, unblocked tickets — computed by reading `tickets/` and checking each one's blockers.
-
-The cost of the fallback is that the frontier isn't visible without reading the directory. Keep `MAP.md` short enough to compensate.
+A ticket is **unblocked** when every number in its `blocked-by` refers to a `status: closed` ticket. The **frontier** is the open, unblocked tickets — computed by reading `tickets/` and checking each one's blockers.
 
 ### Resolving a ticket
 
@@ -147,9 +145,9 @@ A `seam` ticket is the exception to "linked, not pasted": its resolution **is** 
 
 ### When a decision is reversed later
 
-Decisions get reversed downstream — the code gets built, the call sites become real, and the shape turns out wrong. When that happens, **do not edit the closed ticket's `## Resolution`**. Instead:
+Decisions get reversed downstream — the code gets built, the call sites become real, and the shape turns out wrong. This is the ticket-specific case of the global rule to update the artifact that recorded a decision: a closed ticket is superseded, not rewritten. Leave its `## Resolution` text as it stands and:
 
 1. Add one line at the top of that section: `> Superseded by <link to where the new decision lives>`
 2. Record the new decision where it now stands. Before hand-off, that is a new ticket, and the map's **Decisions so far** gist points at it. After hand-off (the map carries the `Handed off` banner), it is the PRD, with one line naming what it replaced, and the issue it touched; the map stays as history.
 
-The ticket is the primary source for what was believed at the time, and the PRD links back to it. Rewriting it destroys the record — and the reason the first answer turned out wrong is usually the most useful thing in it. An artifact left carrying a superseded design as settled is worse than either: the next agent reads it and inherits a contract the code does not have.
+The ticket is the primary source for what was believed at the time, and the PRD links back to it. Rewriting it destroys the record — and the reason the first answer turned out wrong is usually the most useful thing in it.

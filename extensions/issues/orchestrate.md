@@ -6,7 +6,7 @@ You are orchestrating an unattended batch of issues. You delegate every piece of
 
 ## Sub-agents to use
 
-Spawn these by type. Their model, tools and instructions are already configured, including that they neither commit nor spawn sub-agents: pass a task, not a process.
+Spawn these by type. Their model, tools and instructions are already configured, including that they do not commit: pass a task, not a process.
 
 | Type | Task prompt should contain |
 |---|---|
@@ -42,7 +42,7 @@ Carry the descriptions with you — they are what lets you write the final repor
 1. `git status --porcelain` and record every path listed, tracked and untracked alike. This is the **carry-over set** — the user's own in-flight work (env files, agent instructions, scratch edits). It is not yours. You never stage it, never commit it, never revert it, and never mention it as part of the batch's output.
 2. Record the starting SHA: `git rev-parse HEAD`
 3. Record the branch: `git rev-parse --abbrev-ref HEAD`
-4. Work out the repo's test, typecheck and lint commands (from `AGENTS.md` and what it points to, `CONTEXT.md`, `package.json` scripts, `justfile`, `Makefile`, whatever this repo uses), **per area**: a repo with a frontend and a backend has a full set for each, keyed by the paths it covers. Take each area's full suite, not a CI subset or tier. You will run these yourself after every slice.
+4. Work out the repo's test, typecheck and lint commands (from `AGENTS.md` and what it points to, `package.json` scripts, `justfile`, `Makefile`, whatever this repo uses), **per area**: a repo with a frontend and a backend has a full set for each, keyed by the paths it covers. Take each area's full suite, not a CI subset or tier. You will run these yourself after every slice.
 5. Record the `## Unreviewed` section of `.scratch/<feature>/context.md` as it stands (it may be absent).
 
 A dirty working tree is normal and is not a reason to stop.

@@ -20,7 +20,7 @@ Wayfinder runs **before** `to-prd`:
 loose idea → wayfinder map (decisions, HITL, one ticket per session)
            → to-prd → PRD.md
            → to-issues → .scratch/<effort>/issues/
-           → /goal (execution, AFK)
+           → /issue or /orchestrate (execution)
 ```
 
 If the way to the destination is already clear enough to hold in one head, skip this skill and go straight to `to-prd`.
@@ -98,7 +98,7 @@ Every ticket is either **HITL** (worked _with_ a human who speaks for themselves
   A question is a `seam` ticket when being wrong is **expensive to reverse**: a persisted data shape or migration, a wire or URL contract crossing a service or frontend boundary, an existing interface with callers outside this change. That is the whole bar.
 
   Otherwise it is **not** a seam ticket, however many issues will build on it. A shape that is reversible inside one session, internal to a single issue, with no persistence and no consumers beyond it, belongs in an issue's plan, settled with the code in front of whoever writes it. Charting that kind of shape onto the map pre-empts a decision the implementer should make, and it will be re-decided against the running code anyway.
-- **`grilling`** (HITL) — Conversation. The default case. Invoke the `grill-me` skill.
+- **`grilling`** (HITL) — Conversation. The default case. Invoke the `grill-me` and `domain-modeling` skills.
 - **`task`** (HITL or AFK) — Manual work that must happen before a _decision_ can be made: nothing to decide, prototype, or research, but the discussion is blocked until it's done. Signing up for a service so its API can be judged, provisioning access, moving data so its shape can be seen. This is the one type that _does_ rather than decides, and it earns its place by unblocking a decision, not by delivering the destination. Drive it alone where you can; otherwise hand the human a precise checklist. The resolution records what was done and any facts later tickets depend on (where credentials live, new URLs, row counts).
 
 `task` tickets never become issues — they're neither decisions nor implementation slices. They get done during wayfinding and disappear.
@@ -124,8 +124,6 @@ Out-of-scope work never graduates, so it returns only if the destination is redr
 
 When a ticket that already exists turns out to sit past the destination (mis-scoped while charting, or exposed by a resolution), **close it** and leave one line in **Out of scope**: the gist plus why it's out, linking the closed ticket. It stays out of **Decisions so far**, which records the route actually walked; a scope boundary isn't a step on it.
 
-The **Out of scope** section carries straight into the PRD's own Out of scope section when the map is handed off.
-
 ## Premises
 
 The approach stands on the premises listed under **Approach**, each a finding from `briefing.md`. When a ticket's resolution, a research finding, or the user contradicts one, **do not absorb it as a new constraint** and carry on. Stop, tell the user which premise fell and what it costs the approach, and open a grilling ticket "Re-choose the approach" that blocks every open ticket.
@@ -139,10 +137,10 @@ The same applies when resolving a ticket would need new infrastructure the appro
 The boundary is a ticket:
 
 - **Charting is its own session.** It ends when the map exists and the research agents are running. Resolving a ticket in the charting session is a mistake twice over — the breadth-first grilling has already eaten the context, and you're still in survey mode, which is the wrong mode for deciding.
-- **Each `grilling`, `prototype`, and `task` ticket is one session.** Load `MAP.md`, zoom only into the closed tickets that matter, resolve, record, stop.
+- **Each `grilling`, `seam`, `prototype`, and `task` ticket is one session.** Load `MAP.md`, zoom only into the closed tickets that matter, resolve, record, stop.
 - **Stop when the ticket is recorded.** The temptation right then is "the next ticket just unblocked, let's keep going" — that's exactly what this rule exists to stop, because your judgment on the next ticket is now soaked in the last one's specifics.
 
-**Context pressure means the ticket was too big — split it, don't resume it.** This inverts the `/goal` loop, which aborts near the context limit, writes a handoff, and respawns on the same issue. That works because implementation is AFK. Wayfinding is mostly HITL, and respawning mid-grilling drops the human into a conversation with no memory of the last hour of dialogue. So when a ticket runs long: record what _is_ settled as its resolution, close it, and create a follow-up ticket for the remainder.
+**Context pressure means the ticket was too big — split it, don't resume it.** This inverts implementation, where a run near the context limit writes a handoff and a fresh agent resumes the same issue. That works because implementation follows an agreed plan. Wayfinding is mostly HITL, and respawning mid-grilling drops the human into a conversation with no memory of the last hour of dialogue. So when a ticket runs long: record what _is_ settled as its resolution, close it, and create a follow-up ticket for the remainder.
 
 ## Invocation
 
@@ -150,7 +148,7 @@ The boundary is a ticket:
 
 The user invokes with a loose idea.
 
-1. **Name the destination.** Invoke `grill-me` to pin down what this map is finding its way to: the PRD, decision, or change. The destination fixes the scope, so it's settled first.
+1. **Name the destination.** Invoke `grill-me` and `domain-modeling` to pin down what this map is finding its way to: the PRD, decision, or change. The destination fixes the scope, so it's settled first.
 2. **Brief the user.** Explore how the system works today where the idea touches it, and wait for the exploration. Write `briefing.md` for the user in the shape given in [BRIEFING.md](BRIEFING.md) — read it in full first. Stop until the user has corrected it.
 3. **Choose the approach.** Lay out 2–3 approaches that differ in something expensive to change later, each with a rough cost and the briefing findings it depends on. Recommend one when the facts decide it. The user chooses.
 4. **Map the frontier.** Grill again, **breadth-first** this time, within the chosen approach: fan out across the whole space rather than deep on any one thread, surfacing the open decisions and the first steps takeable now. **If this surfaces no fog** — the way is already clear, the whole journey small enough for one session — you don't need a map. Stop, say so, and point at `to-prd`.

@@ -26,7 +26,6 @@ The instruction files were written for a human-attended run. In this batch:
 - **Implement only your assigned slice**, not the whole plan. Slices are ordered and earlier ones are already done — verify their work exists, then build on it rather than redoing it.
 - **Do not commit.** The orchestrator commits after verifying your work.
 - **Do not ask the human anything** and do not stop for review — there is nobody there. Where the instructions say to stop for human review, end your turn instead.
-- **Do not spawn sub-agents.**
 - **Do not set the status to `done`.** Leave it `in-progress`; the orchestrator closes the issue when every slice is finished.
 - Still append your handoff entry to `## In Progress` — the next slice's agent depends on it, and it is the only thing it will know about your run.
 

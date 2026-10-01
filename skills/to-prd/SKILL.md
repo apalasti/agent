@@ -17,11 +17,11 @@ If `.scratch/<effort-slug>/MAP.md` exists, read [from-map.md](from-map.md) and f
 
 ### 2. Explore the codebase
 
-Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
+Explore the repo to understand the current state of the codebase, if you haven't already. Use the vocabulary in `GLOSSARY.md` (if it exists) throughout the PRD, and respect any ADRs in the area you're touching.
 
 ### 3. Sketch the modules and the seams under test
 
-Sketch the major modules you will build or modify. Look for opportunities to extract **deep modules**: a lot of behaviour behind a small interface that rarely changes.
+Sketch the major modules you will build or modify. Look for opportunities to extract **deep modules** (see the `codebase-design` skill).
 
 Where a `seam` ticket settled an interface, that shape is already decided: carry it, don't re-open it. Where one didn't and the interface is expensive to reverse, show the user the **signature**, not a description of it, and the call sites it produces. A sentence about where a field sits or how a parameter threads is not a settled interface, however confident it sounds.
 

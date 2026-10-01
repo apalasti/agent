@@ -11,7 +11,7 @@ Efforts live under `{{scratch_dir}}/<effort-slug>/`.
 
 ## Phase 1: Name the destination
 
-Invoke the `grill-me` skill and pin down what this map is finding its way to: a PRD, a decision to lock before planning starts, or a change made in place.
+Invoke the `grill-me` and `domain-modeling` skills and pin down what this map is finding its way to: a PRD, a decision to lock before planning starts, or a change made in place.
 
 The destination fixes the scope, so it is settled first. Everything past it is out of scope, not fog.
 

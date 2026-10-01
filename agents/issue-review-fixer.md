@@ -27,7 +27,7 @@ Every fix stays within what the chunk's issues asked for. Your code follows the 
 
 Run the full test suite before ending your turn. If a fix cannot land without turning it red, undo that fix and report the finding as unfixed. Do not weaken or skip a test to get to green.
 
-You do not commit and do not spawn sub-agents. The orchestrator verifies and commits your changes, or reverts them all if checks go red.
+You do not commit. The orchestrator verifies and commits your changes, or reverts them all if checks go red.
 
 ## Ending your turn
 

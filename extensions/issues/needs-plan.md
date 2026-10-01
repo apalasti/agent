@@ -16,7 +16,7 @@ The deliverable is an agreed plan. You reach agreement through **three review ro
 1. Read the issue file carefully
 2. Check for `.scratch/<feature>/context.md` and read it if it exists — it contains a pre-built codebase map for this feature. Only re-read files directly relevant to this issue rather than re-exploring everything. Entries under its `## Unreviewed` heading are agent-written **observations**: use them to find things, not as rules for how to write code.
 3. **Do not guess the codebase structure.** Map out the relevant files, read their contents, and understand the execution flow before proposing anything
-4. Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
+4. Read `GLOSSARY.md` and any ADRs in the area you're touching, where they exist
 
 Do not narrate this phase. The next thing the user sees from you is the Round 1 message.
 

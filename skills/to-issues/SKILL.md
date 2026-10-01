@@ -19,20 +19,19 @@ Work from whatever is already in the conversation context. If the feature has a 
 
 ### 2. Explore the codebase (optional)
 
-If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
+If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the vocabulary in `GLOSSARY.md` (if it exists), and respect ADRs in the area you're touching.
 
 Look for opportunities to **prefactor**: make the change easy, then make the easy change.
 
 ### 3. Draft vertical slices
 
-Break the plan into **tracer bullet** issues. Each issue is a thin vertical slice that cuts through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
+Break the plan into **tracer bullet** issues. Give each one its **Blocked by**: the other issues that must complete before it can start. An issue with no blockers can start immediately.
 
 <vertical-slice-rules>
-- Each slice delivers a narrow but COMPLETE path through every layer (schema, API, UI, tests)
+- Each slice cuts a narrow but COMPLETE path through every layer (schema, API, UI, tests): vertical, NOT a horizontal slice of one layer
 - A completed slice is demoable or verifiable on its own
 - Each slice is small enough for one agent to plan in a single fresh context window
 - Prefactoring slices come first
-- Prefer many thin slices over few thick ones
 </vertical-slice-rules>
 
 If you cannot draw a vertical slice because the structure it would cut through does not exist yet — the tables aren't settled, the wire contract isn't settled — that is a **missing seam decision, not a slicing problem**. Do not invent the shape here: every slice would pin itself to it, unreviewed, and it is expensive to reverse by the time anyone notices. Name what is undecided and stop; it needs a `seam` ticket before the breakdown can be drawn.
@@ -40,7 +39,7 @@ If you cannot draw a vertical slice because the structure it would cut through d
 **Wide refactors are the exception to vertical slicing.** A wide refactor is one mechanical change (rename a column, retype a shared symbol) whose blast radius fans across the codebase, so no vertical slice can land green. Sequence it as **expand–contract**:
 
 1. **Expand**: add the new form beside the old, so nothing breaks.
-2. **Migrate**: move the call sites over in batches sized by blast radius (per package, per directory), one issue per batch, each blocked by the expand. The old form still exists, so every batch leaves the suite green. A batch that cannot stay green on its own merges with its neighbour until it can.
+2. **Migrate**: move the call sites over in batches sized by blast radius (per package, per directory), one issue per batch, each blocked by the expand. The old form still exists, so every batch leaves the suite green. A batch that cannot stay green on its own merges with its neighbour until it can. When a merged batch would no longer fit one context window, keep the batches but let them share an integration branch, all blocking a final integrate-and-verify issue; green is promised only there.
 3. **Contract**: delete the old form once no caller remains, blocked by every migrate batch.
 
 ### 4. Quiz the user
@@ -66,7 +65,7 @@ Iterate until the user approves the breakdown.
 
 For each approved slice, publish a new issue using the issue tracker's template, with `status: needs-plan` unless instructed otherwise. Publish in dependency order (blockers first) so **Blocked by** can reference real issues.
 
-- **Description**: opens with a link to the PRD (`../PRD.md`) when there is one, then the slice's end-to-end behaviour, not layer-by-layer implementation. Leave out file paths and code, except for the decisions the issue tracker's **Decisions prose cannot carry** lists; a design transcript covering a surface this slice builds is always linked.
+- **Description**: opens with a link to the PRD (`../PRD.md`), or to the parent issue when the source was one, then the slice's end-to-end behaviour, not layer-by-layer implementation. Leave out file paths and code, except for the decisions the issue tracker's **Decisions prose cannot carry** lists; a design transcript covering a surface this slice builds is always linked.
 - **Acceptance criteria**: each one checkable on the finished slice.
 
 Leave any parent issue open and unmodified.

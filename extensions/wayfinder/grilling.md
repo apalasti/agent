@@ -19,7 +19,7 @@ Refer to the map and to each ticket by its **title**, never by a bare number, pa
 
 ## Phase 2: Grill
 
-Invoke the `grill-me` skill and work the ticket's `## Question` with the user.
+Invoke the `grill-me` and `domain-modeling` skills and work the ticket's `## Question` with the user.
 
 This is a HITL ticket. It resolves only through the live exchange. **Never answer your own questions on the user's behalf** — a grilling session that does that has broken the ticket.
 

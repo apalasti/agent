@@ -26,12 +26,12 @@ For an idea too big and too foggy to plan in one session, `wayfinder` charts it 
 decision tickets under `.scratch/<effort>/`, worked one per session until the way is clear:
 
 ```
-loose idea → wayfinder → to-prd → to-issues → /goal
+loose idea → wayfinder → to-prd → to-issues → /issue or /orchestrate
 ```
 
 The map is `MAP.md`; its tickets are `tickets/<NN>-<slug>.md`, typed `research` / `prototype` /
-`grilling` / `task` and blocked via `blocked-by` frontmatter. They live apart from `issues/` so the
-`/issue` and `/goal` pickers don't try to implement them. When the map is exhausted, `to-prd` reads
+`grilling` / `seam` / `task` and blocked via `blocked-by` frontmatter. They live apart from `issues/` so the
+`/issue` and `/orchestrate` pickers don't try to implement them. When the map is exhausted, `to-prd` reads
 it and the closed tickets into a PRD, and the effort rejoins the issue workflow below.
 
 Skip it when the way is already clear — go straight to `to-prd`.

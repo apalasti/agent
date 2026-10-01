@@ -47,4 +47,4 @@ Write the answer to the question, not a summary of the reading. The resolution m
 
 ## One exception to the one-ticket rule
 
-Research tickets run as background agents and cost you no context, so **several may run in parallel**. If other research tickets sit on the frontier, fire them too. This exception covers research tickets only: a `grilling`, `prototype`, or `task` ticket still ends the session.
+Research tickets run as background agents and cost you no context, so **several may run in parallel**. If other research tickets sit on the frontier, fire them too. This exception covers research tickets only: a `grilling`, `seam`, `prototype`, or `task` ticket still ends the session.
