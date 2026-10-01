@@ -13,7 +13,7 @@ Map file: `{{map_path}}`
 1. Read `{{map_path}}` — the low-resolution view. Note the **Destination**: every choice in this session serves it.
 2. Read the **Notes** section and consult any skills it names
 3. Read the ticket file
-4. **Read the closed ticket this one was graduated from**, in full. It carries the requirement this interface has to serve — you are settling the shape that satisfies it, not revisiting what it must do.
+4. **Read the closed ticket this one was graduated from**, in full. It carries the requirement this interface has to serve. Quote the line that forces this interface to exist, and weigh it: **hard** (the destination fails without it) or **nice-to-have** (a bonus someone mentioned). Open the session by showing the user that quote and your weighing; every candidate is judged against the hard requirements only.
 5. Zoom only where you must: read the full body of a closed ticket when this ticket depends on its decision.
 
 Refer to the map and to each ticket by its **title**, never by a bare number, path, or slug.
@@ -23,7 +23,7 @@ Refer to the map and to each ticket by its **title**, never by a bare number, pa
 The whole point of this ticket type is that the user is reacting to a **shape they can see**, not to a description of one. Prose about where a field sits or how a parameter threads is what this session exists to avoid producing.
 
 1. **Pull what exists today from the codebase, not from memory.** The real signature, the real type, the real table. If the interface is new, say so and render what it would sit next to.
-2. **Build two candidates.** Not one with a rationale — two. Even when you are confident, the alternative is what makes the choice legible, and it is often what the user picks.
+2. **Build two candidates, one of them minimal.** The **minimal** candidate is the smallest shape that meets only the hard requirements; when every requirement is nice-to-have, it is "build nothing" and its call sites show what the callers do instead. The other candidate is your best shape for the full requirement. The pair is what makes the choice legible, and the minimal one is often what the user picks.
 3. For each candidate, render:
    - **The shape.** The signature, type declaration, endpoint, or table-and-column sketch, as code.
    - **What calls it.** Every call site this candidate produces or changes. For a data model, the access patterns instead: the reads each surface needs, the writes, what is unique, what cascades.
@@ -51,7 +51,7 @@ This is a HITL ticket. Show both candidates and settle the ticket's `## Question
 
 - **One ticket per session.**
 - **Render, do not build.** The deliverable is a settled shape, not a working implementation. Stubs and sketches only — enough to read, not to run.
-- **Two candidates, always.** A single option is a recommendation, and the user cannot judge a recommendation against an alternative they have not seen.
+- **Two candidates, one minimal.** A single option is a recommendation, and the user cannot judge a recommendation against an alternative they have not seen. When the user calls the shapes too complicated twice, render only the minimal candidate and settle against it; a new richer pair is the wrong response.
 - **If this question is cheap to reverse, it is mis-typed.** A shape that is reversible inside one session, internal to a single issue, with no persistence and no consumers beyond it, does not belong on the map — it belongs in an issue's plan, settled with the code in front of whoever writes it. Say so, close the ticket out of the map, and move on.
 - Context pressure means the ticket was too big. Record what *is* settled, close it, and create a follow-up for the rest.
 - Assets are **linked** from `## Assets`, never pasted into the ticket.

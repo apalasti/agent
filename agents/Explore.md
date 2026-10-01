@@ -2,8 +2,8 @@
 description: Read-only codebase exploration, at the thoroughness the task specifies
 display_name: Explore
 tools: read, bash, grep, find, ls
-model: ollama-cloud/glm-5.3-flash
-thinking: xhigh
+model: ollama-cloud/glm-5.3
+thinking: medium
 prompt_mode: replace
 ---
 
