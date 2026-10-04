@@ -213,6 +213,7 @@ export default async function plugin(bb: BbPluginApi) {
     description:
       "Work in a path that already exists on the machine (a git worktree, any checkout).",
     icon: "FolderGit2",
+    requires: { projectCheckout: true },
     inputs: z.object({ path: z.string().trim().min(1).describe("Absolute path of the checkout") }),
     experimental_existingPath: (inputs) => inputs.path,
     availability: () => ({ status: "available" }),

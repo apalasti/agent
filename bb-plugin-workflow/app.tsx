@@ -8,6 +8,7 @@ import type { FormEvent, ReactNode } from "react";
 import {
   definePluginApp,
   useRpc,
+  type PluginEnvironmentProviderInputsProps,
   type PluginNewThreadPanelProps,
   type PluginThreadPanelProps,
 } from "@get-bb/plugin-sdk/app";
@@ -651,6 +652,99 @@ function WorkflowPanel({ threadId }: PluginThreadPanelProps) {
   );
 }
 
+function ExistingCheckoutInputs({
+  projectId,
+  target,
+  value,
+  onChange,
+}: PluginEnvironmentProviderInputsProps) {
+  const rpc = useRpc<typeof rpcContract>();
+  const [worktrees, setWorktrees] = useState<WorkflowWorktree[] | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customPath, setCustomPath] = useState("");
+  const selectedPath = (value as { path?: string } | null)?.path ?? "";
+
+  useEffect(() => {
+    if (projectId === null) {
+      setWorktrees([]);
+      return;
+    }
+    rpc.call("scan", { projectId }).then(
+      (result) => setWorktrees(result.sections.map((s) => s.worktree)),
+      () => setWorktrees([]),
+    );
+  }, [rpc, projectId]);
+
+  useEffect(() => {
+    if (selectedPath === "") {
+      onChange({ status: "blocked", reason: "Pick a checkout" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  const options = (worktrees ?? []).filter(
+    (w) =>
+      target.kind !== "existing-host" || w.hostId === undefined || w.hostId === target.hostId,
+  );
+
+  if (customOpen || options.length === 0) {
+    return (
+      <div className="flex items-center gap-2">
+        <Input
+          value={customPath}
+          onChange={(event) => {
+            const path = event.target.value;
+            setCustomPath(path);
+            if (path.trim() === "") {
+              onChange({ status: "blocked", reason: "Enter an absolute path" });
+            } else {
+              onChange({ status: "ready", value: { path: path.trim() } });
+            }
+          }}
+          placeholder="/absolute/path/to/checkout"
+          aria-label="Checkout path"
+        />
+        {options.length > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setCustomOpen(false)}>
+            List
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
+        value={options.some((w) => w.path === selectedPath) ? selectedPath : ""}
+        onChange={(event) => {
+          const path = event.target.value;
+          if (path === "") {
+            onChange({ status: "blocked", reason: "Pick a checkout" });
+          } else {
+            onChange({ status: "ready", value: { path } });
+          }
+        }}
+        aria-label="Checkout"
+      >
+        <option value="" disabled>
+          Pick a checkout…
+        </option>
+        {options.map((w) => (
+          <option key={w.path} value={w.path}>
+            {w.isPrimary ? "Primary" : (w.branch ?? w.path)}
+            {w.isPrimary ? "" : ` — ${w.path}`}
+          </option>
+        ))}
+      </select>
+      <Button variant="ghost" size="sm" onClick={() => setCustomOpen(true)} aria-label="Enter a path">
+        Custom
+      </Button>
+    </div>
+  );
+}
+
 function WorktreeSpawnPanel({ projectId }: PluginNewThreadPanelProps) {
   const rpc = useRpc<typeof rpcContract>();
   const [sections, setSections] = useState<WorkflowSection[] | null>(null);
@@ -790,6 +884,11 @@ export default definePluginApp((app) => {
     icon: "GitBranch",
     component: WorktreeSpawnPanel,
     layout: "padded",
+  });
+
+  app.slots.experimental_environmentProviderInputs({
+    environmentProviderId: "existing-checkout",
+    component: ExistingCheckoutInputs,
   });
 
   // Sidebar row badges for plugin-spawned threads (ticket in progress ✚,
