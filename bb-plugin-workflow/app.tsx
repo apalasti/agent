@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
   definePluginApp,
+  useBbNavigate,
   useRpc,
   type PluginEnvironmentProviderInputsProps,
   type PluginNewThreadPanelProps,
@@ -28,14 +29,24 @@ interface SpawnTarget {
   environmentId?: string | null;
 }
 type SpawnInput =
-  | { kind: "ref"; projectId: string; ref: string; target?: SpawnTarget }
-  | { kind: "chart"; projectId: string; idea: string; target?: SpawnTarget }
+  | {
+      kind: "manual";
+      projectId: string;
+      prompt: string;
+      title?: string;
+      target?: SpawnTarget;
+      newWorktree?: boolean;
+      open?: boolean;
+    }
+  | { kind: "ref"; projectId: string; ref: string; target?: SpawnTarget; open?: boolean }
+  | { kind: "chart"; projectId: string; idea: string; target?: SpawnTarget; open?: boolean }
   | {
       kind: "orchestrate";
       projectId: string;
       feature: string;
       numbers: string[];
       target?: SpawnTarget;
+      open?: boolean;
     };
 
 const targetOf = (worktree: WorkflowWorktree): SpawnTarget => ({
@@ -78,6 +89,115 @@ function SectionTitle({ children }: { children: ReactNode }) {
     <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
       {children}
     </h2>
+  );
+}
+
+interface PickOption {
+  key: string;
+  label: string;
+  sub?: string;
+  icon?: string;
+}
+
+function Picker({
+  options,
+  value,
+  onSelect,
+  placeholder,
+  filterPlaceholder,
+  footer,
+  disabled,
+}: {
+  options: PickOption[];
+  value: string | null;
+  onSelect: (key: string) => void;
+  placeholder: string;
+  filterPlaceholder?: string;
+  footer?: ReactNode;
+  disabled?: boolean;
+}) {
+  const [listOpen, setListOpen] = useState(false);
+  const [filter, setFilter] = useState("");
+  const selected = options.find((o) => o.key === value);
+  const needle = filter.trim().toLowerCase();
+  const filtered = options.filter(
+    (o) => needle === "" || o.label.toLowerCase().includes(needle) || (o.sub ?? "").toLowerCase().includes(needle),
+  );
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={listOpen}
+        onClick={() => setListOpen((v) => !v)}
+        className="flex h-8 w-full items-center gap-2 rounded-md border border-input bg-background px-2.5 text-left text-sm transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <Icon
+          name={selected?.icon ?? "ListFilter"}
+          className="size-3.5 shrink-0 text-muted-foreground"
+        />
+        <span className={cn("min-w-0 flex-1 truncate", selected === undefined && "text-muted-foreground")}>
+          {selected?.label ?? placeholder}
+        </span>
+        <Icon
+          name="ChevronDown"
+          className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", listOpen && "rotate-180")}
+        />
+      </button>
+      {listOpen && (
+        <>
+          <div className="fixed inset-0 z-40" aria-hidden onClick={() => setListOpen(false)} />
+          <div className="absolute left-0 right-0 z-50 mt-1 overflow-hidden rounded-md border border-border bg-popover shadow-md">
+            {options.length > 4 && (
+              <Input
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+                placeholder={filterPlaceholder ?? "Filter…"}
+                aria-label="Filter options"
+                autoFocus
+                className="h-8 rounded-none border-0 border-b border-border focus-visible:ring-0"
+              />
+            )}
+            <ul className="max-h-56 overflow-y-auto py-1" role="listbox">
+              {filtered.map((o) => (
+                <li key={o.key}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={o.key === value}
+                    onClick={() => {
+                      onSelect(o.key);
+                      setListOpen(false);
+                      setFilter("");
+                    }}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-sm hover:bg-muted/60",
+                      o.key === value && "bg-muted/40",
+                    )}
+                  >
+                    {o.icon !== undefined && (
+                      <Icon name={o.icon} className="size-3.5 shrink-0 text-muted-foreground" />
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{o.label}</span>
+                      {o.sub !== undefined && (
+                        <span className="block truncate text-xs text-muted-foreground">{o.sub}</span>
+                      )}
+                    </span>
+                    {o.key === value && <Icon name="Check" className="size-3.5 shrink-0 text-primary" />}
+                  </button>
+                </li>
+              ))}
+              {filtered.length === 0 && (
+                <li className="px-2.5 py-2 text-xs text-muted-foreground">Nothing matches.</li>
+              )}
+            </ul>
+            {footer}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -502,8 +622,186 @@ function WorkflowPage() {
   );
 }
 
+type ItemState = "ready" | "running" | "blocked" | "done";
+
+const STATE_DOT: Record<ItemState, string> = {
+  ready: "bg-emerald-500",
+  running: "bg-amber-500",
+  blocked: "bg-red-500",
+  done: "bg-muted-foreground/40",
+};
+
+function ticketState(ticket: ScratchTicket): ItemState {
+  if (ticket.status === "closed") return "done";
+  if (ticket.blocked) return "blocked";
+  if (ticket.claimed !== null) return "running";
+  return "ready";
+}
+
+function CompactRow({
+  state,
+  refLabel,
+  title,
+  children,
+}: {
+  state: ItemState;
+  refLabel: string;
+  title: string;
+  children?: ReactNode;
+}) {
+  return (
+    <li
+      className={cn(
+        "flex items-center gap-2 py-1",
+        state === "done" && "opacity-50",
+        state === "blocked" && "opacity-70",
+      )}
+    >
+      <span className={cn("size-1.5 shrink-0 rounded-full", STATE_DOT[state])} aria-hidden />
+      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{refLabel}</span>
+      <span className="min-w-0 flex-1 truncate text-xs" title={title}>
+        {title}
+      </span>
+      {children}
+    </li>
+  );
+}
+
+function CompactTicketGroup({
+  effort,
+  disabled,
+  onRun,
+  onOpen,
+}: {
+  effort: { slug: string; tickets: ScratchTicket[] };
+  disabled: boolean;
+  onRun: (ticket: ScratchTicket) => void;
+  onOpen: (threadId: string) => void;
+}) {
+  const [showDone, setShowDone] = useState(false);
+  const live = effort.tickets.filter((t) => t.status !== "closed");
+  const done = effort.tickets.filter((t) => t.status === "closed");
+  return (
+    <section>
+      <SectionTitle>{effort.slug}</SectionTitle>
+      <ul>
+        {live.map((ticket) => {
+          const state = ticketState(ticket);
+          return (
+            <CompactRow key={ticket.slug} state={state} refLabel={ticket.number} title={ticket.title}>
+              {state === "ready" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 gap-1 px-1.5 text-xs text-emerald-600 hover:text-emerald-600 dark:text-emerald-400"
+                  disabled={disabled}
+                  onClick={() => onRun(ticket)}
+                >
+                  <Icon name="Play" className="size-3" />
+                  Run
+                </Button>
+              )}
+              {state === "running" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 gap-1 px-1.5 text-xs text-amber-600 hover:text-amber-600 dark:text-amber-400"
+                  disabled={disabled || ticket.thread == null}
+                  onClick={() => {
+                    if (ticket.thread != null) onOpen(ticket.thread.id);
+                  }}
+                >
+                  <Icon name="ArrowUpRight" className="size-3" />
+                  Open
+                </Button>
+              )}
+              {state === "blocked" && (
+                <span className="shrink-0 text-[11px] text-muted-foreground">blocked</span>
+              )}
+            </CompactRow>
+          );
+        })}
+      </ul>
+      {done.length > 0 && (
+        <>
+          <button
+            type="button"
+            className="text-[11px] text-muted-foreground hover:text-foreground"
+            onClick={() => setShowDone((v) => !v)}
+          >
+            {showDone ? "Hide" : "Show"} {done.length} done
+          </button>
+          {showDone && (
+            <ul>
+              {done.map((ticket) => (
+                <CompactRow key={ticket.slug} state="done" refLabel={ticket.number} title={ticket.title} />
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function CompactIssueGroup({
+  feature,
+  issues,
+  disabled,
+  onRun,
+}: {
+  feature: { slug: string };
+  issues: ScratchIssue[];
+  disabled: boolean;
+  onRun: (issue: ScratchIssue) => void;
+}) {
+  const [showDone, setShowDone] = useState(false);
+  const live = issues.filter((i) => i.status !== "done");
+  const done = issues.filter((i) => i.status === "done");
+  return (
+    <section>
+      <SectionTitle>{feature.slug} issues</SectionTitle>
+      <ul>
+        {live.map((issue) => (
+          <CompactRow key={issue.slug} state="ready" refLabel={issue.number} title={issue.title}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 gap-1 px-1.5 text-xs text-emerald-600 hover:text-emerald-600 dark:text-emerald-400"
+              disabled={disabled}
+              onClick={() => onRun(issue)}
+            >
+              <Icon name="Play" className="size-3" />
+              Run
+            </Button>
+          </CompactRow>
+        ))}
+      </ul>
+      {done.length > 0 && (
+        <>
+          <button
+            type="button"
+            className="text-[11px] text-muted-foreground hover:text-foreground"
+            onClick={() => setShowDone((v) => !v)}
+          >
+            {showDone ? "Hide" : "Show"} {done.length} done
+          </button>
+          {showDone && (
+            <ul>
+              {done.map((issue) => (
+                <CompactRow key={issue.slug} state="done" refLabel={issue.number} title={issue.title} />
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
 function WorkflowPanel({ threadId }: PluginThreadPanelProps) {
   const rpc = useRpc<typeof rpcContract>();
+  const navigate = useBbNavigate();
   const [result, setResult] = useState<{
     projectId: string;
     section: WorkflowSection | null;
@@ -541,95 +839,77 @@ function WorkflowPanel({ threadId }: PluginThreadPanelProps) {
       </p>
     );
   }
+  const { section } = result;
+  const target = targetOf(section.worktree);
+  const runWith = (input: SpawnInput) => spawn({ ...input, open: false });
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3 p-1.5">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
           <Icon
-            name={result.section.worktree.isPrimary ? "Home" : "GitBranch"}
-            className="size-3.5 shrink-0 text-muted-foreground"
+            name={section.worktree.isPrimary ? "Home" : "GitBranch"}
+            className="size-3 shrink-0 text-muted-foreground"
           />
-          <span className="truncate text-sm font-medium">
-            {result.section.worktree.isPrimary
+          <span className="truncate text-xs font-medium">
+            {section.worktree.isPrimary
               ? "Primary checkout"
-              : (result.section.worktree.branch ?? "worktree")}
+              : (section.worktree.branch ?? "worktree")}
           </span>
         </div>
         <Button
           variant="ghost"
           size="icon"
-          className="size-7"
+          className="size-6"
           disabled={spawning}
           onClick={refresh}
           aria-label="Rescan"
         >
-          <Icon name="RefreshCw" className="size-3.5" />
+          <Icon name="RefreshCw" className="size-3" />
         </Button>
       </div>
-      {result.section.index === null ? (
-        <div className="text-sm text-muted-foreground">
+      {section.index === null ? (
+        <div className="px-1 text-xs text-muted-foreground">
           No <code>.scratch/</code> in this checkout yet.
           <div className="mt-2">
             <ChartForm
               disabled={spawning}
               placeholder="Chart a new map here…"
               onChart={(idea) =>
-                spawn({
-                  kind: "chart",
-                  projectId: result.projectId,
-                  idea,
-                  target: targetOf(result.section!.worktree),
-                })
+                runWith({ kind: "chart", projectId: result.projectId, idea, target })
               }
             />
           </div>
         </div>
       ) : (
         <>
-          {result.section.index.efforts.map((effort) => (
-            <EffortCard
+          {section.index.efforts.map((effort) => (
+            <CompactTicketGroup
               key={effort.slug}
               effort={effort}
               disabled={spawning}
-              onRunTicket={(ticket) =>
-                spawn({
+              onRun={(ticket) =>
+                runWith({
                   kind: "ref",
                   projectId: result.projectId,
                   ref: `${effort.slug}/tickets/${ticket.number}`,
-                  target: targetOf(result.section!.worktree),
+                  target,
                 })
               }
-              onHandoff={() =>
-                spawn({
-                  kind: "ref",
-                  projectId: result.projectId,
-                  ref: `${effort.slug}/handoff`,
-                  target: targetOf(result.section!.worktree),
-                })
-              }
+              onOpen={(id) => navigate.toThread(id)}
             />
           ))}
-          {result.section.index.features.map((feature) => (
-            <IssuesCard
+          {section.index.features.map((feature) => (
+            <CompactIssueGroup
               key={feature.slug}
-              feature={feature.slug}
+              feature={{ slug: feature.slug }}
               issues={feature.issues}
               disabled={spawning}
-              onRunOne={(number) =>
-                spawn({
+              onRun={(issue) =>
+                runWith({
                   kind: "ref",
                   projectId: result.projectId,
-                  ref: `${feature.slug}/issues/${number}`,
-                  target: targetOf(result.section!.worktree),
-                })
-              }
-              onRunBatch={(numbers) =>
-                spawn({
-                  kind: "orchestrate",
-                  projectId: result.projectId,
-                  feature: feature.slug,
-                  numbers,
-                  target: targetOf(result.section!.worktree),
+                  ref: `${feature.slug}/issues/${issue.number}`,
+                  target,
                 })
               }
             />
@@ -638,12 +918,7 @@ function WorkflowPanel({ threadId }: PluginThreadPanelProps) {
             disabled={spawning}
             placeholder="Chart a new map here…"
             onChart={(idea) =>
-              spawn({
-                kind: "chart",
-                projectId: result.projectId,
-                idea,
-                target: targetOf(result.section!.worktree),
-              })
+              runWith({ kind: "chart", projectId: result.projectId, idea, target })
             }
           />
         </>
@@ -682,16 +957,24 @@ function ExistingCheckoutInputs({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  const options = (worktrees ?? []).filter(
-    (w) =>
-      target.kind !== "existing-host" || w.hostId === undefined || w.hostId === target.hostId,
-  );
+  const options: PickOption[] = (worktrees ?? [])
+    .filter(
+      (w) =>
+        target.kind !== "existing-host" || w.hostId === undefined || w.hostId === target.hostId,
+    )
+    .map((w) => ({
+      key: w.path,
+      label: w.isPrimary ? "Primary checkout" : (w.branch ?? w.path.split("/").pop() ?? w.path),
+      sub: w.isPrimary ? w.path : shortPath(w.path),
+      icon: w.isPrimary ? "Home" : "GitBranch",
+    }));
 
-  if (customOpen || options.length === 0) {
+  if (customOpen) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Input
           value={customPath}
+          autoFocus
           onChange={(event) => {
             const path = event.target.value;
             setCustomPath(path);
@@ -703,54 +986,65 @@ function ExistingCheckoutInputs({
           }}
           placeholder="/absolute/path/to/checkout"
           aria-label="Checkout path"
+          className="h-8 text-sm"
         />
         {options.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={() => setCustomOpen(false)}>
-            List
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            onClick={() => setCustomOpen(false)}
+            aria-label="Back to the list"
+          >
+            <Icon name="List" className="size-4" />
           </Button>
         )}
       </div>
     );
   }
 
+  if (worktrees !== null && options.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground">No checkouts known for this project.</p>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2">
-      <select
-        className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm"
-        value={options.some((w) => w.path === selectedPath) ? selectedPath : ""}
-        onChange={(event) => {
-          const path = event.target.value;
-          if (path === "") {
-            onChange({ status: "blocked", reason: "Pick a checkout" });
-          } else {
-            onChange({ status: "ready", value: { path } });
-          }
-        }}
-        aria-label="Checkout"
-      >
-        <option value="" disabled>
-          Pick a checkout…
-        </option>
-        {options.map((w) => (
-          <option key={w.path} value={w.path}>
-            {w.isPrimary ? "Primary" : (w.branch ?? w.path)}
-            {w.isPrimary ? "" : ` — ${w.path}`}
-          </option>
-        ))}
-      </select>
-      <Button variant="ghost" size="sm" onClick={() => setCustomOpen(true)} aria-label="Enter a path">
-        Custom
-      </Button>
-    </div>
+    <Picker
+      options={options}
+      value={options.some((o) => o.key === selectedPath) ? selectedPath : null}
+      onSelect={(path) => onChange({ status: "ready", value: { path } })}
+      placeholder={worktrees === null ? "Loading checkouts…" : "Pick a checkout…"}
+      filterPlaceholder="Filter by branch or path…"
+      disabled={worktrees === null}
+      footer={
+        <button
+          type="button"
+          className="w-full border-t border-border px-2.5 py-1.5 text-left text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          onClick={() => setCustomOpen(true)}
+        >
+          Custom path…
+        </button>
+      }
+    />
   );
 }
 
+function shortPath(path: string): string {
+  const parts = path.split("/").filter((p) => p !== "");
+  return parts.length <= 2 ? path : `…/${parts.slice(-2).join("/")}`;
+}
+
+const NEW_WORKTREE_KEY = "__new-worktree__";
+
 function WorktreeSpawnPanel({ projectId }: PluginNewThreadPanelProps) {
   const rpc = useRpc<typeof rpcContract>();
+  const navigate = useBbNavigate();
   const [sections, setSections] = useState<WorkflowSection[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
-  const [busyPath, setBusyPath] = useState<string | null>(null);
+  const [where, setWhere] = useState<string | null>(NEW_WORKTREE_KEY);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (projectId === null) return;
@@ -763,100 +1057,93 @@ function WorktreeSpawnPanel({ projectId }: PluginNewThreadPanelProps) {
     );
   }, [rpc, projectId]);
 
-  const spawnHere = async (worktree: WorkflowWorktree) => {
-    if (projectId === null) return;
-    const text = prompt.trim();
-    if (text === "") {
-      toast.error("Write a first message for the thread.");
-      return;
-    }
-    setBusyPath(worktree.path);
-    try {
-      const spawned = await rpc.call("spawnHere", {
-        projectId,
-        prompt: text,
-        target: targetOf(worktree),
-      });
-      toast.success(`Spawned “${spawned.title}”`);
-      setPrompt("");
-    } catch (cause) {
-      toast.error(cause instanceof Error ? cause.message : String(cause));
-    } finally {
-      setBusyPath(null);
-    }
-  };
-
   if (projectId === null) {
     return (
-      <p className="p-3 text-sm text-muted-foreground">
-        Pick a project in the composer first.
+      <p className="text-sm text-muted-foreground">
+        Pick a project first — its checkouts appear here.
       </p>
     );
   }
   if (error !== null) {
     return (
-      <p role="alert" className="p-3 text-sm text-destructive">
+      <p role="alert" className="text-sm text-destructive">
         {error}
       </p>
     );
   }
-  if (sections === null) {
-    return <p className="p-3 text-sm text-muted-foreground">Finding checkouts…</p>;
-  }
+
+  const worktrees = (sections ?? []).map((s) => s.worktree);
+  const options: PickOption[] = [
+    {
+      key: NEW_WORKTREE_KEY,
+      label: "New worktree",
+      sub: "BB creates a fresh worktree + branch for this thread",
+      icon: "GitBranchPlus",
+    },
+    ...worktrees.map((w) => ({
+      key: w.path,
+      label: w.isPrimary ? "Primary checkout" : (w.branch ?? w.path.split("/").pop() ?? w.path),
+      sub: w.isPrimary ? w.path : shortPath(w.path),
+      icon: w.isPrimary ? "Home" : "GitBranch",
+    })),
+  ];
+
+  const start = async () => {
+    const text = prompt.trim();
+    if (text === "" || where === null) return;
+    setBusy(true);
+    try {
+      const chosen = worktrees.find((w) => w.path === where);
+      const spawned = await rpc.call("spawn", {
+        kind: "manual",
+        projectId,
+        prompt: text,
+        ...(where === NEW_WORKTREE_KEY
+          ? { newWorktree: true }
+          : { target: chosen !== undefined ? targetOf(chosen) : { path: where } }),
+      } as never);
+      toast.success(`Started “${spawned.title}”`);
+      setPrompt("");
+      navigate.toThread(spawned.threadId);
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-2">
       <Input
         value={prompt}
+        autoFocus
+        disabled={busy}
         onChange={(event) => setPrompt(event.target.value)}
-        placeholder="First message for the new thread…"
-        aria-label="First prompt"
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && prompt.trim() !== "" && where !== null) {
+            void start();
+          }
+        }}
+        placeholder="Describe the problem to work on…"
+        aria-label="Problem description"
+        className="h-8 text-sm"
       />
-      <ul className="divide-y divide-border">
-        {sections.map(({ worktree, index }) => {
-          const tickets =
-            index?.efforts.flatMap((e) => e.tickets.filter((t) => t.status !== "closed"))
-              .length ?? 0;
-          const issues =
-            index?.features.flatMap((f) => f.issues.filter((i) => i.status !== "done")).length ??
-            0;
-          return (
-            <li key={worktree.path} className="flex items-center gap-3 py-2">
-              <Icon
-                name={worktree.isPrimary ? "Home" : "GitBranch"}
-                className="size-3.5 shrink-0 text-muted-foreground"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">
-                  {worktree.isPrimary ? "Primary checkout" : (worktree.branch ?? "worktree")}
-                </span>
-                <span className="block truncate font-mono text-xs text-muted-foreground">
-                  {worktree.path}
-                </span>
-                {(tickets > 0 || issues > 0) && (
-                  <span className="text-xs text-muted-foreground">
-                    {tickets} open tickets · {issues} open issues
-                  </span>
-                )}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1"
-                disabled={busyPath !== null}
-                onClick={() => void spawnHere(worktree)}
-                aria-label={`Spawn a thread in ${worktree.branch ?? worktree.path}`}
-              >
-                <Icon name="Play" className="size-3.5" />
-                Spawn here
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="text-xs text-muted-foreground">
-        The thread attaches to that checkout as an unmanaged environment — from then on it
-        appears under “Reuse an existing environment” and its own sidebar group.
-      </p>
+      <Picker
+        options={options}
+        value={where}
+        onSelect={setWhere}
+        placeholder={sections === null ? "Loading checkouts…" : "Where should it work?"}
+        filterPlaceholder="Filter by branch or path…"
+        disabled={sections === null || busy}
+      />
+      <Button
+        className="h-8 gap-1.5"
+        disabled={busy || prompt.trim() === "" || where === null}
+        onClick={() => void start()}
+      >
+        <Icon name="Play" className="size-3.5" />
+        {busy ? "Starting…" : "Start"}
+      </Button>
     </div>
   );
 }

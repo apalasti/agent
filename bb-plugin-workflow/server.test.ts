@@ -257,9 +257,10 @@ describe("bb workflow CLI", () => {
     expect(result.statuses.thr_other).toBeUndefined();
   });
 
-  it("spawnHere attaches an unmanaged environment at a git-only worktree", async () => {
+  it("manual spawn attaches an unmanaged environment at a git-only worktree", async () => {
     const { harness } = await makeHost();
-    const result = (await harness.behavior.callRpc("spawnHere", {
+    const result = (await harness.behavior.callRpc("spawn", {
+      kind: "manual" as const,
       projectId: "proj_1",
       prompt: "check the mel dashboard",
       target: { path: "/repo-wt/feat", hostId: "host_1", environmentId: null },
@@ -275,7 +276,7 @@ describe("bb workflow CLI", () => {
     expect(args.pluginMetadata).toMatchObject({ kind: "manual", checkout: "/repo-wt/feat" });
   });
 
-  it("spawnHere reuses the BB environment when the worktree has one", async () => {
+  it("manual spawn reuses the BB environment when the worktree has one", async () => {
     const { harness } = await makeHost({
       environments: [
         {
@@ -287,13 +288,63 @@ describe("bb workflow CLI", () => {
         },
       ],
     });
-    await harness.behavior.callRpc("spawnHere", {
+    await harness.behavior.callRpc("spawn", {
+      kind: "manual" as const,
       projectId: "proj_1",
       prompt: "hi",
       target: { path: "/repo-wt/feat", hostId: "host_1", environmentId: null },
     });
     const args = harness.inspection.sdk.callsTo("threads.spawn")[0][0] as Record<string, any>;
     expect(args.environment).toEqual({ type: "reuse", environmentId: "env_feat" });
+  });
+
+  it("manual spawn with newWorktree provisions through the git-worktree provider", async () => {
+    const { harness } = await makeHost();
+    const result = (await harness.behavior.callRpc("spawn", {
+      kind: "manual" as const,
+      projectId: "proj_1",
+      prompt: "fix the history table layout",
+      newWorktree: true,
+    })) as any;
+    expect(result.threadId).toBe("thr_1");
+    expect(result.title).toBe("fix the history table layout");
+    const args = harness.inspection.sdk.callsTo("threads.spawn")[0][0] as Record<string, any>;
+    expect(args.environment).toEqual({
+      type: "provider",
+      environmentProviderId: "git-worktree",
+      inputs: { branch: { kind: "default" } },
+      machine: { type: "existing", hostId: "host_1" },
+    });
+    expect(args.pluginMetadata).toEqual({ kind: "manual" });
+    expect(harness.inspection.sdk.callsTo("threads.open")).toHaveLength(1);
+  });
+
+  it("spawn with open: false never brings the thread into view", async () => {
+    const { harness } = await makeHost();
+    await harness.behavior.callRpc("spawn", {
+      kind: "ref" as const,
+      projectId: "proj_1",
+      ref: "dark-mode/tickets/01",
+      open: false,
+    });
+    expect(harness.inspection.sdk.callsTo("threads.open")).toHaveLength(0);
+  });
+
+  it("scan attaches the claiming thread to claimed tickets", async () => {
+    const { harness } = await makeHost({
+      listedThreads: [{ id: "thr_worker", projectId: "proj_1", title: "Rollout" }],
+      threadMetadata: {
+        thr_worker: { kind: "ticket", ticket: "03-rollout" },
+      },
+    });
+    const result = (await harness.behavior.callRpc("scan", { projectId: "proj_1" })) as any;
+    const tickets = result.sections.flatMap((s: any) =>
+      s.index === null ? [] : s.index.efforts.flatMap((e: any) => e.tickets),
+    );
+    const rollout = tickets.find((t: any) => t.slug === "03-rollout");
+    expect(rollout.thread).toEqual({ id: "thr_worker", title: "Rollout" });
+    const palette = tickets.find((t: any) => t.slug === "02-pick-palette");
+    expect(palette.thread ?? null).toBeNull();
   });
 
   it("rejects an unknown --worktree with candidates", async () => {

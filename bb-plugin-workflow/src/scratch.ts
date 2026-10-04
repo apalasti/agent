@@ -10,6 +10,8 @@ export interface ScratchTicket {
   status: string;
   claimed: string | null;
   blocked: boolean;
+  /** The workflow thread working on this ticket, when one claimed it. Set by the server scan, not the file. */
+  thread?: { id: string; title: string | null } | null;
   /** Repo-absolute path of the ticket file. */
   path: string;
 }

@@ -35,6 +35,7 @@ import {
   type WorktreeInfo,
 } from "./src/worktrees";
 
+const threadRefSchema = z.object({ id: z.string(), title: z.string().nullable() });
 const ticketSchema = z.object({
   kind: z.literal("ticket"),
   effort: z.string(),
@@ -46,6 +47,8 @@ const ticketSchema = z.object({
   claimed: z.string().nullable(),
   blocked: z.boolean(),
   path: z.string(),
+  /** The workflow thread working on this ticket, when it claimed it. */
+  thread: threadRefSchema.nullable().optional(),
 });
 const issueSchema = z.object({
   kind: z.literal("issue"),
@@ -87,16 +90,29 @@ const targetSchema = z.object({
 
 const spawnInputSchema = z.discriminatedUnion("kind", [
   z.object({
+    kind: z.literal("manual"),
+    projectId: z.string().min(1),
+    prompt: z.string().trim().min(1),
+    title: z.string().trim().min(1).max(120).optional(),
+    target: targetSchema.optional(),
+    /** Spawn through the git-worktree provider: a fresh worktree is created. */
+    newWorktree: z.boolean().optional(),
+    /** Navigate to the thread after spawning. Panels pass false to stay put. */
+    open: z.boolean().optional(),
+  }),
+  z.object({
     kind: z.literal("ref"),
     projectId: z.string().min(1),
     ref: z.string().min(1),
     target: targetSchema.optional(),
+    open: z.boolean().optional(),
   }),
   z.object({
     kind: z.literal("chart"),
     projectId: z.string().min(1),
     idea: z.string().trim().min(1),
     target: targetSchema.optional(),
+    open: z.boolean().optional(),
   }),
   z.object({
     kind: z.literal("orchestrate"),
@@ -104,6 +120,7 @@ const spawnInputSchema = z.discriminatedUnion("kind", [
     feature: z.string().min(1),
     numbers: z.array(z.string().min(1)).min(1),
     target: targetSchema.optional(),
+    open: z.boolean().optional(),
   }),
 ]);
 
@@ -132,15 +149,6 @@ export const rpcContract = defineRpcContract({
   },
   spawn: {
     input: spawnInputSchema,
-    output: z.object({ threadId: z.string(), title: z.string() }),
-  },
-  spawnHere: {
-    input: z.object({
-      projectId: z.string().min(1),
-      prompt: z.string().trim().min(1),
-      title: z.string().trim().min(1).max(120).optional(),
-      target: targetSchema,
-    }),
     output: z.object({ threadId: z.string(), title: z.string() }),
   },
   rowStatuses: {
@@ -294,16 +302,48 @@ export default async function plugin(bb: BbPluginApi) {
     return scanScratch(worktree.path, hostIo(worktree.hostId));
   }
 
+  async function ticketThreads(): Promise<Map<string, { id: string; title: string | null }>> {
+    const map = new Map<string, { id: string; title: string | null }>();
+    const threads = await bb.sdk.threads
+      .list({ originPluginId: bb.pluginId, limit: 200 })
+      .catch(() => []);
+    for (const thread of threads as {
+      id: string;
+      title?: string | null;
+      archivedAt?: number | string | null;
+      deletedAt?: number | string | null;
+    }[]) {
+      if (thread.archivedAt != null || thread.deletedAt != null) continue;
+      const meta = await bb.sdk.threads
+        .getPluginMetadata({ threadId: thread.id, pluginId: bb.pluginId })
+        .catch(() => null);
+      if (meta?.kind === "ticket" && typeof meta.ticket === "string") {
+        map.set(meta.ticket, { id: thread.id, title: thread.title ?? null });
+      }
+    }
+    return map;
+  }
+
   async function scanSections(
     projectId: string,
     worktrees?: WorktreeInfo[],
   ): Promise<WorkflowSection[]> {
     const selected = worktrees ?? (await listProjectWorktrees(projectId));
+    const claims = await ticketThreads().catch(() => new Map<string, { id: string; title: string | null }>());
     return Promise.all(
-      selected.map(async (worktree) => ({
-        worktree,
-        index: await scanWorktree(worktree).catch(() => null),
-      })),
+      selected.map(async (worktree) => {
+        const index = await scanWorktree(worktree).catch(() => null);
+        if (index !== null) {
+          for (const effort of index.efforts) {
+            for (const ticket of effort.tickets) {
+              if (ticket.claimed !== null) {
+                ticket.thread = claims.get(ticket.slug) ?? null;
+              }
+            }
+          }
+        }
+        return { worktree, index };
+      }),
     );
   }
 
@@ -330,6 +370,7 @@ export default async function plugin(bb: BbPluginApi) {
     metadata: Record<string, string>;
     target: SpawnTarget;
     explicit: boolean;
+    open?: boolean;
   }): Promise<{ threadId: string; title: string }> {
     const thread = await bb.sdk.threads.spawn({
       projectId: args.projectId,
@@ -339,7 +380,9 @@ export default async function plugin(bb: BbPluginApi) {
       pluginMetadata: { ...args.metadata, checkout: args.target.path },
     });
     // Best-effort: brings the thread into view in connected apps.
-    await bb.sdk.threads.open({ threadId: thread.id, file: null }).catch(() => undefined);
+    if (args.open !== false) {
+      await bb.sdk.threads.open({ threadId: thread.id, file: null }).catch(() => undefined);
+    }
     return { threadId: thread.id, title: args.title };
   }
 
@@ -347,6 +390,47 @@ export default async function plugin(bb: BbPluginApi) {
     input: z.infer<typeof spawnInputSchema>,
   ): Promise<{ threadId: string; title: string }> {
     const worktrees = await listProjectWorktrees(input.projectId);
+    const open = input.open !== false;
+    if (input.kind === "manual") {
+      const title =
+        input.title ??
+        (input.prompt.length > 60 ? `${input.prompt.slice(0, 60)}…` : input.prompt);
+      if (input.newWorktree === true) {
+        const hostId = worktrees.find((w) => w.isPrimary)?.hostId ?? worktrees[0]?.hostId;
+        const thread = await bb.sdk.threads.spawn({
+          projectId: input.projectId,
+          environment: {
+            type: "provider",
+            environmentProviderId: "git-worktree",
+            inputs: { branch: { kind: "default" } },
+            machine: hostId === undefined ? undefined : { type: "existing", hostId },
+          } as never,
+          prompt: input.prompt,
+          title,
+          pluginMetadata: { kind: "manual" },
+        });
+        if (open) {
+          await bb.sdk.threads.open({ threadId: thread.id, file: null }).catch(() => undefined);
+        }
+        return { threadId: thread.id, title };
+      }
+      const known = worktrees.find((w) => w.path === input.target?.path);
+      const fallback = worktrees.find((w) => w.isPrimary) ?? worktrees[0];
+      const target: SpawnTarget = known ?? {
+        path: input.target?.path ?? fallback.path,
+        hostId: input.target?.hostId ?? fallback.hostId,
+        environmentId: input.target?.environmentId ?? null,
+      };
+      return spawnThread({
+        projectId: input.projectId,
+        title,
+        prompt: input.prompt,
+        metadata: { kind: "manual" },
+        target,
+        explicit: true,
+        open,
+      });
+    }
     const explicit = input.target !== undefined;
     const target: WorktreeInfo = explicit
       ? (() => {
@@ -356,7 +440,7 @@ export default async function plugin(bb: BbPluginApi) {
         })()
       : worktrees.find((w) => w.isPrimary) ?? worktrees[0];
     const index = await scanScratch(target.path, hostIo(target.hostId));
-    const base = { projectId: input.projectId, target, explicit };
+    const base = { projectId: input.projectId, target, explicit, open };
     const scratchRoot = `${target.path}/.scratch`;
 
     if (input.kind === "chart") {
@@ -564,26 +648,6 @@ export default async function plugin(bb: BbPluginApi) {
     scan: async ({ projectId }) => ({ sections: await scanSections(projectId) }),
     scanThread: ({ threadId }) => sectionForThread(threadId),
     spawn: (input) => spawnFromInput(input),
-    spawnHere: async (input) => {
-      const worktrees = await listProjectWorktrees(input.projectId);
-      const known = worktrees.find((w) => w.path === input.target.path);
-      const target: SpawnTarget = known ?? {
-        path: input.target.path,
-        hostId: input.target.hostId,
-        environmentId: input.target.environmentId ?? null,
-      };
-      const title =
-        input.title ??
-        (input.prompt.length > 60 ? `${input.prompt.slice(0, 60)}…` : input.prompt);
-      return spawnThread({
-        projectId: input.projectId,
-        title,
-        prompt: input.prompt,
-        metadata: { kind: "manual" },
-        target,
-        explicit: true,
-      });
-    },
     rowStatuses: async () => ({ statuses: await rowStatuses() }),
   });
 
