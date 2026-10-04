@@ -1,12 +1,18 @@
-// bb-plugin-workflow — the Workflow page: every effort's frontier tickets and
-// every feature's open issues from the selected project's .scratch/, each one
-// spawns a BB thread from the templates bundled with the plugin.
+// bb-plugin-workflow — two surfaces over the same scan of a project's
+// .scratch/, scoped per worktree: the sidebar Workflow page (every checkout
+// of a project, its frontier tickets and open issues) and a right-rail thread
+// panel (the current thread's checkout only). Every Run spawns a BB thread
+// into the owning checkout so bb's sidebar groups it under that worktree.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { definePluginApp, useRpc } from "@get-bb/plugin-sdk/app";
+import {
+  definePluginApp,
+  useRpc,
+  type PluginThreadPanelProps,
+} from "@get-bb/plugin-sdk/app";
 import { toast } from "sonner";
-import type { rpcContract } from "./server";
-import type { WorkbenchIndex, ScratchIssue, ScratchTicket } from "./src/scratch";
+import type { rpcContract, WorkflowSection, WorkflowWorktree } from "./server";
+import type { ScratchIssue, ScratchTicket } from "./src/scratch";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
@@ -14,64 +20,47 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 type Rpc = ReturnType<typeof useRpc<typeof rpcContract>>;
+interface SpawnTarget {
+  path: string;
+  hostId?: string;
+  environmentId?: string | null;
+}
 type SpawnInput =
-  | { kind: "ref"; projectId: string; ref: string }
-  | { kind: "chart"; projectId: string; idea: string }
-  | { kind: "orchestrate"; projectId: string; feature: string; numbers: string[] };
+  | { kind: "ref"; projectId: string; ref: string; target?: SpawnTarget }
+  | { kind: "chart"; projectId: string; idea: string; target?: SpawnTarget }
+  | {
+      kind: "orchestrate";
+      projectId: string;
+      feature: string;
+      numbers: string[];
+      target?: SpawnTarget;
+    };
 
-function useWorkbench() {
-  const rpc = useRpc<typeof rpcContract>();
-  const [projects, setProjects] = useState<{ id: string; name: string }[] | null>(null);
-  const [projectId, setProjectId] = useState<string | null>(null);
-  const [index, setIndex] = useState<WorkbenchIndex | null>(null);
-  const [error, setError] = useState<string | null>(null);
+const targetOf = (worktree: WorkflowWorktree): SpawnTarget => ({
+  path: worktree.path,
+  hostId: worktree.hostId,
+  environmentId: worktree.environmentId,
+});
+
+function useSpawner(rpc: Rpc, refresh: () => void) {
   const [spawning, setSpawning] = useState(false);
-
-  const rescan = useCallback(
-    (id: string) => {
-      rpc.call("scan", { projectId: id }).then(
-        (result) => {
-          setIndex(result.index);
-          setError(null);
-        },
-        (cause: unknown) => {
-          setIndex(null);
-          setError(cause instanceof Error ? cause.message : String(cause));
-        },
-      );
-    },
-    [rpc],
-  );
-
-  useEffect(() => {
-    rpc.call("projects").then((result) => {
-      setProjects(result.projects);
-      setProjectId((current) => current ?? result.projects[0]?.id ?? null);
-    }, (cause: unknown) => setError(cause instanceof Error ? cause.message : String(cause)));
-  }, [rpc]);
-
-  useEffect(() => {
-    if (projectId !== null) rescan(projectId);
-  }, [projectId, rescan]);
-
   const spawn = useCallback(
     async (input: SpawnInput) => {
       if (spawning) return;
       setSpawning(true);
       try {
-        const spawned = await rpc.call("spawn", input);
+        const spawned = await rpc.call("spawn", input as never);
         toast.success(`Spawned “${spawned.title}”`);
-        rescan(input.projectId);
+        refresh();
       } catch (cause) {
         toast.error(cause instanceof Error ? cause.message : String(cause));
       } finally {
         setSpawning(false);
       }
     },
-    [rpc, rescan, spawning],
+    [rpc, refresh, spawning],
   );
-
-  return { projects, projectId, setProjectId, index, error, spawning, rescan, spawn };
+  return { spawning, spawn };
 }
 
 function EmptyState({ children }: { children: ReactNode }) {
@@ -83,26 +72,27 @@ function EmptyState({ children }: { children: ReactNode }) {
 }
 
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{children}</h2>;
+  return (
+    <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      {children}
+    </h2>
+  );
 }
 
 function TicketRow({
   ticket,
   disabled,
   onRun,
+  compact,
 }: {
   ticket: ScratchTicket;
   disabled: boolean;
   onRun: () => void;
+  compact?: boolean;
 }) {
   return (
     <li className="flex items-center gap-3 py-2 text-sm">
-      <span
-        className={cn(
-          "min-w-0 flex-1 truncate",
-          ticket.blocked && "text-muted-foreground",
-        )}
-      >
+      <span className={cn("min-w-0 flex-1 truncate", ticket.blocked && "text-muted-foreground")}>
         <span className="font-mono text-xs text-muted-foreground">{ticket.number}</span>{" "}
         <span className="rounded bg-muted px-1.5 py-0.5 text-xs">{ticket.type}</span>{" "}
         {ticket.title}
@@ -120,7 +110,7 @@ function TicketRow({
           aria-label={`Run ticket "${ticket.title}"`}
         >
           <Icon name="Play" className="size-3.5" />
-          Run
+          {compact ? null : "Run"}
         </Button>
       )}
     </li>
@@ -133,12 +123,14 @@ function IssuesCard({
   disabled,
   onRunOne,
   onRunBatch,
+  titlePrefix,
 }: {
   feature: string;
   issues: ScratchIssue[];
   disabled: boolean;
   onRunOne: (number: string) => void;
   onRunBatch: (numbers: string[]) => void;
+  titlePrefix?: string;
 }) {
   const open = issues.filter((i) => i.status !== "done");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -154,7 +146,10 @@ function IssuesCard({
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card px-4">
       <div className="flex items-center justify-between border-b border-border py-2.5">
-        <SectionTitle>{feature} issues</SectionTitle>
+        <SectionTitle>
+          {titlePrefix}
+          {feature} issues
+        </SectionTitle>
         <Button
           variant="outline"
           size="sm"
@@ -199,9 +194,11 @@ function IssuesCard({
 function ChartForm({
   disabled,
   onChart,
+  placeholder,
 }: {
   disabled: boolean;
   onChart: (idea: string) => void;
+  placeholder?: string;
 }) {
   const [idea, setIdea] = useState("");
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -216,7 +213,7 @@ function ChartForm({
       <Input
         value={idea}
         onChange={(event) => setIdea(event.target.value)}
-        placeholder="＋ Chart a new map from a loose idea…"
+        placeholder={placeholder ?? "＋ Chart a new map from a loose idea…"}
         aria-label="Idea to chart"
       />
       <Button type="submit" disabled={disabled || idea.trim() === ""}>
@@ -227,24 +224,210 @@ function ChartForm({
   );
 }
 
-function WorkflowPage() {
-  const { projects, projectId, setProjectId, index, error, spawning, rescan, spawn } = useWorkbench();
+function EffortCard({
+  effort,
+  disabled,
+  onRunTicket,
+  onHandoff,
+}: {
+  effort: { slug: string; tickets: ScratchTicket[] };
+  disabled: boolean;
+  onRunTicket: (ticket: ScratchTicket) => void;
+  onHandoff: () => void;
+}) {
   const [showBlocked, setShowBlocked] = useState(false);
+  const frontier = useMemo(
+    () => effort.tickets.filter((t) => t.status !== "closed" && !t.blocked),
+    [effort.tickets],
+  );
+  const blocked = useMemo(
+    () => effort.tickets.filter((t) => t.status !== "closed" && t.blocked),
+    [effort.tickets],
+  );
+  const exhausted = frontier.length === 0 && blocked.length === 0;
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-card px-4">
+      <div className="flex items-center justify-between border-b border-border py-2.5">
+        <SectionTitle>{effort.slug}</SectionTitle>
+        {exhausted && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1"
+            disabled={disabled}
+            onClick={onHandoff}
+          >
+            <Icon name="Flag" className="size-3.5" />
+            Hand off to to-prd
+          </Button>
+        )}
+      </div>
+      <ul className="divide-y divide-border">
+        {frontier.map((ticket) => (
+          <TicketRow
+            key={ticket.slug}
+            ticket={ticket}
+            disabled={disabled}
+            onRun={() => onRunTicket(ticket)}
+          />
+        ))}
+      </ul>
+      {blocked.length > 0 && (
+        <div className="py-2">
+          <button
+            type="button"
+            className="text-xs text-muted-foreground hover:text-foreground"
+            onClick={() => setShowBlocked((v) => !v)}
+          >
+            {showBlocked ? "Hide" : "Show"} {blocked.length} blocked
+          </button>
+          {showBlocked && (
+            <ul className="divide-y divide-border">
+              {blocked.map((ticket) => (
+                <TicketRow key={ticket.slug} ticket={ticket} disabled onRun={() => {}} />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
-  const effortCards = useMemo(
-    () =>
-      index?.efforts.map((effort) => ({
-        ...effort,
-        frontier: effort.tickets.filter((t) => t.status !== "closed" && !t.blocked),
-        blocked: effort.tickets.filter((t) => t.status !== "closed" && t.blocked),
-      })) ?? [],
-    [index],
+function SectionBody({
+  section,
+  projectId,
+  disabled,
+  spawn,
+  compact,
+}: {
+  section: WorkflowSection;
+  projectId: string;
+  disabled: boolean;
+  spawn: (input: SpawnInput) => void;
+  compact?: boolean;
+}) {
+  const target = targetOf(section.worktree);
+  const index = section.index;
+  if (index === null) {
+    return (
+      <div className="px-4 py-3 text-sm text-muted-foreground">
+        No <code>.scratch/</code> here yet.
+        <div className="mt-2">
+          <ChartForm
+            disabled={disabled}
+            placeholder="Chart a new map in this checkout…"
+            onChart={(idea) => spawn({ kind: "chart", projectId, idea, target })}
+          />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3 px-4 py-3">
+      {index.efforts.map((effort) => (
+        <EffortCard
+          key={effort.slug}
+          effort={effort}
+          disabled={disabled}
+          onRunTicket={(ticket) =>
+            spawn({
+              kind: "ref",
+              projectId,
+              ref: `${effort.slug}/tickets/${ticket.number}`,
+              target,
+            })
+          }
+          onHandoff={() => spawn({ kind: "ref", projectId, ref: `${effort.slug}/handoff`, target })}
+        />
+      ))}
+      {index.features.map((feature) => (
+        <IssuesCard
+          key={feature.slug}
+          feature={feature.slug}
+          issues={feature.issues}
+          disabled={disabled}
+          onRunOne={(number) =>
+            spawn({ kind: "ref", projectId, ref: `${feature.slug}/issues/${number}`, target })
+          }
+          onRunBatch={(numbers) =>
+            spawn({ kind: "orchestrate", projectId, feature: feature.slug, numbers, target })
+          }
+        />
+      ))}
+      <ChartForm
+        disabled={disabled}
+        onChart={(idea) => spawn({ kind: "chart", projectId, idea, target })}
+      />
+    </div>
+  );
+}
+
+function WorktreeHeader({ worktree }: { worktree: WorkflowWorktree }) {
+  return (
+    <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+      <Icon
+        name={worktree.isPrimary ? "Home" : "GitBranch"}
+        className="size-3.5 text-muted-foreground"
+      />
+      <span className="truncate text-sm font-medium">
+        {worktree.isPrimary ? "Primary checkout" : (worktree.branch ?? "worktree")}
+      </span>
+      <span className="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">
+        {worktree.path}
+      </span>
+      {worktree.environmentId === null && (
+        <span
+          className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+          title="No BB environment attached yet; the first run here creates one, and the thread groups under this worktree."
+        >
+          no threads yet
+        </span>
+      )}
+    </div>
+  );
+}
+
+function WorkflowPage() {
+  const rpc = useRpc<typeof rpcContract>();
+  const [projects, setProjects] = useState<{ id: string; name: string }[] | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const [sections, setSections] = useState<WorkflowSection[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const rescan = useCallback(
+    (id: string) => {
+      rpc.call("scan", { projectId: id }).then(
+        (result) => {
+          setSections(result.sections);
+          setError(null);
+        },
+        (cause: unknown) => {
+          setSections(null);
+          setError(cause instanceof Error ? cause.message : String(cause));
+        },
+      );
+    },
+    [rpc],
   );
 
-  const isEmpty =
-    index !== null &&
-    index.efforts.length === 0 &&
-    index.features.every((f) => f.issues.every((i) => i.status === "done"));
+  useEffect(() => {
+    rpc.call("projects").then(
+      (result) => {
+        setProjects(result.projects);
+        setProjectId((current) => current ?? result.projects[0]?.id ?? null);
+      },
+      (cause: unknown) => setError(cause instanceof Error ? cause.message : String(cause)),
+    );
+  }, [rpc]);
+
+  useEffect(() => {
+    if (projectId !== null) rescan(projectId);
+  }, [projectId, rescan]);
+
+  const { spawning, spawn } = useSpawner(rpc, () => {
+    if (projectId !== null) rescan(projectId);
+  });
 
   return (
     <div className="h-full min-h-0 flex-1 overflow-y-auto">
@@ -281,103 +464,188 @@ function WorkflowPage() {
           </p>
         )}
 
-        {projectId !== null && index !== null && (
-          <>
-            {effortCards.map((effort) => (
-              <div key={effort.slug} className="overflow-hidden rounded-lg border border-border bg-card px-4">
-                <div className="flex items-center justify-between border-b border-border py-2.5">
-                  <SectionTitle>{effort.slug}</SectionTitle>
-                  {effort.frontier.length === 0 && effort.blocked.length === 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 gap-1"
-                      disabled={spawning}
-                      onClick={() =>
-                        spawn({ kind: "ref", projectId, ref: `${effort.slug}/handoff` })
-                      }
-                    >
-                      <Icon name="Flag" className="size-3.5" />
-                      Hand off to to-prd
-                    </Button>
-                  )}
-                </div>
-                <ul className="divide-y divide-border">
-                  {effort.frontier.map((ticket) => (
-                    <TicketRow
-                      key={ticket.slug}
-                      ticket={ticket}
-                      disabled={spawning}
-                      onRun={() =>
-                        spawn({ kind: "ref", projectId, ref: `${effort.slug}/tickets/${ticket.number}` })
-                      }
-                    />
-                  ))}
-                </ul>
-                {effort.blocked.length > 0 && (
-                  <div className="py-2">
-                    <button
-                      type="button"
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => setShowBlocked((v) => !v)}
-                    >
-                      {showBlocked ? "Hide" : "Show"} {effort.blocked.length} blocked
-                    </button>
-                    {showBlocked && (
-                      <ul className="divide-y divide-border">
-                        {effort.blocked.map((ticket) => (
-                          <TicketRow
-                            key={ticket.slug}
-                            ticket={ticket}
-                            disabled
-                            onRun={() => {}}
-                          />
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+        {projectId !== null &&
+          sections !== null &&
+          (sections.length === 0 ? (
+            <EmptyState>This project has no local checkout.</EmptyState>
+          ) : (
+            sections.map((section) => (
+              <section
+                key={section.worktree.path}
+                className="overflow-hidden rounded-xl border border-border bg-background"
+              >
+                <WorktreeHeader worktree={section.worktree} />
+                <SectionBody
+                  section={section}
+                  projectId={projectId}
+                  disabled={spawning}
+                  spawn={spawn}
+                />
+              </section>
+            ))
+          ))}
 
-            {index.features.map((feature) => (
-              <IssuesCard
-                key={feature.slug}
-                feature={feature.slug}
-                issues={feature.issues}
-                disabled={spawning}
-                onRunOne={(number) =>
-                  spawn({ kind: "ref", projectId, ref: `${feature.slug}/issues/${number}` })
-                }
-                onRunBatch={(numbers) =>
-                  spawn({ kind: "orchestrate", projectId, feature: feature.slug, numbers })
-                }
-              />
-            ))}
-
-            {isEmpty && (
-              <EmptyState>
-                No open tickets or issues in this project's <code>.scratch/</code> — chart a new map below.
-              </EmptyState>
-            )}
-
-            <ChartForm
-              disabled={spawning}
-              onChart={(idea) => spawn({ kind: "chart", projectId, idea })}
-            />
-
-            <p className="text-xs text-muted-foreground">
-              Agents do the same from a shell: <code>bb workflow tickets</code>,{" "}
-              <code>bb workflow run {"<slug>/<NN>"}</code>,{" "}
-              <code>bb workflow orchestrate {"<feature> \"01 03\""}</code>.
-            </p>
-          </>
-        )}
-
-        {projectId !== null && index === null && error === null && (
+        {projectId !== null && sections === null && error === null && (
           <EmptyState>Reading .scratch/…</EmptyState>
         )}
+
+        <p className="text-xs text-muted-foreground">
+          Agents do the same from a shell: <code>bb workflow tickets</code>,{" "}
+          <code>bb workflow run {"<slug>/<NN>"}</code>,{" "}
+          <code>bb workflow orchestrate {"<feature> \"01 03\""}</code>, all with{" "}
+          <code>--worktree</code> to pick a checkout.
+        </p>
       </div>
+    </div>
+  );
+}
+
+function WorkflowPanel({ threadId }: PluginThreadPanelProps) {
+  const rpc = useRpc<typeof rpcContract>();
+  const [result, setResult] = useState<{
+    projectId: string;
+    section: WorkflowSection | null;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(() => {
+    rpc.call("scanThread", { threadId }).then(
+      (value) => {
+        setResult(value);
+        setError(null);
+      },
+      (cause: unknown) => setError(cause instanceof Error ? cause.message : String(cause)),
+    );
+  }, [rpc, threadId]);
+
+  useEffect(refresh, [refresh]);
+
+  const { spawning, spawn } = useSpawner(rpc, refresh);
+
+  if (error !== null) {
+    return (
+      <p role="alert" className="p-3 text-sm text-destructive">
+        {error}
+      </p>
+    );
+  }
+  if (result === null) {
+    return <p className="p-3 text-sm text-muted-foreground">Reading .scratch/…</p>;
+  }
+  if (result.section === null) {
+    return (
+      <p className="p-3 text-sm text-muted-foreground">
+        This thread has no checkout, so there is no .scratch/ to show.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <Icon
+            name={result.section.worktree.isPrimary ? "Home" : "GitBranch"}
+            className="size-3.5 shrink-0 text-muted-foreground"
+          />
+          <span className="truncate text-sm font-medium">
+            {result.section.worktree.isPrimary
+              ? "Primary checkout"
+              : (result.section.worktree.branch ?? "worktree")}
+          </span>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          disabled={spawning}
+          onClick={refresh}
+          aria-label="Rescan"
+        >
+          <Icon name="RefreshCw" className="size-3.5" />
+        </Button>
+      </div>
+      {result.section.index === null ? (
+        <div className="text-sm text-muted-foreground">
+          No <code>.scratch/</code> in this checkout yet.
+          <div className="mt-2">
+            <ChartForm
+              disabled={spawning}
+              placeholder="Chart a new map here…"
+              onChart={(idea) =>
+                spawn({
+                  kind: "chart",
+                  projectId: result.projectId,
+                  idea,
+                  target: targetOf(result.section!.worktree),
+                })
+              }
+            />
+          </div>
+        </div>
+      ) : (
+        <>
+          {result.section.index.efforts.map((effort) => (
+            <EffortCard
+              key={effort.slug}
+              effort={effort}
+              disabled={spawning}
+              onRunTicket={(ticket) =>
+                spawn({
+                  kind: "ref",
+                  projectId: result.projectId,
+                  ref: `${effort.slug}/tickets/${ticket.number}`,
+                  target: targetOf(result.section!.worktree),
+                })
+              }
+              onHandoff={() =>
+                spawn({
+                  kind: "ref",
+                  projectId: result.projectId,
+                  ref: `${effort.slug}/handoff`,
+                  target: targetOf(result.section!.worktree),
+                })
+              }
+            />
+          ))}
+          {result.section.index.features.map((feature) => (
+            <IssuesCard
+              key={feature.slug}
+              feature={feature.slug}
+              issues={feature.issues}
+              disabled={spawning}
+              onRunOne={(number) =>
+                spawn({
+                  kind: "ref",
+                  projectId: result.projectId,
+                  ref: `${feature.slug}/issues/${number}`,
+                  target: targetOf(result.section!.worktree),
+                })
+              }
+              onRunBatch={(numbers) =>
+                spawn({
+                  kind: "orchestrate",
+                  projectId: result.projectId,
+                  feature: feature.slug,
+                  numbers,
+                  target: targetOf(result.section!.worktree),
+                })
+              }
+            />
+          ))}
+          <ChartForm
+            disabled={spawning}
+            placeholder="Chart a new map here…"
+            onChart={(idea) =>
+              spawn({
+                kind: "chart",
+                projectId: result.projectId,
+                idea,
+                target: targetOf(result.section!.worktree),
+              })
+            }
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -389,5 +657,64 @@ export default definePluginApp((app) => {
     icon: "Map",
     path: "workflow",
     component: WorkflowPage,
+  });
+
+  app.slots.threadPanelAction({
+    id: "workflow-panel",
+    title: "Workflow",
+    icon: "Map",
+    component: WorkflowPanel,
+    layout: "padded",
+  });
+
+  // Sidebar row badges for plugin-spawned threads (ticket in progress ✚,
+  // orchestration x/y done…). Data comes from the server over the plugin's own
+  // RPC route; same-origin fetch carries the app session.
+  app.contentScripts.register({
+    id: "workflow-row-status",
+    mount({ experimental_setThreadRowStatus: setStatus, signal }) {
+      if (!setStatus) return;
+      const applied = new Map<string, string>();
+      const refresh = async () => {
+        if (signal.aborted) return;
+        try {
+          const response = await fetch("/api/v1/plugins/workflow/rpc/rowStatuses", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: "null",
+            signal,
+          });
+          if (!response.ok) return;
+          const body = (await response.json()) as {
+            statuses?: Record<string, { icon: string; label: string; tone?: string }>;
+          };
+          const statuses = body?.statuses ?? {};
+          for (const [threadId, status] of Object.entries(statuses)) {
+            const key = JSON.stringify(status);
+            if (applied.get(threadId) !== key) {
+              setStatus(threadId, status as never);
+              applied.set(threadId, key);
+            }
+          }
+          for (const threadId of [...applied.keys()]) {
+            if (!(threadId in statuses)) {
+              setStatus(threadId, null);
+              applied.delete(threadId);
+            }
+          }
+        } catch {
+          // Poll again next tick; a badge is not worth an error surface.
+        }
+      };
+      const timer = setInterval(refresh, 45_000);
+      const onFocus = () => void refresh();
+      window.addEventListener("focus", onFocus, { signal });
+      const kickoff = setTimeout(() => void refresh(), 1_500);
+      return () => {
+        clearInterval(timer);
+        clearTimeout(kickoff);
+        for (const threadId of applied.keys()) setStatus(threadId, null);
+      };
+    },
   });
 });

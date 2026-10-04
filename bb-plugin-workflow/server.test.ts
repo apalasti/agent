@@ -14,9 +14,23 @@ const FILES: Record<string, string> = {
     "---\nstatus: ready-to-implement\n---\n\n# CSS variables\n",
   "/repo/.scratch/dark-mode/issues/02-toggle.md":
     "---\nstatus: done\n---\n\n# Toggle\n",
+  "/repo-wt/feat/.scratch/feat-work/MAP.md": "# Feat work\n",
+  "/repo-wt/feat/.scratch/feat-work/tickets/01-wire-mel.md":
+    "---\ntype: task\nstatus: open\nblocked-by: []\n---\n\n# Wire MEL\n",
+  "/repo-wt/feat/.scratch/feat-work/issues/01-add-dashboard.md":
+    "---\nstatus: in-progress\n---\n\n# Add dashboard\n",
+  "/repo/.git/worktrees/feat/gitdir": "/repo-wt/feat/.git\n",
+  "/repo/.git/worktrees/feat/HEAD": "ref: refs/heads/feature-mel-dashboard\n",
 };
 
-async function makeHost() {
+interface HostOverrides {
+  environments?: Record<string, unknown>[];
+  listedThreads?: Record<string, unknown>[];
+  threadMetadata?: Record<string, Record<string, string>>;
+  threadIds?: Record<string, Record<string, unknown>>;
+}
+
+async function makeHost(overrides: HostOverrides = {}) {
   const host = createFakePluginHost({
     pluginId: "workflow",
     sdk: {
@@ -26,6 +40,16 @@ async function makeHost() {
           id: "proj_1",
           sources: [{ hostId: "host_1", path: "/repo", type: "local_path", isDefault: true }],
         }),
+      },
+      environments: {
+        list: async () => ({ environments: overrides.environments ?? [] }),
+        get: async ({ environmentId }: { environmentId: string }) => {
+          const env = (overrides.environments ?? []).find(
+            (e) => (e as { id?: string }).id === environmentId,
+          );
+          if (!env) throw new Error(`no such environment ${environmentId}`);
+          return env;
+        },
       },
       files: {
         listPaths: async ({ path }: { path: string }) => {
@@ -44,6 +68,14 @@ async function makeHost() {
       threads: {
         spawn: async () => ({ id: "thr_1" }),
         open: async () => ({}),
+        get: async ({ threadId }: { threadId: string }) => {
+          const thread = overrides.threadIds?.[threadId];
+          if (!thread) throw new Error(`no such thread ${threadId}`);
+          return thread;
+        },
+        list: async () => overrides.listedThreads ?? [],
+        getPluginMetadata: async ({ threadId }: { threadId: string }) =>
+          overrides.threadMetadata?.[threadId] ?? {},
       },
     },
   });
@@ -54,7 +86,7 @@ async function makeHost() {
 describe("bb workflow CLI", () => {
   it("lists only the frontier, with blocked count and claims", async () => {
     const { harness } = await makeHost();
-    const result = await harness.behavior.runCli(["tickets"]);
+    const result = await harness.behavior.runCli(["tickets", "--worktree", "/repo"]);
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("dark-mode/02  [seam] Pick the palette");
     expect(result.stdout).not.toContain("Pick the store");
@@ -75,7 +107,7 @@ describe("bb workflow CLI", () => {
     expect(args.environment).toEqual({
       type: "host",
       hostId: "host_1",
-      workspace: { type: "unmanaged", path: "/repo" },
+      workspace: { type: "unmanaged", hostId: "host_1", path: "/repo" },
     });
     expect(args.prompt).toContain("/repo/.scratch/dark-mode/tickets/02-pick-palette.md");
     expect(args.prompt).toContain("/repo/.scratch/dark-mode/MAP.md");
@@ -83,6 +115,7 @@ describe("bb workflow CLI", () => {
       kind: "ticket",
       effort: "dark-mode",
       ticket: "02-pick-palette",
+      checkout: "/repo",
     });
     expect(harness.inspection.sdk.callsTo("threads.open")).toHaveLength(1);
   });
@@ -113,10 +146,121 @@ describe("bb workflow CLI", () => {
     expect(args.prompt).toContain("/repo/.scratch");
   });
 
-  it("answers scan over RPC for the frontend", async () => {
+  it("discovers the git worktree and scopes scans per checkout", async () => {
     const { harness } = await makeHost();
-    const result = await harness.behavior.callRpc("scan", { projectId: "proj_1" });
-    expect(result.index.efforts[0].tickets).toHaveLength(3);
-    expect(result.index.blockedTicketCount).toBe(1);
+    const all = await harness.behavior.runCli(["tickets"]);
+    expect(all.exitCode).toBe(0);
+    expect(all.stdout).toContain("-- /repo");
+    expect(all.stdout).toContain("dark-mode/02");
+    expect(all.stdout).toContain("-- feature-mel-dashboard");
+    expect(all.stdout).toContain("feat-work/01  [task] Wire MEL");
+
+    const scoped = await harness.behavior.runCli(["tickets", "--worktree", "feature-mel-dashboard"]);
+    expect(scoped.exitCode).toBe(0);
+    expect(scoped.stdout).toContain("feat-work/01");
+    expect(scoped.stdout).not.toContain("dark-mode");
+  });
+
+  it("reuses an existing BB environment when spawning into a known worktree", async () => {
+    const { harness } = await makeHost({
+      environments: [
+        {
+          id: "env_feat",
+          path: "/repo-wt/feat",
+          hostId: "host_1",
+          branchName: "feature-mel-dashboard",
+          isWorktree: true,
+        },
+      ],
+    });
+    const result = await harness.behavior.runCli([
+      "run",
+      "feat-work/issues/01",
+      "--worktree",
+      "feature-mel-dashboard",
+    ]);
+    expect(result.exitCode).toBe(0);
+    const args = harness.inspection.sdk.callsTo("threads.spawn")[0][0] as Record<string, any>;
+    expect(args.environment).toEqual({ type: "reuse", environmentId: "env_feat" });
+    expect(args.prompt).toContain("/repo-wt/feat/.scratch/feat-work/issues/01-add-dashboard.md");
+    expect(args.pluginMetadata).toMatchObject({ checkout: "/repo-wt/feat", kind: "orchestrate" });
+  });
+
+  it("answers scan over RPC as one section per worktree", async () => {
+    const { harness } = await makeHost();
+    const result = (await harness.behavior.callRpc("scan", { projectId: "proj_1" })) as any;
+    expect(result.sections).toHaveLength(2);
+    const primary = result.sections[0];
+    expect(primary.worktree).toMatchObject({ path: "/repo", isPrimary: true });
+    expect(primary.index.efforts[0].tickets).toHaveLength(3);
+    const wt = result.sections[1];
+    expect(wt.worktree).toMatchObject({
+      path: "/repo-wt/feat",
+      branch: "feature-mel-dashboard",
+      isWorktree: true,
+      environmentId: null,
+    });
+    expect(wt.index.features[0].issues[0].title).toBe("Add dashboard");
+  });
+
+  it("scanThread resolves the thread's environment to its checkout section", async () => {
+    const { harness } = await makeHost({
+      environments: [
+        {
+          id: "env_feat",
+          path: "/repo-wt/feat",
+          hostId: "host_1",
+          branchName: "feature-mel-dashboard",
+          isWorktree: true,
+        },
+      ],
+      threadIds: { thr_in_wt: { id: "thr_in_wt", projectId: "proj_1", environmentId: "env_feat" } },
+    });
+    const result = (await harness.behavior.callRpc("scanThread", {
+      threadId: "thr_in_wt",
+    })) as any;
+    expect(result.projectId).toBe("proj_1");
+    expect(result.section.worktree).toMatchObject({
+      path: "/repo-wt/feat",
+      environmentId: "env_feat",
+    });
+    expect(result.section.index.efforts[0].tickets[0].title).toBe("Wire MEL");
+  });
+
+  it("rowStatuses maps plugin threads to ticket and orchestration badges", async () => {
+    const { harness } = await makeHost({
+      listedThreads: [
+        { id: "thr_ticket", projectId: "proj_1", originPluginId: "workflow" },
+        { id: "thr_orch", projectId: "proj_1", originPluginId: "workflow" },
+        { id: "thr_chart", projectId: "proj_1", originPluginId: "workflow" },
+        { id: "thr_other", projectId: "proj_1", originPluginId: "other-plugin" },
+      ],
+      threadMetadata: {
+        thr_ticket: { kind: "ticket", effort: "dark-mode", number: "03", checkout: "/repo" },
+        thr_orch: { kind: "orchestrate", feature: "dark-mode", issues: "01,02", checkout: "/repo" },
+        thr_chart: { kind: "chart", idea: "offline sync" },
+      },
+      environments: [],
+    });
+    const result = (await harness.behavior.callRpc("rowStatuses", null)) as any;
+    expect(result.statuses.thr_ticket).toEqual({
+      icon: "CircleDot",
+      label: "dark-mode/03 — in progress",
+      tone: "running",
+    });
+    expect(result.statuses.thr_orch).toEqual({
+      icon: "ListChecks",
+      label: "dark-mode — 1/2 done",
+      tone: "running",
+    });
+    expect(result.statuses.thr_chart).toEqual({ icon: "Map", label: "Charting: offline sync" });
+    expect(result.statuses.thr_other).toBeUndefined();
+  });
+
+  it("rejects an unknown --worktree with candidates", async () => {
+    const { harness } = await makeHost();
+    const result = await harness.behavior.runCli(["tickets", "--worktree", "nope"]);
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("feature-mel-dashboard");
   });
 });
