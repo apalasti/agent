@@ -203,6 +203,42 @@ export default async function plugin(bb: BbPluginApi) {
     };
   }
 
+  // Environment provider so the compose screen's own Environment picker can
+  // attach a path that already exists on the machine (a git worktree, any
+  // checkout). experimental_existingPath makes core reuse the environment
+  // recorded for a path, so second threads in the same worktree share it.
+  bb.experimental_environments.register({
+    id: "existing-checkout",
+    displayName: "Existing checkout",
+    description:
+      "Work in a path that already exists on the machine (a git worktree, any checkout).",
+    icon: "FolderGit2",
+    inputs: z.object({ path: z.string().trim().min(1).describe("Absolute path of the checkout") }),
+    experimental_existingPath: (inputs) => inputs.path,
+    availability: () => ({ status: "available" }),
+    validate: async ({ host, inputs }) => {
+      const readable = await bb.sdk.files
+        .listPaths({ hostId: host.id, path: inputs.path, includeFiles: true, includeDirectories: true })
+        .then(() => true)
+        .catch(() => false);
+      return readable
+        ? { action: "accept" }
+        : { action: "refuse", message: "Path does not exist or is not readable on this machine" };
+    },
+    create: async ({ host, inputs, report }) => {
+      report.step("Attaching existing checkout");
+      const readable = await bb.sdk.files
+        .listPaths({ hostId: host.id, path: inputs.path, includeFiles: true, includeDirectories: true })
+        .then(() => true)
+        .catch(() => false);
+      if (!readable) {
+        return { status: "failed", message: "Path does not exist or is not readable" };
+      }
+      return { status: "created", path: inputs.path, ownsPath: false };
+    },
+    remove: async () => ({ status: "removed" }),
+  });
+
   async function listProjectWorktrees(projectId: string): Promise<WorktreeInfo[]> {
     const project = (await bb.sdk.projects.get({ projectId })) as {
       sources?: { path?: string | null; targetPath?: string | null; hostId?: string }[];
