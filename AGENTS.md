@@ -30,9 +30,7 @@ The same bar applies to *reading* one: an outline that leaves a reader unable to
 
 ## Debugging
 
-- **Instrument before fixing.** If the failure has not been reproduced and observed, do not land a fix for it. A speculative fix with a green test of its own proves nothing about the reported symptom, and two of them in a row cost more than the logging would have. Add the tracing that shows what actually runs, in what order, and read it.
-- **A fix is done when the reported symptom is confirmed gone in the running system** — not when its own test passes. The test pins what you believed; the symptom is what was wrong.
-- **Never close a report as unreproducible against synthetic data.** A payload built to mirror the shape will miss anything that only real data exhibits. Reproduce with the reporter's actual data, or say plainly that you could not and what you tried.
+For anything reported broken, throwing, failing or slow, invoke the `diagnosing-bugs` skill before reading code for a cause: no hypothesis and no fix until a loop goes red on the reported symptom.
 
 ## When a decision is reversed, update the artifact that recorded it
 

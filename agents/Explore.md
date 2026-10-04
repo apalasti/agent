@@ -2,8 +2,8 @@
 description: Read-only codebase exploration, at the thoroughness the task specifies
 display_name: Explore
 tools: read, bash, grep, find, ls
-model: ollama-cloud/glm-5.3
-thinking: medium
+model: claude-bridge/claude-sonnet-5-5
+thinking: low
 prompt_mode: replace
 ---
 

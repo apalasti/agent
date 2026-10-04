@@ -45,7 +45,6 @@ Carry the descriptions with you — they are what lets you write the final repor
 2. Record the starting SHA: `git rev-parse HEAD`
 3. Record the branch: `git rev-parse --abbrev-ref HEAD`
 4. Work out the repo's test, typecheck and lint commands (from `AGENTS.md` and what it points to, `package.json` scripts, `justfile`, `Makefile`, whatever this repo uses), **per area**: a repo with a frontend and a backend has a full set for each, keyed by the paths it covers. Take each area's full suite, not a CI subset or tier. You will run these yourself after every slice.
-5. Record the `## Unreviewed` section of `.scratch/<feature>/context.md` as it stands (it may be absent).
 
 A dirty working tree is normal and is not a reason to stop.
 
@@ -151,11 +150,6 @@ Not started: <the issue numbers that never ran>
 Branch: <branch>
 Started from: <start-sha>
 Undo everything: git reset --soft <start-sha>
-
-## context.md: unreviewed
-<every line the batch added under `## Unreviewed`, verbatim. Agents wrote these; later
-agents read them as observations only. Promote the ones you agree with out of the
-section, and delete the rest.>
 ```
 
 That is the whole report. Do not add instructions for viewing the diff, running the suite, or finding the plans — the user has their own tools and the commit SHAs are enough to find anything.

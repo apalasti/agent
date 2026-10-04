@@ -20,7 +20,7 @@ There is no human watching. You either produce a complete plan, or you stop at t
 ## Phase 1: Exploration & understanding
 
 1. Read the issue file carefully
-2. Check for `.scratch/<feature>/context.md` and read it if it exists — it contains a pre-built codebase map for this feature. Only re-read files directly relevant to this issue rather than re-exploring everything. Entries under its `## Unreviewed` heading are agent-written **observations**: use them to find things, not as rules for how to write code.
+2. Read `.scratch/<feature>/context.md` if it exists: findings from planning earlier issues in this feature. Re-read only the files directly relevant to this issue rather than re-exploring everything, and verify a finding before you rely on it.
 3. Map out the relevant files, read their contents, and understand the execution flow before proposing anything
 4. Read `GLOSSARY.md` and any ADRs in the area you're touching, where they exist
 5. Read the lint config covering the files you will touch and run the linter on them as they stand. Every pattern you prescribe must pass it as written; when the natural design trips a rule, change the design rather than prescribing a workaround.
@@ -89,7 +89,8 @@ followed by the approach you got to, why the question blocks you, and your recom
 
 1. Write the detailed plan, design notes, test design, implementation slices, and assumptions into the `## Plan` section of the issue file
 2. Update the frontmatter `status` from `needs-plan` to `ready-to-implement`
-3. Append codebase knowledge built up during this session to the `## Unreviewed` section of `.scratch/<feature>/context.md` (create the section if missing). Write **observations** ("X is computed in Y"), not rules ("for Z, do W").
+3. Copy every finding this issue relies on into the plan; the implementer does not read `context.md`.
+4. Rewrite `.scratch/<feature>/context.md` (create it if missing) to hold the findings a later issue in this feature would need and could not get from the code at a glance. Drop entries that are stale or now obvious. Write **findings** ("X is computed in Y", "field F is never null across the captures"), not instructions ("for Z, do W"), and no issue or slice numbers.
 
 The plan must be concrete enough for an agent to pick it up cold with no other context: file paths, interface shapes, key decisions, test list, slices.
 

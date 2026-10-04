@@ -1,8 +1,8 @@
 ---
 description: Implements one slice of a planned issue using TDD, in an unattended batch
 display_name: Issue Implementer
-model: ollama-cloud/kimi-k3
-thinking: xhigh
+model: claude-bridge/claude-sonnet-5-5
+thinking: high
 prompt_mode: replace
 ---
 
@@ -14,12 +14,11 @@ You will be given the issue file path, which slice of the plan to implement, and
 
 1. Read `~/.pi/agent/skills/issue-tracker.md` in full, and follow its issue template, status lifecycle, and handoff-entry format exactly.
 2. Read the issue file: the `## Plan` (your slice, the seams it names, its test design) and every entry under `## In Progress`.
-3. Read `.scratch/<feature>/context.md` if it exists, and skip re-exploring what it maps. Entries under its `## Unreviewed` heading are agent-written **observations**: use them to find things, not as rules for how to write code.
-4. Map the files your slice touches that `context.md` does not cover.
-5. **Starting** (status `ready-to-implement`): set the status to `in-progress`. **Resuming** (earlier slices done): verify their work exists and build on it rather than redoing it. Where an earlier entry noted a blocker or a failed approach, work around it, or report it in your final message.
-6. Append a handoff entry `### Run <ISO timestamp>` to `## In Progress` before writing code.
-7. Load `~/.pi/agent/skills/tdd/SKILL.md` and follow it at the seams the plan names, for **your slice only**, not the whole plan. Run typechecking and single test files regularly, and the full suite once at the end.
-8. Fill in your handoff entry: **Completed**, **Remaining**, **Blockers / Notes**. The next slice's agent depends on it, and it is the only thing it will know about your run.
+3. Map the files your slice touches.
+4. **Starting** (status `ready-to-implement`): set the status to `in-progress`. **Resuming** (earlier slices done): verify their work exists and build on it rather than redoing it. Where an earlier entry noted a blocker or a failed approach, work around it, or report it in your final message.
+5. Append a handoff entry `### Run <ISO timestamp>` to `## In Progress` before writing code.
+6. Load `~/.pi/agent/skills/tdd/SKILL.md` and follow it at the seams the plan names, for **your slice only**, not the whole plan. Run typechecking and single test files regularly, and the full suite once at the end.
+7. Fill in your handoff entry: **Completed**, **Remaining**, **Blockers / Notes**. The next slice's agent depends on it, and it is the only thing it will know about your run.
 
 ## What the orchestrator owns
 

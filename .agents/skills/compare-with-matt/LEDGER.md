@@ -8,6 +8,7 @@
 |---|---|
 | `skills/code-review/` | `engineering/code-review/` |
 | `skills/codebase-design/` | `engineering/codebase-design/` |
+| `skills/diagnosing-bugs/` | `engineering/diagnosing-bugs/` |
 | `skills/domain-modeling/` | `engineering/domain-modeling/` |
 | `skills/grill-me/` | `productivity/grilling/` (his `grill-me` is an alias for it) |
 | `skills/prototype/` | `engineering/prototype/` |
@@ -38,6 +39,7 @@ No counterpart for Matt's `productivity/handoff/`: implementers hand off through
 - **`to-issues` sizes slices to be planned in one context window**: issues start at `needs-plan`, and implementation may span several handed-off runs.
 - **`issue-tracker.md`: YAML frontmatter, `needs-plan → ready-to-implement → in-progress → done`, wayfinder tickets in `tickets/` with `type`/`status`/`blocked-by`/`claimed` frontmatter**: `extensions/issues/index.ts` and `extensions/wayfinder/index.ts` parse these fields; the orchestrator routes issues by status and the wayfinder picker picks prompts by ticket type.
 - **Implementation is the `/orchestrate` extension template plus `issue-*` agents, not skills**: the command builds the batch from the issue files, and pi subagent types carry each role's model and prompt.
+- **`diagnosing-bugs`: the user runs the HITL script, not the agent** (rung 10, the Agent-runnable check, the script's header): pi's bash tool has no stdin, so the template's first `read` exits 1. The agent copies and edits it; the user pastes back the `--- Captured ---` block.
 - **Comment rules restated in `issue-implementer` / `issue-review-fixer`**: they run with `prompt_mode: replace`, which drops `AGENTS.md` (pi-subagents README).
 
 ### Decisions
@@ -48,6 +50,9 @@ No counterpart for Matt's `productivity/handoff/`: implementers hand off through
 - **`/issue` removed; `/orchestrate` is the only execution entry point**, for one issue or many. Interactive planning (`needs-plan.md`), human approval before commit and the `issue-handoff` skill went with it; the implementer's process moved from the `ready-to-implement`/`in-progress` prompts into `issue-implementer.md`. Replaced the earlier `/issue` + `/orchestrate` split, judged not worth its complexity.
 - **Wayfinder claiming is written, and shown rather than hidden.** Each ticket prompt sets `claimed` first; the picker marks claimed tickets and keeps them selectable, since a crashed session never releases its claim. Matt's frontier excludes claimed tickets. Replaced the unused optional `claimed` field.
 - **Research tickets close with the human.** Charting fires the reading and links the findings; the ticket stays open until a session reads them with the user, so a human has read every finding a decision rests on. `research.md` never re-runs research that has findings. Matt closes research tickets AFK.
+- **`AGENTS.md` Debugging points at `diagnosing-bugs` instead of stating its own rules.** The user adopted Matt's process over ours. Replaced three bullets (instrument before fixing; done when the symptom is gone in the running system; never close as unreproducible against synthetic data).
+- **`diagnosing-bugs` deletes throwaway harnesses, never keeps them in a debug location**: no prototype code reaches main (above). Matt allows "moved to a clearly-marked debug location".
+- **`diagnosing-bugs` records a missing seam in the commit message**: Matt's "Flag this for the next phase" pointed at Cleanup, which never acts on it.
 - **`/orchestrate` runs serially, not in parallel worktrees.** The user: serial has caused no problems, and it is what lets each slice be checked green and committed alone. It does work the `## Blocked by` frontier as Matt's `implement-spec` does.
 
 Behaviour Matt lacks, kept because it changes what the agent does:
@@ -58,7 +63,7 @@ Behaviour Matt lacks, kept because it changes what the agent does:
 - `to-prd`: `from-map.md` branch, module sketch, signature-for-unsettled-interfaces, the checkpoint that runs after a map too, "seams under test" reused in the template.
 - `to-issues`: PRD read, missing-seam stop, user-story coverage line, checkable acceptance criteria.
 - `issue-tracker.md`: issue template and handoff format as the one shared source; `## Resolution` with assets and seam exception; supersede-not-rewrite for closed tickets.
-- `orchestrate` + `issue-*` agents: `context.md` observations under `## Unreviewed`; per-issue planner with stop bar, orchestrator-run checks with one fixer, carry-over set, leakage check, chunked review with findings as leads, sentinel replies, final report.
+- `orchestrate` + `issue-*` agents: planner-only `.scratch/<feature>/context.md` of findings, rewritten per issue and read by no implementer (replaced agent-written observations under an `## Unreviewed` fence that the user promoted or deleted); per-issue planner with stop bar, orchestrator-run checks with one fixer, carry-over set, leakage check, chunked review with findings as leads, sentinel replies, final report.
 - `prototype`: switch back to the starting branch; design transcript; embedded/standalone naming; trimmed duplicates of the branch files.
 - `wayfinder`: local-markdown map with PRD as default destination; `seam` tickets; briefing, approach and premises; one question per ticket; split-don't-resume; per-type prompt guardrails; handoff step; tasks never become issues.
 - Shorter descriptions in `research` and `writing-for-agents` (the latter covers agent prompts and pointer docs, which its body names).
@@ -67,6 +72,8 @@ Behaviour Matt lacks, kept because it changes what the agent does:
 
 Deferred by the user to a later session:
 
-- Candidates: `grill-with-docs`, `diagnosing-bugs`, `improve-codebase-architecture`, `pr`, `retro`, `to-questionnaire`, `wizard`, `ask-matt`, `triage`, `teach`, `git-guardrails-claude-code`, `migrate-to-shoehorn`, `scaffold-exercises`, `setup-pre-commit`, `claude-handoff`, `loop-me`, `setup-ts-deep-modules`, `writing-beats`, `writing-fragments`, `writing-shape`. The 2026-10-01 reviewer recommended adopting the first six (`diagnosing-bugs` tied to the reporter's real data; `retro`, `improve-codebase-architecture` user-invoked) and rejecting the rest.
+- `improve-codebase-architecture`, reviewed 2026-10-01 and deferred again. Open questions: Matt's exit is grilling then `/to-spec` in the same conversation, but our `to-prd` leaves out the per-file outline AGENTS.md requires for restructures (route it through `to-prd` or `issue-tracker.md`'s "Decisions prose cannot carry"?); whether the picked candidate is rendered like a wayfinder `seam` ticket, which would move that method from `extensions/wayfinder/seam.md` into `codebase-design`; a pointer from `codebase-design`'s body, since its description claims "find deepening opportunities".
+- `~/.pi/agent/skills/visual-explainer` is a dangling symlink to `../../../.agents/skills/visual-explainer`.
+- Candidates: `grill-with-docs`, `pr`, `retro`, `to-questionnaire`, `wizard`, `ask-matt`, `triage`, `teach`, `git-guardrails-claude-code`, `migrate-to-shoehorn`, `scaffold-exercises`, `setup-pre-commit`, `claude-handoff`, `loop-me`, `setup-ts-deep-modules`, `writing-beats`, `writing-fragments`, `writing-shape`. An earlier reviewer recommended adopting the first four (`retro` user-invoked) and rejecting the rest.
 
 ## Not adopted

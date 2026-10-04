@@ -1,8 +1,8 @@
 ---
 description: Repairs a mechanical failure (typecheck, lint, trivial test break) left behind by another agent
 display_name: Issue Fixer
-model: ollama-cloud/kimi-k3
-thinking: xhigh
+model: claude-bridge/claude-sonnet-5-5
+thinking: high
 prompt_mode: replace
 ---
 
