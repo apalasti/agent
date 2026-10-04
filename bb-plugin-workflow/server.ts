@@ -134,6 +134,15 @@ export const rpcContract = defineRpcContract({
     input: spawnInputSchema,
     output: z.object({ threadId: z.string(), title: z.string() }),
   },
+  spawnHere: {
+    input: z.object({
+      projectId: z.string().min(1),
+      prompt: z.string().trim().min(1),
+      title: z.string().trim().min(1).max(120).optional(),
+      target: targetSchema,
+    }),
+    output: z.object({ threadId: z.string(), title: z.string() }),
+  },
   rowStatuses: {
     input: z.null(),
     output: z.object({ statuses: z.record(z.string(), rowStatusSchema) }),
@@ -518,6 +527,26 @@ export default async function plugin(bb: BbPluginApi) {
     scan: async ({ projectId }) => ({ sections: await scanSections(projectId) }),
     scanThread: ({ threadId }) => sectionForThread(threadId),
     spawn: (input) => spawnFromInput(input),
+    spawnHere: async (input) => {
+      const worktrees = await listProjectWorktrees(input.projectId);
+      const known = worktrees.find((w) => w.path === input.target.path);
+      const target: SpawnTarget = known ?? {
+        path: input.target.path,
+        hostId: input.target.hostId,
+        environmentId: input.target.environmentId ?? null,
+      };
+      const title =
+        input.title ??
+        (input.prompt.length > 60 ? `${input.prompt.slice(0, 60)}…` : input.prompt);
+      return spawnThread({
+        projectId: input.projectId,
+        title,
+        prompt: input.prompt,
+        metadata: { kind: "manual" },
+        target,
+        explicit: true,
+      });
+    },
     rowStatuses: async () => ({ statuses: await rowStatuses() }),
   });
 

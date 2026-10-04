@@ -8,6 +8,7 @@ import type { FormEvent, ReactNode } from "react";
 import {
   definePluginApp,
   useRpc,
+  type PluginNewThreadPanelProps,
   type PluginThreadPanelProps,
 } from "@get-bb/plugin-sdk/app";
 import { toast } from "sonner";
@@ -650,6 +651,122 @@ function WorkflowPanel({ threadId }: PluginThreadPanelProps) {
   );
 }
 
+function WorktreeSpawnPanel({ projectId }: PluginNewThreadPanelProps) {
+  const rpc = useRpc<typeof rpcContract>();
+  const [sections, setSections] = useState<WorkflowSection[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState("");
+  const [busyPath, setBusyPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (projectId === null) return;
+    rpc.call("scan", { projectId }).then(
+      (result) => {
+        setSections(result.sections);
+        setError(null);
+      },
+      (cause: unknown) => setError(cause instanceof Error ? cause.message : String(cause)),
+    );
+  }, [rpc, projectId]);
+
+  const spawnHere = async (worktree: WorkflowWorktree) => {
+    if (projectId === null) return;
+    const text = prompt.trim();
+    if (text === "") {
+      toast.error("Write a first message for the thread.");
+      return;
+    }
+    setBusyPath(worktree.path);
+    try {
+      const spawned = await rpc.call("spawnHere", {
+        projectId,
+        prompt: text,
+        target: targetOf(worktree),
+      });
+      toast.success(`Spawned “${spawned.title}”`);
+      setPrompt("");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusyPath(null);
+    }
+  };
+
+  if (projectId === null) {
+    return (
+      <p className="p-3 text-sm text-muted-foreground">
+        Pick a project in the composer first.
+      </p>
+    );
+  }
+  if (error !== null) {
+    return (
+      <p role="alert" className="p-3 text-sm text-destructive">
+        {error}
+      </p>
+    );
+  }
+  if (sections === null) {
+    return <p className="p-3 text-sm text-muted-foreground">Finding checkouts…</p>;
+  }
+  return (
+    <div className="space-y-3">
+      <Input
+        value={prompt}
+        onChange={(event) => setPrompt(event.target.value)}
+        placeholder="First message for the new thread…"
+        aria-label="First prompt"
+      />
+      <ul className="divide-y divide-border">
+        {sections.map(({ worktree, index }) => {
+          const tickets =
+            index?.efforts.flatMap((e) => e.tickets.filter((t) => t.status !== "closed"))
+              .length ?? 0;
+          const issues =
+            index?.features.flatMap((f) => f.issues.filter((i) => i.status !== "done")).length ??
+            0;
+          return (
+            <li key={worktree.path} className="flex items-center gap-3 py-2">
+              <Icon
+                name={worktree.isPrimary ? "Home" : "GitBranch"}
+                className="size-3.5 shrink-0 text-muted-foreground"
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">
+                  {worktree.isPrimary ? "Primary checkout" : (worktree.branch ?? "worktree")}
+                </span>
+                <span className="block truncate font-mono text-xs text-muted-foreground">
+                  {worktree.path}
+                </span>
+                {(tickets > 0 || issues > 0) && (
+                  <span className="text-xs text-muted-foreground">
+                    {tickets} open tickets · {issues} open issues
+                  </span>
+                )}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1"
+                disabled={busyPath !== null}
+                onClick={() => void spawnHere(worktree)}
+                aria-label={`Spawn a thread in ${worktree.branch ?? worktree.path}`}
+              >
+                <Icon name="Play" className="size-3.5" />
+                Spawn here
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="text-xs text-muted-foreground">
+        The thread attaches to that checkout as an unmanaged environment — from then on it
+        appears under “Reuse an existing environment” and its own sidebar group.
+      </p>
+    </div>
+  );
+}
+
 export default definePluginApp((app) => {
   app.slots.navPanel({
     id: "workflow",
@@ -664,6 +781,14 @@ export default definePluginApp((app) => {
     title: "Workflow",
     icon: "Map",
     component: WorkflowPanel,
+    layout: "padded",
+  });
+
+  app.slots.experimental_newThreadPanelAction({
+    id: "spawn-in-worktree",
+    title: "Spawn into worktree",
+    icon: "GitBranch",
+    component: WorktreeSpawnPanel,
     layout: "padded",
   });
 

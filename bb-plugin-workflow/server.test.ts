@@ -257,6 +257,45 @@ describe("bb workflow CLI", () => {
     expect(result.statuses.thr_other).toBeUndefined();
   });
 
+  it("spawnHere attaches an unmanaged environment at a git-only worktree", async () => {
+    const { harness } = await makeHost();
+    const result = (await harness.behavior.callRpc("spawnHere", {
+      projectId: "proj_1",
+      prompt: "check the mel dashboard",
+      target: { path: "/repo-wt/feat", hostId: "host_1", environmentId: null },
+    })) as any;
+    expect(result.threadId).toBe("thr_1");
+    const args = harness.inspection.sdk.callsTo("threads.spawn")[0][0] as Record<string, any>;
+    expect(args.prompt).toBe("check the mel dashboard");
+    expect(args.environment).toEqual({
+      type: "host",
+      hostId: "host_1",
+      workspace: { type: "unmanaged", hostId: "host_1", path: "/repo-wt/feat" },
+    });
+    expect(args.pluginMetadata).toMatchObject({ kind: "manual", checkout: "/repo-wt/feat" });
+  });
+
+  it("spawnHere reuses the BB environment when the worktree has one", async () => {
+    const { harness } = await makeHost({
+      environments: [
+        {
+          id: "env_feat",
+          path: "/repo-wt/feat",
+          hostId: "host_1",
+          branchName: "feature-mel-dashboard",
+          isWorktree: true,
+        },
+      ],
+    });
+    await harness.behavior.callRpc("spawnHere", {
+      projectId: "proj_1",
+      prompt: "hi",
+      target: { path: "/repo-wt/feat", hostId: "host_1", environmentId: null },
+    });
+    const args = harness.inspection.sdk.callsTo("threads.spawn")[0][0] as Record<string, any>;
+    expect(args.environment).toEqual({ type: "reuse", environmentId: "env_feat" });
+  });
+
   it("rejects an unknown --worktree with candidates", async () => {
     const { harness } = await makeHost();
     const result = await harness.behavior.runCli(["tickets", "--worktree", "nope"]);
