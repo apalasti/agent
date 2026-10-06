@@ -5,6 +5,7 @@ import {
   ThreadTitle,
   useSidebarThreadDraft,
   useSidebarThreadRowStatus,
+  useSidebarThreadRowStatuses,
   useSidebarThreadShortcut,
   type PluginSidebarThread,
 } from "@get-bb/plugin-sdk/app";
@@ -28,9 +29,18 @@ import { Icon } from "@/components/ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { ScratchSummary, WorktreeStatus } from "../contract";
-import { rollupIndicator, type ProjectNode, type ThreadNode, type WorktreeNode } from "../group";
+import { rollupIndicator, runningStatusLabels, type ProjectNode, type ThreadNode, type WorktreeNode } from "../group";
 import { collapseKey, useIsOnScreen, useScratchSummary, useWorktreeStatus } from "./data";
-import { IndicatorGlyph, RollupGlyph, RowStatusGlyph, rowStatusWins, withDraft } from "./glyphs";
+import {
+  IndicatorGlyph,
+  RollupGlyph,
+  RowStatusGlyph,
+  RunningRollupGlyph,
+  RunningStatusLine,
+  rowStatusWins,
+  runningSummary,
+  withDraft,
+} from "./glyphs";
 
 export type ListContextValue = {
   activeThreadId: string | null;
@@ -228,6 +238,7 @@ export function GroupHeader({
 export function ProjectRow({ node }: { node: ProjectNode }) {
   const list = useList();
   const actions = experimental_useSidebarThreadActions();
+  const rowStatuses = useSidebarThreadRowStatuses();
   const { project } = node;
   const key = collapseKey.project(project.id);
   const collapsed = list.isCollapsed(key);
@@ -237,7 +248,14 @@ export function ProjectRow({ node }: { node: ProjectNode }) {
       label={project.name}
       collapsed={collapsed}
       onToggle={() => list.toggle(key)}
-      passive={collapsed ? <RollupGlyph rollup={rollupIndicator(allThreads)} /> : null}
+      passive={
+        collapsed ? (
+          <>
+            <RunningRollupGlyph labels={runningStatusLabels(allThreads, rowStatuses)} />
+            <RollupGlyph rollup={rollupIndicator(allThreads)} />
+          </>
+        ) : null
+      }
       actions={
         <>
           <HoverButton label={`New task in ${project.name}`} icon="Plus" onClick={() => list.openNewTask(project.id)} />
@@ -347,6 +365,7 @@ async function copyText(text: string, what: string) {
 
 export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string; group: WorktreeNode; depth?: number }) {
   const list = useList();
+  const rowStatuses = useSidebarThreadRowStatuses();
   const [ref, isOnScreen] = useIsOnScreen<HTMLDivElement>();
   const status = useWorktreeStatus(projectId, group.kind === "worktree" ? group.path : null, isOnScreen);
   const scratch = useScratchSummary(projectId, group.kind === "worktree" ? group.path : null, isOnScreen);
@@ -386,13 +405,15 @@ export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string
   const behind = status?.behind ?? 0;
   const dirty = status?.dirtyFiles ?? 0;
   const summary = status ? statusSummary(status) : null;
+  const runningLabels = collapsed ? runningStatusLabels(group.threads, rowStatuses) : [];
+  const title = [group.path, runningSummary(runningLabels)].filter((line) => line !== null).join("\n");
 
   return (
     <div
       ref={ref}
       className={GROUP_ROW}
       style={indent(depth)}
-      title={group.path ?? undefined}
+      title={title === "" ? undefined : title}
       data-worktree-path={group.path ?? undefined}
     >
       <button
@@ -440,6 +461,7 @@ export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string
         passive={
           collapsed && !isEmpty ? (
             <>
+              <RunningRollupGlyph labels={runningLabels} />
               <RollupGlyph rollup={rollupIndicator(group.threads)} />
               <span className="text-xs tabular-nums text-subtle-foreground">{group.threadCount}</span>
             </>
@@ -548,6 +570,7 @@ export function ThreadRow({ node, depth }: { node: ThreadNode; depth: number }) 
   const hasChildren = node.children.length > 0;
   const collapsed = hasChildren && list.isCollapsed(key);
   const indicator = withDraft(thread.indicator, hasUnsubmittedDraft);
+  const runningLabel = rowStatus?.tone === "running" ? rowStatus.label : null;
   const entries = threadEntries(thread, actions, split.isAvailable, () => setRenaming(true), list.onNavigate);
 
   const passive = shortcut ? (
@@ -586,7 +609,10 @@ export function ThreadRow({ node, depth }: { node: ThreadNode; depth: number }) 
           <div
             className={cn(
               ROW,
-              "group/row h-[var(--bb-sidebar-row-height,1.75rem)] cursor-pointer text-sidebar-foreground",
+              "group/row cursor-pointer text-sidebar-foreground",
+              runningLabel === null
+                ? "h-[var(--bb-sidebar-row-height,1.75rem)]"
+                : "min-h-[var(--bb-sidebar-row-height,1.75rem)] flex-wrap gap-y-0 pb-1",
               isActive
                 ? "bb-sidebar-selected-row bg-state-active"
                 : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground has-[[data-state=open]]:bg-sidebar-accent",
@@ -639,6 +665,11 @@ export function ThreadRow({ node, depth }: { node: ThreadNode; depth: number }) 
                   </>
                 }
               />
+            )}
+            {runningLabel === null ? null : (
+              <span className="pointer-events-none relative -mt-1 flex min-w-0 basis-full">
+                <RunningStatusLine label={runningLabel} />
+              </span>
             )}
           </div>
         </ContextMenuTrigger>

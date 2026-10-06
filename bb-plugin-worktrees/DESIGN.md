@@ -26,7 +26,13 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
      New thread here, Workflow… (opens `WorkflowDialog`), Copy path, Copy branch name,
      Remove worktree… (not for the main checkout).
    - Thread row: bb's own row semantics (status indicator glyph, unread, title, pin/archive
-     actions, keyboard DOM contract, split drag).
+     actions, keyboard DOM contract, split drag). A row status with tone `running` (e.g. the
+     subagents plugin's "2 subagents running") also renders as a muted second line with a
+     spinner under the title, so it shows even while bb's busy spinner owns the glyph slot
+     (was: the status only replaced the glyph, and lost to the spinner exactly while an
+     orchestrator waited on its subagents). Clicking the line opens the thread. Collapsed
+     worktree and project rows add a green spinner for running statuses inside them, and the
+     worktree row's tooltip lists their labels.
 2. **New task dialog** — the `task.sh` port. Fields: Branch (required), Base ref (defaults
    to the project's configured base, e.g. `wizz/main`), plus an embedded
    `experimental_NewThreadComposer` so the prompt, provider, model and permission pickers

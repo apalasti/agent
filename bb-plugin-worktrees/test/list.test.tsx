@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { loadPluginApp, renderSlot, type PluginRpcTestHandlers } from "@get-bb/plugin-sdk/testing/app";
-import type { PluginThreadListProps } from "@get-bb/plugin-sdk/app";
+import type { PluginSidebarThreadRowStatus, PluginThreadListProps } from "@get-bb/plugin-sdk/app";
 import { WORKTREES_CHANGED, type rpcContract } from "../src/contract";
 import { makeProject, makeThread, makeWorktree } from "./fixtures";
 
@@ -58,7 +58,12 @@ function rpcHandlers(overrides: Partial<PluginRpcTestHandlers<typeof rpcContract
 
 const threads = [
   makeThread("t-main", { title: "Main work", displayTitle: "Main work", environment: { id: "env-main", path: MAIN } }),
-  makeThread("t-feat", { title: "Feature work", displayTitle: "Feature work", environment: { id: "env-feat", path: `${FEAT}/` } }),
+  makeThread("t-feat", {
+    title: "Feature work",
+    displayTitle: "Feature work",
+    indicator: "runtime",
+    environment: { id: "env-feat", path: `${FEAT}/` },
+  }),
   makeThread("t-child", {
     title: "Child",
     displayTitle: "Child",
@@ -69,7 +74,15 @@ const threads = [
 
 const projects = [makeProject("p1", { name: "irrops" }), makeProject("me", { name: "Personal", isPersonal: true })];
 
-async function renderList(options: { rpc?: ReturnType<typeof rpcHandlers>; onNavigate?: () => void } = {}) {
+const SUBAGENTS_RUNNING: PluginSidebarThreadRowStatus = { icon: "Bot", label: "2 subagents running", tone: "running" };
+
+async function renderList(
+  options: {
+    rpc?: ReturnType<typeof rpcHandlers>;
+    onNavigate?: () => void;
+    rowStatuses?: Record<string, PluginSidebarThreadRowStatus>;
+  } = {},
+) {
   const app = await loadPluginApp(() => import("../app"));
   const props: PluginThreadListProps = {
     activeThreadId: "t-main",
@@ -81,6 +94,7 @@ async function renderList(options: { rpc?: ReturnType<typeof rpcHandlers>; onNav
   return renderSlot<PluginThreadListProps, typeof rpcContract>(app.threadLists[0]!, props, {
     rpc: options.rpc ?? rpcHandlers(),
     sidebarThreads: { status: "ready", threads, projects, sections: [] },
+    sidebarRowStatuses: options.rowStatuses,
   });
 }
 
@@ -213,6 +227,34 @@ describe("Worktrees thread list", () => {
     await slot.findByRole("link", { name: "Open Child" });
     fireEvent.click(slot.getByRole("button", { name: "Collapse Feature work threads" }));
     expect(slot.queryByRole("link", { name: "Open Child" })).toBeNull();
+  });
+
+  it("shows a running row status as a second line under a busy thread's title, keeping the spinner", async () => {
+    const slot = await renderList({ rowStatuses: { "t-feat": SUBAGENTS_RUNNING } });
+    const anchor = await slot.findByRole("link", { name: "Open Feature work" });
+    const row = anchor.parentElement!;
+    const line = row.querySelector("[data-row-status-line]");
+    expect(line?.textContent).toBe("2 subagents running");
+    expect(row.querySelector(".animate-spin")).toBeTruthy();
+    expect(row.querySelectorAll("a[data-sidebar-thread-shortcut-target]")).toHaveLength(1);
+
+    fireEvent.click(anchor);
+    expect(slot.inspection.sidebarActionCalls).toContainEqual(expect.objectContaining({ method: "open", threadId: "t-feat" }));
+  });
+
+  it("leaves rows without a running status single-line", async () => {
+    const slot = await renderList({ rowStatuses: { "t-main": { icon: "Check", label: "Done", tone: "success" } } });
+    await slot.findByText("feat/a");
+    expect(slot.container.querySelector("[data-row-status-line]")).toBeNull();
+    expect(slot.getByLabelText("Done")).toBeTruthy();
+  });
+
+  it("rolls a nested thread's running status into its collapsed worktree", async () => {
+    const slot = await renderList({ rowStatuses: { "t-child": SUBAGENTS_RUNNING } });
+    fireEvent.click(await slot.findByRole("button", { name: "Collapse feat/a threads" }));
+    const worktree = slot.container.querySelector(`[data-worktree-path="${FEAT}"]`)!;
+    expect(worktree.getAttribute("title")).toBe(`${FEAT}\n2 subagents running`);
+    expect(worktree.querySelector('[aria-label="2 subagents running"]')).toBeTruthy();
   });
 
   it("shows why a project's worktrees could not be listed", async () => {

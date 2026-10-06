@@ -1,4 +1,4 @@
-import type { PluginSidebarProject, PluginSidebarThread } from "@get-bb/plugin-sdk/app";
+import type { PluginSidebarProject, PluginSidebarThread, PluginSidebarThreadRowStatus } from "@get-bb/plugin-sdk/app";
 import type { Worktree } from "./contract";
 
 export type ThreadNode = {
@@ -152,6 +152,17 @@ export function rollupIndicator(nodes: readonly ThreadNode[]): Rollup {
   let best = ROLLUP_PRIORITY.length - 1;
   for (const thread of flattenThreads(nodes)) best = Math.min(best, ROLLUP_PRIORITY.indexOf(rollupOf(thread)));
   return ROLLUP_PRIORITY[best]!;
+}
+
+/** Labels of the running row statuses (e.g. "2 subagents running") set on threads inside a group. */
+export function runningStatusLabels(
+  nodes: readonly ThreadNode[],
+  statuses: ReadonlyMap<string, PluginSidebarThreadRowStatus>,
+): string[] {
+  return flattenThreads(nodes).flatMap((thread) => {
+    const status = statuses.get(thread.id);
+    return status?.tone === "running" ? [status.label] : [];
+  });
 }
 
 function latestActivity(nodes: readonly ThreadNode[]): number {

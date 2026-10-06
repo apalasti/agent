@@ -97,6 +97,25 @@ export function RowStatusGlyph({ status }: { status: PluginSidebarThreadRowStatu
   return <Icon name={status.icon} className={cn(GLYPH, tone)} aria-label={status.label} />;
 }
 
+export function RunningStatusLine({ label }: { label: string }) {
+  return (
+    <span data-row-status-line="" className="pointer-events-none flex min-w-0 items-center gap-1 text-[11px] leading-4 text-subtle-foreground">
+      <Icon name="Loading" className="size-3 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+      <span className="min-w-0 truncate">{label}</span>
+    </span>
+  );
+}
+
+export function runningSummary(labels: readonly string[]): string | null {
+  return labels.length > 0 ? labels.join(" · ") : null;
+}
+
+export function RunningRollupGlyph({ labels }: { labels: readonly string[] }) {
+  const summary = runningSummary(labels);
+  if (summary === null) return null;
+  return <Icon name="Loading" className={cn(GLYPH, "size-3.5 animate-spin text-success motion-reduce:animate-none")} aria-label={summary} />;
+}
+
 const ROLLUP_LABEL: Record<Rollup, string | null> = {
   "unread-error": "A thread here failed",
   "waiting-for-input": "A thread here needs input",
