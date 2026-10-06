@@ -42,6 +42,7 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
    bb task list [--project <id|name>]          # worktrees + their threads
    bb task rm <branch|path> [--delete-branch] [--force] [--project ...]
    bb task config [--project ...] [--base <ref>] [--overlay <dir>] [--teardown <cmd>] [--setup <cmd>] [--tool <t>]
+   bb task scratch | run <effort>/<NN> | orchestrate <effort> [NN ...] | chart "<idea>" | handoff <effort>  [--path]
    ```
    (Replaced `--prompt-file -`: plugin CLIs run on the server and only see stdin through
    the SDK's `--<option>-stdin` rewrite, so stdin is `--prompt-stdin`.)
@@ -111,6 +112,8 @@ bb-plugin-worktrees/
   src/ui/WorkflowDialog.tsx WorkflowDialog({ projectId, worktreePath, worktreeLabel, open, onOpenChange })
   src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
+  src/ui/WorkflowDialog.tsx  .scratch efforts of one worktree: Run / Orchestrate / Chart / Hand off
+  src/scratch.ts            pure .scratch scanner + pi prompt composition (see `.scratch/` workflow)
   src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu
   skills/worktrees/SKILL.md the `bb task` CLI for agents
   test/*.test.ts            git.test (temp repos), overlay.test, group.test, server.test (harness)
@@ -144,7 +147,80 @@ force})` → archive every thread whose environment path is that worktree → te
 → `git gtr rm <branch> --yes` or `git worktree remove [--force] <path>` → optional
 `git branch -D` → publish `worktrees-changed`.
 
-## Later phases (not in v1)
+## `.scratch/` workflow (phase 2)
 
-- `.scratch/` workflow (wayfinder tickets, issues, `/orchestrate`) surfaced per worktree.
+pi's `/wayfinder` and `/orchestrate` (`~/fun/agent/extensions/{wayfinder,issues}`) compose a
+prompt and drop it into pi's editor through `ui.select`/`ui.input`/`setEditorText`, which bb's
+pi bridge does not render (the command hangs). The plugin composes the same prompts from the
+same template files and spawns the thread itself, in the worktree the `.scratch/` lives in.
+(Replaced the deleted standalone `bb-plugin-workflow`, which bundled copies of the templates
+and had its own worktree discovery.)
+
+Surfaces: the worktree `⋯` menu → **Workflow…** (`WorkflowDialog`), and `bb task scratch | run
+| orchestrate | chart | handoff` (documented in `skills/worktrees/SKILL.md`).
+
+Rules carried over from pi unchanged: an effort is `.scratch/<slug>/` with `MAP.md` and/or
+`issues/`; a ticket's `type` picks `wayfinder/<type>.md` (unknown → `grilling`); a ticket is on
+the **frontier** when it is not `closed` and every `blocked-by` number is a `closed` ticket
+(a missing blocker blocks); claimed frontier tickets stay runnable; **handoff** is offered when a
+map has no open ticket; issues default to `needs-plan` and `done` ones are not batchable.
+
+Files:
+
+```
+src/scratch.ts   node:fs, no bb imports
+  scanScratch(root) → ScratchIndex
+  findEffort(index, slug) → ScratchEffort                       throws naming known efforts
+  findRunnableTicket(index, "<effort>/<NN>") → {effort, ticket}  refuses closed / blocked
+  selectIssues(effort, numbers) → ScratchIssue[]                [] → every open issue
+  ticketPrompt(templatesDir, effort, ticket, timestamp?) / handoffPrompt(templatesDir, effort, timestamp?)
+  chartPrompt(templatesDir, root, idea) / orchestratePrompt(templatesDir, batch)
+  promptTimestamp() → "YYYY-MM-DDTHH:MMZ"
+src/contract.ts  (appended) ScratchTicket {ref, number, slug, title, type, status, claimed,
+                 blockedBy, blockers, state: frontier|blocked|done, path}, ScratchIssue,
+                 ScratchEffort {slug, dir, mapPath|null, tickets, issues, handoffReady},
+                 ScratchIndex {root, scratchDir, efforts}, AgentSelection, WorkflowThreadMetadata
+                 RPC: scratch({projectId, path}) → ScratchIndex
+                      runTicket({…target, ref}) / orchestrate({…target, effort, issues}) /
+                      chart({…target, idea}) / handoff({…target, effort}) → {threadId}
+                        where target = {projectId, path, request?}
+                      agentDefaults({projectId}) → AgentSelection | null
+server.ts        settings.templatesDir (string, default ~/fun/agent/extensions, read per run)
+                 worktreeScratch, spawnWorkflow, runTicket, orchestrate, chart, handoff,
+                 agentDefaults; CLI scratch/run/orchestrate/chart/handoff + cliWorktreePath
+src/ui/WorkflowDialog.tsx  WorkflowDialog({projectId, worktreePath, worktreeLabel, open, onOpenChange})
+test/scratch.test.ts, test/workflow.test.tsx, workflow block in test/server.test.ts
+```
+
+Template placeholders, filled exactly as the pi extensions do (`__dirname` there is
+`<templatesDir>/wayfinder` or `<templatesDir>/issues`): `{{map_path}} {{effort_dir}} {{effort}}
+{{ticket_path}} {{ticket_title}} {{ticket_type}} {{timestamp}} {{map_bookkeeping}}` (the trimmed
+`wayfinder/map-bookkeeping.md`; ticket fields empty for handoff), chart's `{{idea}}
+{{scratch_dir}}`, orchestrate's `{{issues}}` (`- NN — title — status: s — \`path\`` per line).
+All paths are absolute under the worktree's realpath, which is what pi's `git rev-parse
+--show-toplevel` root gives.
+
+**A ticket becomes a thread.** Dialog Run (or `bb task run demo/03 --path …`) → RPC
+`runTicket({projectId, path, ref: "demo/03", request?})` → `findProjectWorktree` rejects a path
+that is not a git worktree of the project → `scanScratch(worktree.path)` →
+`findRunnableTicket` → `ticketPrompt(settings.templatesDir, …)` → `spawnWorkflow` keeps only
+`providerId/model/reasoningLevel/permissionMode/serviceTier/executionInputSources` from
+`request`, adds `prompt`, `title: "demo/03: <ticket title>"`, `pluginMetadata: {kind: "ticket",
+effort: "demo", ref: "demo/03", path}` → `spawnInWorktree` (shared with the worktree `+`
+dialog: reuse a ready environment at that path, else `project-checkout` with `inputs: {path}`)
+→ `{threadId}` → dialog closes and `useBbNavigate().toThread(threadId)`; with ⌘/Ctrl held it
+stays open, toasts with an Open action, and rescans.
+
+**The agent choice.** `agentDefaults` → `system.config().generalSettings.defaultProviderId`
+(else the first available provider) → `providers.models` default model + its default
+reasoning → dialog seeds `experimental_ProviderModelPicker` → the picked value rides as
+`request` on every spawn. When defaults cannot be resolved the picker is hidden and bb's own
+defaults apply. The CLI never sends `request`.
+
+**CLI `--path` default.** `ctx.threadId` → `threads.get` → `environmentId` → the worktree whose
+`environmentIds` contain it; otherwise the main checkout. (Plugin CLIs run on the server, so
+the caller's `BB_ENVIRONMENT_ID` is not visible; the thread id is.)
+
+## Later phases
+
 - Personal skills from `~/fun/agent/skills` for non-pi providers via `~/.bb/skills`.

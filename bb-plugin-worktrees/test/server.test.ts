@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createFakePluginHost, makeThreadResponse } from "@get-bb/plugin-sdk/testing";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import plugin from "../server";
-import { TASK_WORKTREE_PROVIDER_ID, WORKTREES_CHANGED } from "../src/contract";
+import { TASK_WORKTREE_PROVIDER_ID, WORKTREES_CHANGED, type ScratchIndex } from "../src/contract";
 import { git, makeRepo, write, type TempRepo } from "./repo";
 
 const PROJECT_ID = "proj_demo";
@@ -12,9 +12,10 @@ const HOST_ID = "host_local";
 let repo: TempRepo;
 let environments: { id: string; path: string | null; status: string; lifecycle: { phase: string } }[];
 
-async function load() {
+async function load(settings: Record<string, string> = {}) {
   const { bb, harness } = createFakePluginHost({
     pluginId: "worktrees",
+    settings,
     sdk: {
       projects: {
         get: async () => ({
@@ -28,6 +29,7 @@ async function load() {
       environments: { list: async () => environments },
       threads: {
         spawn: async () => ({ id: "thr_new" }),
+        get: async () => makeThreadResponse({ id: "thr_caller", environmentId: "env_side" }),
         list: async () => [makeThreadResponse({ id: "thr_in_worktree" })],
         archive: async () => ({ ok: true }),
       },
@@ -207,5 +209,102 @@ describe("bb task cli", () => {
     await harness.behavior.runCli(["config", "--base", "origin/dev", "--teardown", "make down"]);
     const shown = await harness.behavior.runCli(["config", "--base", "", "--json"]);
     expect(JSON.parse(shown.stdout)).toMatchObject({ baseRef: null, teardownCommand: "make down", effectiveBaseRef: "main", tool: "git" });
+  });
+});
+
+describe("workflow", () => {
+  let templates: string;
+
+  beforeEach(() => {
+    templates = join(repo.root, "templates");
+    write(join(templates, "wayfinder", "task.md"), "Run {{ticket_path}} at {{timestamp}}\n");
+    write(join(templates, "wayfinder", "map-bookkeeping.md"), "\n");
+    write(join(templates, "wayfinder", "chart.md"), "Chart {{idea}} in {{scratch_dir}}\n");
+    write(join(templates, "issues", "orchestrate.md"), "Batch:\n{{issues}}\n");
+  });
+
+  function scratchIn(root: string) {
+    write(join(root, ".scratch", "demo", "MAP.md"), "# Demo\n");
+    write(join(root, ".scratch", "demo", "tickets", "01-a.md"), "---\ntype: task\nstatus: open\n---\n\n# Do A\n");
+    write(join(root, ".scratch", "demo", "issues", "01-x.md"), "---\nstatus: needs-plan\n---\n\n# Build X\n");
+    write(join(root, ".scratch", "demo", "issues", "02-y.md"), "---\nstatus: done\n---\n\n# Build Y\n");
+  }
+
+  const spawnCalls = (harness: Awaited<ReturnType<typeof load>>) =>
+    harness.inspection.sdk.callsTo("threads.spawn").map((args) => args[0] as Record<string, unknown>);
+
+  it("scans the requested worktree's .scratch only", async () => {
+    const harness = await load({ templatesDir: templates });
+    const side = join(repo.root, "side");
+    git(repo.repo, "worktree", "add", "-q", "-b", "side", side);
+    scratchIn(side);
+    const main = (await harness.behavior.callRpc("scratch", { projectId: PROJECT_ID, path: repo.repo })) as ScratchIndex;
+    const inSide = (await harness.behavior.callRpc("scratch", { projectId: PROJECT_ID, path: side })) as ScratchIndex;
+    expect(main.efforts).toEqual([]);
+    expect(inSide.efforts.map((effort) => effort.slug)).toEqual(["demo"]);
+    await expect(harness.behavior.callRpc("scratch", { projectId: PROJECT_ID, path: repo.root })).rejects.toThrow(/not a worktree/);
+  });
+
+  it("runs a ticket in its worktree with the composed prompt, title, metadata, and the agent choice", async () => {
+    const harness = await load({ templatesDir: templates });
+    scratchIn(repo.repo);
+    const request = { providerId: "pi", model: "m", prompt: "ignored", environment: { type: "host" } };
+    await harness.behavior.callRpc("runTicket", { projectId: PROJECT_ID, path: repo.repo, ref: "demo/1", request });
+    const [call] = spawnCalls(harness);
+    expect(call).toMatchObject({
+      projectId: PROJECT_ID,
+      providerId: "pi",
+      model: "m",
+      title: "demo/01: Do A",
+      pluginMetadata: { kind: "ticket", effort: "demo", ref: "demo/01", path: repo.repo },
+      environment: { type: "provider", environmentProviderId: "project-checkout", inputs: { path: repo.repo } },
+    });
+    expect(call?.prompt).toMatch(new RegExp(`^Run ${join(repo.repo, ".scratch/demo/tickets/01-a.md")} at \\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\dZ\\n$`));
+  });
+
+  it("orchestrates the selected open issues and refuses done ones", async () => {
+    const harness = await load({ templatesDir: templates });
+    scratchIn(repo.repo);
+    await harness.behavior.callRpc("orchestrate", { projectId: PROJECT_ID, path: repo.repo, effort: "demo", issues: ["01"] });
+    expect(spawnCalls(harness)[0]).toMatchObject({
+      prompt: `Batch:\n- 01 — Build X — status: needs-plan — \`${join(repo.repo, ".scratch/demo/issues/01-x.md")}\`\n`,
+      title: "demo/01: Build X",
+      pluginMetadata: { kind: "orchestrate", effort: "demo", ref: "demo/01" },
+    });
+    await expect(
+      harness.behavior.callRpc("orchestrate", { projectId: PROJECT_ID, path: repo.repo, effort: "demo", issues: ["02"] }),
+    ).rejects.toThrow(/done/);
+  });
+
+  it("CLI defaults --path to the calling thread's worktree", async () => {
+    const harness = await load({ templatesDir: templates });
+    const side = join(repo.root, "side");
+    git(repo.repo, "worktree", "add", "-q", "-b", "side", side);
+    environments = [{ id: "env_side", path: side, status: "ready", lifecycle: { phase: "active" } }];
+    scratchIn(side);
+
+    const listed = await harness.behavior.runCli(["scratch"], { threadId: "thr_caller" });
+    expect(listed.stdout).toContain("▸ demo/01  [task] Do A");
+    expect(listed.stdout).toContain("issue demo/01  needs-plan  Build X");
+
+    const charted = await harness.behavior.runCli(["chart", "cost", "tracking", "--json"], { threadId: "thr_caller" });
+    expect(charted.exitCode).toBe(0);
+    expect(spawnCalls(harness)[0]).toMatchObject({
+      prompt: `Chart cost tracking in ${join(side, ".scratch")}\n`,
+      title: "Chart: cost tracking",
+      environment: { type: "reuse", environmentId: "env_side" },
+    });
+
+    const fromMain = await harness.behavior.runCli(["scratch", "--json"]);
+    expect(JSON.parse(fromMain.stdout)).toMatchObject({ root: repo.repo, efforts: [] });
+  });
+
+  it("CLI run reports a blocked ticket as a failure", async () => {
+    const harness = await load({ templatesDir: templates });
+    scratchIn(repo.repo);
+    write(join(repo.repo, ".scratch", "demo", "tickets", "02-b.md"), "---\ntype: task\nstatus: open\nblocked-by: [01]\n---\n\n# Do B\n");
+    const result = await harness.behavior.runCli(["run", "demo/02"]);
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toMatch(/blocked by 01/);
   });
 });

@@ -49,6 +49,63 @@ export type TaskWorktreeInputs = z.infer<typeof taskWorktreeInputsSchema>;
 
 const projectRef = z.object({ projectId: z.string().min(1) });
 
+export const scratchTicketSchema = z.object({
+  ref: z.string(),
+  number: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  type: z.string(),
+  status: z.string(),
+  claimed: z.string().nullable(),
+  blockedBy: z.array(z.string()),
+  /** blockedBy minus the closed ones. */
+  blockers: z.array(z.string()),
+  state: z.enum(["frontier", "blocked", "done"]),
+  path: z.string(),
+});
+export type ScratchTicket = z.infer<typeof scratchTicketSchema>;
+
+export const scratchIssueSchema = z.object({
+  ref: z.string(),
+  number: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  status: z.string(),
+  path: z.string(),
+});
+export type ScratchIssue = z.infer<typeof scratchIssueSchema>;
+
+export const scratchEffortSchema = z.object({
+  slug: z.string(),
+  dir: z.string(),
+  mapPath: z.string().nullable(),
+  tickets: z.array(scratchTicketSchema),
+  issues: z.array(scratchIssueSchema),
+  handoffReady: z.boolean(),
+});
+export type ScratchEffort = z.infer<typeof scratchEffortSchema>;
+
+export const scratchIndexSchema = z.object({
+  root: z.string(),
+  scratchDir: z.string(),
+  efforts: z.array(scratchEffortSchema),
+});
+export type ScratchIndex = z.infer<typeof scratchIndexSchema>;
+
+export const agentSelectionSchema = z.object({
+  providerId: z.string(),
+  model: z.string(),
+  reasoningLevel: z.string(),
+  serviceTier: z.string().optional(),
+});
+export type AgentSelection = z.infer<typeof agentSelectionSchema>;
+
+/** `request` carries the provider/model/reasoning/permission choice; prompt and environment are the plugin's. */
+const workflowTarget = projectRef.extend({
+  path: z.string().min(1),
+  request: z.record(z.string(), z.unknown()).optional(),
+});
+
 export const rpcContract = defineRpcContract({
   listWorktrees: {
     input: projectRef,
@@ -101,4 +158,35 @@ export const rpcContract = defineRpcContract({
     input: projectRef.extend({ config: projectConfigSchema.partial() }),
     output: resolvedConfigSchema,
   },
+  scratch: {
+    input: projectRef.extend({ path: z.string().min(1) }),
+    output: scratchIndexSchema,
+  },
+  runTicket: {
+    input: workflowTarget.extend({ ref: z.string().min(1) }),
+    output: z.object({ threadId: z.string() }),
+  },
+  orchestrate: {
+    input: workflowTarget.extend({ effort: z.string().min(1), issues: z.array(z.string().min(1)) }),
+    output: z.object({ threadId: z.string() }),
+  },
+  chart: {
+    input: workflowTarget.extend({ idea: z.string().trim().min(1) }),
+    output: z.object({ threadId: z.string() }),
+  },
+  handoff: {
+    input: workflowTarget.extend({ effort: z.string().min(1) }),
+    output: z.object({ threadId: z.string() }),
+  },
+  agentDefaults: {
+    input: projectRef,
+    output: agentSelectionSchema.nullable(),
+  },
 });
+
+export type WorkflowThreadMetadata = {
+  kind: "ticket" | "orchestrate" | "chart" | "handoff";
+  effort: string | null;
+  ref: string | null;
+  path: string;
+};

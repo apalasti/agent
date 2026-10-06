@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { basename, isAbsolute, join } from "node:path";
 import { PluginCliError, cliCommand, defineCli, type BbPluginApi, type JsonValue } from "@get-bb/plugin-sdk";
 import { z } from "zod";
@@ -6,9 +7,12 @@ import {
   WORKTREES_CHANGED,
   rpcContract,
   taskWorktreeInputsSchema,
+  type AgentSelection,
   type ProjectConfig,
   type ResolvedConfig,
+  type ScratchIndex,
   type Worktree,
+  type WorkflowThreadMetadata,
 } from "./src/contract";
 import { loadConfig, overlayPath, resolveConfig, saveConfig } from "./src/config";
 import {
@@ -28,6 +32,16 @@ import {
   type Runner,
 } from "./src/git";
 import { applyOverlay } from "./src/overlay";
+import {
+  chartPrompt,
+  findEffort,
+  findRunnableTicket,
+  handoffPrompt,
+  orchestratePrompt,
+  scanScratch,
+  selectIssues,
+  ticketPrompt,
+} from "./src/scratch";
 
 export type { rpcContract } from "./src/contract";
 
@@ -59,9 +73,40 @@ export interface PluginOptions {
   runner?: Runner;
 }
 
+const AGENT_REQUEST_KEYS = [
+  "providerId",
+  "model",
+  "reasoningLevel",
+  "permissionMode",
+  "serviceTier",
+  "executionInputSources",
+] as const;
+
+function agentChoice(request: Record<string, unknown> | undefined): Record<string, unknown> {
+  const choice: Record<string, unknown> = {};
+  for (const key of AGENT_REQUEST_KEYS) {
+    if (request?.[key] !== undefined) choice[key] = request[key];
+  }
+  return choice;
+}
+
+const truncate = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
+const expandHome = (path: string) => (path === "~" || path.startsWith("~/") ? join(homedir(), path.slice(1)) : path);
+
 export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
   return async function plugin(bb: BbPluginApi) {
     const kv = bb.storage.kv;
+    const settings = bb.settings.define({
+      templatesDir: {
+        type: "string",
+        label: "Workflow prompt templates",
+        description:
+          "Directory holding wayfinder/*.md and issues/orchestrate.md, the templates the pi /wayfinder and /orchestrate commands use. Read on every run.",
+        default: join(homedir(), "fun", "agent", "extensions"),
+      },
+    });
+    const templatesDir = async () => expandHome((await settings.get()).templatesDir.trim());
     const publishChanged = (projectId: string) => bb.realtime.publish(WORKTREES_CHANGED, { projectId });
 
     async function projectSource(projectId: string) {
@@ -104,6 +149,8 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
       return resolveConfig(await loadConfig(kv, projectId), runner, sourceRoot);
     }
 
+    type SpawnArgs = Parameters<typeof bb.sdk.threads.spawn>[0];
+
     async function spawnInWorktree(projectId: string, path: string, request: Record<string, unknown>) {
       const { worktree, hostId } = await findProjectWorktree(projectId, path);
       const reusable = (await liveEnvironments(projectId)).find(
@@ -118,11 +165,117 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
             machine: { type: "existing" as const, hostId },
           };
       const thread = await bb.sdk.threads.spawn({
-        ...(request as unknown as Parameters<typeof bb.sdk.threads.spawn>[0]),
+        ...(request as unknown as SpawnArgs),
         projectId,
         environment,
       });
       return { threadId: thread.id };
+    }
+
+    async function worktreeScratch(projectId: string, path: string): Promise<ScratchIndex> {
+      const { worktree } = await findProjectWorktree(projectId, path);
+      return scanScratch(worktree.path);
+    }
+
+    type WorkflowTarget = { projectId: string; path: string; request?: Record<string, unknown> };
+
+    async function spawnWorkflow(
+      target: WorkflowTarget,
+      thread: { prompt: string; title: string; metadata: Omit<WorkflowThreadMetadata, "path"> },
+      worktreePath: string,
+    ) {
+      const metadata: WorkflowThreadMetadata = { ...thread.metadata, path: worktreePath };
+      return spawnInWorktree(target.projectId, worktreePath, {
+        ...agentChoice(target.request),
+        prompt: thread.prompt,
+        title: thread.title,
+        pluginMetadata: metadata,
+      });
+    }
+
+    async function runTicket(target: WorkflowTarget & { ref: string }) {
+      const index = await worktreeScratch(target.projectId, target.path);
+      const { effort, ticket } = findRunnableTicket(index, target.ref);
+      const prompt = ticketPrompt(await templatesDir(), effort, ticket);
+      return spawnWorkflow(
+        target,
+        {
+          prompt,
+          title: `${ticket.ref}: ${ticket.title}`,
+          metadata: { kind: "ticket", effort: effort.slug, ref: ticket.ref },
+        },
+        index.root,
+      );
+    }
+
+    async function orchestrate(target: WorkflowTarget & { effort: string; issues: readonly string[] }) {
+      const index = await worktreeScratch(target.projectId, target.path);
+      const effort = findEffort(index, target.effort);
+      const batch = selectIssues(effort, target.issues);
+      const prompt = orchestratePrompt(await templatesDir(), batch);
+      const numbers = batch.map((issue) => issue.number);
+      const title =
+        batch.length === 1 && batch[0]
+          ? `${batch[0].ref}: ${batch[0].title}`
+          : `${effort.slug}/${numbers.join(", ")}: orchestrate`;
+      return spawnWorkflow(
+        target,
+        { prompt, title, metadata: { kind: "orchestrate", effort: effort.slug, ref: `${effort.slug}/${numbers.join(",")}` } },
+        index.root,
+      );
+    }
+
+    async function chart(target: WorkflowTarget & { idea: string }) {
+      const { worktree } = await findProjectWorktree(target.projectId, target.path);
+      const idea = target.idea.trim();
+      const prompt = chartPrompt(await templatesDir(), worktree.path, idea);
+      return spawnWorkflow(
+        target,
+        { prompt, title: `Chart: ${truncate(idea, 60)}`, metadata: { kind: "chart", effort: null, ref: null } },
+        worktree.path,
+      );
+    }
+
+    async function handoff(target: WorkflowTarget & { effort: string }) {
+      const index = await worktreeScratch(target.projectId, target.path);
+      const effort = findEffort(index, target.effort);
+      if (effort.mapPath === null) throw new Error(`Effort ${effort.slug} has no MAP.md`);
+      if (!effort.handoffReady) {
+        const open = effort.tickets.filter((ticket) => ticket.state !== "done").map((ticket) => ticket.number);
+        throw new Error(`${effort.slug} still has open tickets: ${open.join(", ")}`);
+      }
+      const prompt = handoffPrompt(await templatesDir(), effort);
+      return spawnWorkflow(
+        target,
+        { prompt, title: `${effort.slug}: hand off to PRD`, metadata: { kind: "handoff", effort: effort.slug, ref: null } },
+        index.root,
+      );
+    }
+
+    async function agentDefaults(projectId: string): Promise<AgentSelection | null> {
+      try {
+        const { hostId } = await projectSource(projectId);
+        const { generalSettings } = await bb.sdk.system.config();
+        const preference = [generalSettings.defaultProviderId, ...generalSettings.providerOrder];
+        const rank = (id: string) => {
+          const index = preference.indexOf(id);
+          return index === -1 ? preference.length : index;
+        };
+        const providers = (await bb.sdk.providers.list({ hostId }))
+          .filter((provider) => provider.available)
+          .sort((a, b) => rank(a.id) - rank(b.id));
+        for (const provider of providers) {
+          const { models } = await bb.sdk.providers.models({ hostId, providerId: provider.id });
+          const model = models.find((candidate) => candidate.isDefault) ?? models[0];
+          if (model !== undefined) {
+            return { providerId: provider.id, model: model.model, reasoningLevel: model.defaultReasoningEffort };
+          }
+        }
+        return null;
+      } catch (cause) {
+        bb.log.warn(`agentDefaults failed: ${errorMessage(cause)}`);
+        return null;
+      }
     }
 
     async function removeProjectWorktree(args: {
@@ -322,6 +475,12 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
         await saveConfig(kv, projectId, config);
         return projectConfig(projectId);
       },
+      scratch: ({ projectId, path }) => worktreeScratch(projectId, path),
+      runTicket: (input) => runTicket(input),
+      orchestrate: (input) => orchestrate(input),
+      chart: (input) => chart(input),
+      handoff: (input) => handoff(input),
+      agentDefaults: ({ projectId }) => agentDefaults(projectId),
     });
 
     async function resolveProjectId(requested: string | undefined, contextProjectId: string | undefined) {
@@ -391,6 +550,59 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
     }
 
     const THREADS_PER_WORKTREE = 10;
+
+    const pathOption = {
+      type: "string" as const,
+      description:
+        "Worktree path, branch, or directory name; defaults to the calling thread's worktree, else the main checkout",
+    };
+
+    async function cliWorktreePath(
+      projectId: string,
+      requested: string | undefined,
+      ctx: { cwd?: string; threadId?: string },
+    ): Promise<string> {
+      const { worktrees } = await projectWorktrees(projectId).catch(cliFailure);
+      if (requested !== undefined) return matchWorktree(worktrees, requested, ctx.cwd).path;
+      if (ctx.threadId !== undefined) {
+        const thread = await bb.sdk.threads.get({ threadId: ctx.threadId }).catch(() => null);
+        const caller = worktrees.find(
+          (worktree) => thread?.environmentId != null && worktree.environmentIds.includes(thread.environmentId),
+        );
+        if (caller) return caller.path;
+      }
+      const main = worktrees.find((worktree) => worktree.isMain) ?? worktrees[0];
+      if (main === undefined) throw new PluginCliError("The project has no git worktrees", { code: "failed" });
+      return main.path;
+    }
+
+    const spawned = (json: boolean | undefined, threadId: string, what: string) =>
+      reply(json, { threadId }, `${threadId}\n${what}. Follow it with: bb thread show ${threadId}`);
+
+    function scratchText(index: ScratchIndex): string {
+      if (index.efforts.length === 0) return `No efforts in ${index.scratchDir}`;
+      const lines = [index.scratchDir];
+      for (const effort of index.efforts) {
+        const done = effort.tickets.filter((ticket) => ticket.state === "done").length;
+        const map = effort.mapPath === null ? "" : `  map ${done}/${effort.tickets.length} closed`;
+        lines.push(`${effort.slug}${map}${effort.handoffReady ? "  ready to hand off" : ""}`);
+        for (const ticket of effort.tickets.filter((candidate) => candidate.state !== "done")) {
+          const mark = ticket.state === "frontier" ? "▸" : "·";
+          const note =
+            ticket.state === "blocked"
+              ? `  blocked by ${ticket.blockers.join(", ")}`
+              : ticket.claimed !== null
+                ? `  claimed ${ticket.claimed}`
+                : "";
+          lines.push(`  ${mark} ${ticket.ref}  [${ticket.type}] ${ticket.title}${note}`);
+        }
+        const issues = effort.issues.filter((issue) => issue.status !== "done");
+        for (const issue of issues) lines.push(`  issue ${issue.ref}  ${issue.status}  ${issue.title}`);
+        const doneIssues = effort.issues.length - issues.length;
+        if (doneIssues > 0) lines.push(`  ${doneIssues} issue(s) done`);
+      }
+      return lines.join("\n");
+    }
 
     bb.cli.register(
       defineCli({
@@ -498,6 +710,66 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
                 force: options.force,
               }).catch(cliFailure);
               return reply(options.json, { path: worktree.path, ...result }, result.log);
+            },
+          }),
+          scratch: cliCommand({
+            summary: "List a worktree's .scratch efforts: map tickets (frontier/blocked/closed) and issues",
+            options: { path: pathOption, project: projectOption, json: jsonOption },
+            async run({ options }, ctx) {
+              const projectId = await resolveProjectId(options.project, ctx.projectId);
+              const path = await cliWorktreePath(projectId, options.path, ctx);
+              const index = await worktreeScratch(projectId, path).catch(cliFailure);
+              return reply(options.json, index, scratchText(index));
+            },
+          }),
+          run: cliCommand({
+            summary: "Start a thread on a frontier map ticket with its wayfinder prompt",
+            positionals: [{ name: "ref", description: "<effort>/<NN>, e.g. plugin-demo/03", required: true }],
+            options: { path: pathOption, project: projectOption, json: jsonOption },
+            async run({ positionals, options }, ctx) {
+              const projectId = await resolveProjectId(options.project, ctx.projectId);
+              const path = await cliWorktreePath(projectId, options.path, ctx);
+              const { threadId } = await runTicket({ projectId, path, ref: positionals.ref }).catch(cliFailure);
+              return spawned(options.json, threadId, `Started ${positionals.ref}`);
+            },
+          }),
+          orchestrate: cliCommand({
+            summary: "Start an orchestrator thread over an effort's issues (all open ones when none are named)",
+            positionals: [
+              { name: "effort", description: "Effort slug under .scratch/", required: true },
+              { name: "issues", description: "Issue numbers, e.g. 01 03", variadic: true },
+            ],
+            options: { path: pathOption, project: projectOption, json: jsonOption },
+            async run({ positionals, options }, ctx) {
+              const projectId = await resolveProjectId(options.project, ctx.projectId);
+              const path = await cliWorktreePath(projectId, options.path, ctx);
+              const issues = positionals.issues.flatMap((value) => value.split(",")).filter((value) => value.trim() !== "");
+              const { threadId } = await orchestrate({ projectId, path, effort: positionals.effort, issues }).catch(cliFailure);
+              return spawned(options.json, threadId, `Orchestrating ${positionals.effort}`);
+            },
+          }),
+          chart: cliCommand({
+            summary: "Start a thread that charts a new wayfinder map from an idea",
+            positionals: [{ name: "idea", description: "One or two lines; quote it or pass several words", required: true, variadic: true }],
+            options: { path: pathOption, project: projectOption, json: jsonOption },
+            async run({ positionals, options }, ctx) {
+              const projectId = await resolveProjectId(options.project, ctx.projectId);
+              const path = await cliWorktreePath(projectId, options.path, ctx);
+              const idea = positionals.idea.join(" ").trim();
+              if (idea === "") throw new PluginCliError("Empty idea", { code: "missing_required" });
+              const { threadId } = await chart({ projectId, path, idea }).catch(cliFailure);
+              return spawned(options.json, threadId, "Charting");
+            },
+          }),
+          handoff: cliCommand({
+            summary: "Start a thread that hands a finished map off to to-prd and to-issues",
+            positionals: [{ name: "effort", description: "Effort slug whose map tickets are all closed", required: true }],
+            options: { path: pathOption, project: projectOption, json: jsonOption },
+            async run({ positionals, options }, ctx) {
+              const projectId = await resolveProjectId(options.project, ctx.projectId);
+              const path = await cliWorktreePath(projectId, options.path, ctx);
+              const { threadId } = await handoff({ projectId, path, effort: positionals.effort }).catch(cliFailure);
+              return spawned(options.json, threadId, `Handing off ${positionals.effort}`);
             },
           }),
           config: cliCommand({
