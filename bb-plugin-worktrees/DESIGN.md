@@ -88,12 +88,22 @@ bb-plugin-worktrees/
                             defaultBaseRef, branchSlug, createWorktree, removeWorktree, hasGtr
   src/overlay.ts            applyOverlay({ sourceRoot, worktreePath, overlayDir, log })
   src/config.ts             ProjectConfig schema, loadConfig/saveConfig over bb.storage, resolveConfig
-  src/group.ts              pure: groupSidebar(threads, worktreesByProject, prefs) → ProjectNode[]
-  src/ui/WorktreeList.tsx   the thread-list component
-  src/ui/rows.tsx           ProjectRow, WorktreeRow, ThreadRow
+  src/group.ts              pure: groupSidebar(threads, projects, worktreesByProject) → SidebarTree
+                            { pinned, projects: ProjectNode[], personal }, plus rollupIndicator
+                            (was groupSidebar(threads, worktreesByProject, prefs) → ProjectNode[];
+                            collapse prefs live in the UI, pinned/personal needed their own groups)
+  src/taskRequest.ts        pure: taskSpawnRequest(request, inputs) — composer request → task-worktree spawn
+  src/ui/WorktreeList.tsx   the thread-list component; owns dialog state
+  src/ui/rows.tsx           GroupHeader, ProjectRow, WorktreeRow, ThreadRow (+ hover/⋯/context menus)
+  src/ui/data.ts            listWorktrees per expanded project, lazy worktreeStatus store, collapse state
+  src/ui/glyphs.tsx         status glyphs mirroring bb's indicator mapping
+  src/ui/fields.tsx         branch + base fields, debounced validateBranch, branch suggestions
+  src/ui/taskDraft.ts       lets the composer's task-worktree chip mirror an open NewTaskDialog
   src/ui/NewTaskDialog.tsx  branch + base + NewThreadComposer
+  src/ui/NewThreadInWorktreeDialog.tsx  composer → RPC spawnInWorktree, for worktrees no live thread runs in
+  src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
-  src/ui/ProjectSettings.tsx
+  src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu
   skills/worktrees/SKILL.md the `bb task` CLI for agents
   test/*.test.ts            git.test (temp repos), overlay.test, group.test, server.test (harness)
 ```
@@ -104,7 +114,9 @@ bb-plugin-worktrees/
 (`src/git.ts listWorktrees`) → RPC `listWorktrees({projectId})` → `useRpc` in
 `WorktreeList` per expanded project, refetched on realtime `worktrees-changed` and every
 30 s → `groupSidebar` joins it with `experimental_useSidebarThreads().threads` on
-`realpath(thread.environment.path) === worktree.path` → `WorktreeRow`.
+`normalizePath(thread.environment.path) === worktree.path`, falling back to
+`worktree.environmentIds` containing `thread.environment.id` (the browser cannot realpath;
+was a `realpath` join) → `WorktreeRow`.
 
 **A task becomes a thread.** NewTaskDialog `{branch, from}` + composer `NewThreadRequest`
 → `sdk.threads.spawn({...request, environment: {type: "provider", environmentProviderId:
