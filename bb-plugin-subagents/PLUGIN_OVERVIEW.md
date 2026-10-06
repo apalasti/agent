@@ -1,21 +1,16 @@
-Keep a todo list beside the work it belongs to, in the sidebar and in
-your agent threads.
+Makes pi subagents visible in bb. When a pi thread runs the `Agent` tool, bb only shows a
+"Ran subagent" row; this plugin shows what each subagent is actually doing.
 
 ## What you get
 
-- An **Example todos** page in the left sidebar that adds, completes, and
-  removes todos.
-- A `bb subagents` command that does the same from a terminal.
-- Live updates, so a change made in one place reaches every open page at once.
+- A pill in the thread header: "2 running · 3 done". Click it to open the Subagents panel.
+- A Subagents panel with one card per subagent (status, model, elapsed time, turns, tool
+  calls, last activity) that expands into its live transcript, nested subagents included.
+- A running-subagents badge on sidebar thread rows.
+- `bb subagents list` and `bb subagents show <id>`, so a lead agent can check on its workers.
 
 ## How it works
 
-The todos live in this plugin's own storage on the BB server, one list per
-installation. Nothing leaves the machine, and the plugin needs no account, API
-key, or external service.
-
-## For agents
-
-The bundled skill tells an agent to read the list with `bb subagents list`, add
-one todo at a time with `bb subagents add`, and close finished work with
-`bb subagents done`.
+Everything is read locally on the bb server: the thread's event history, pi-subagents'
+`.output` transcripts in the system temp directory, and the bb pi bridge's session files.
+Nothing is written and nothing leaves the machine.

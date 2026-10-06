@@ -12,9 +12,9 @@
   },
   "bb": {
     "name": "Subagents",
-    "description": "A BB plugin with an example todo list.",
+    "description": "See pi subagents inside bb: what each Agent call is doing, its live transcript, and which threads have subagents running.",
     "branding": {
-      "icon": "ListTodo"
+      "icon": "Bot"
     },
     "server": "./server.ts",
     "app": "./app.tsx"

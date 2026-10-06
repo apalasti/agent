@@ -1,20 +1,17 @@
 # bb-plugin-subagents
 
-A BB plugin that keeps a todo list. It shows every surface a plugin can own:
+Makes pi subagents (`@tintinweb/pi-subagents`: `Agent`, `get_subagent_result`,
+`steer_subagent`) transparent inside bb. See [DESIGN.md](DESIGN.md) for data sources,
+status rules and surfaces.
 
-- `server.ts` — the backend: a todo store in `bb.storage.kv`, RPC methods
-  for the page, a `bb subagents` CLI command, a setting, and a realtime signal
-  that keeps every open page current.
-- `app.tsx` — the frontend: an **Example todos** page in the left sidebar
-  (`app.slots.navPanel`) built from the vendored components.
-- `skills/example-todos/SKILL.md` — a skill that tells agents how to keep the list
-  with `bb subagents`. BB imports it into agent threads automatically.
-- `PLUGIN_OVERVIEW.md` — the store listing text: a longer version of
-  `bb.description` that the plugin detail page shows under it. See
-  [Store listing](#store-listing).
+- `server.ts` — RPC (`threadSubagents`, `transcript`, `summaries`), the realtime
+  `subagents-changed` signal, and the `bb subagents list|show` CLI.
+- `src/events.ts`, `src/transcript.ts`, `src/session.ts` — pure parsers for bb events,
+  `.output` transcripts and pi session files; `src/collect.ts` joins and caches them.
+- `app.tsx`, `src/ui/`, `src/rowStatus.ts` — header pill, Subagents panel, sidebar row status.
+- `skills/subagents/SKILL.md` — tells agents how to use `bb subagents`.
 
-Try it: install the plugin, open **Example todos** in the sidebar, then run
-`bb subagents add "Ship it"` in a terminal. The page updates at once.
+Tests: `npm test` (fixtures in `test/fixtures/` are trimmed copies of real threads).
 
 ## UI components
 
@@ -101,14 +98,6 @@ bb plugin reload subagents
 ```
 
 Or let `bb plugin dev` rebuild and reload on every save.
-
-## Configure
-
-```
-bb plugin config subagents
-bb plugin config subagents set showDone false
-bb plugin reload subagents
-```
 
 ## Types & API reference
 

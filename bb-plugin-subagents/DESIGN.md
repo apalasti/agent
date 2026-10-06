@@ -28,9 +28,33 @@ from plugin surfaces next to them.
    "customType":"subagents:record","data":{id,type,description,status,result,...}}` entry is
    appended when an agent finishes, and gives the authoritative final status and result.
 
-Status precedence: a session `subagents:record` beats the final report from a foreground `Agent`
-result, which beats `running` (launched, no record, transcript modified within 10 min, or a
-thread turn still active), which beats `unknown`.
+Status precedence: a session `subagents:record` beats a terminal `get_subagent_result` reading
+(`Status: <s>` in its result), which beats the final report from a foreground `Agent` result, which
+beats a transcript whose last assistant message ended the loop (`stopReason` stop/error/aborted),
+which beats `running` (launched, no record, transcript modified within 10 min, or a thread turn
+still active), which beats `unknown`. pi statuses map as queued/running → running,
+completed/steered → completed, error/aborted (turn limit) → failed, stopped → stopped.
+(Revised while building: the get_subagent_result and transcript-end sources were added; the
+agreed draft had only record > foreground > running > unknown.)
+
+Measured details the join relies on:
+
+- A foreground `Agent` result has no agent id (`Agent completed in 29.7s (…).\n\n<report>` or
+  `Agent failed: …`). The id comes from the session's persisted toolResult (`details.agentId`,
+  matched by description + type in order); while it still runs, from the unclaimed `.output` in
+  the session's task dir (`<tmp>/pi-subagents-<uid>/<encodeCwd(session cwd)>/<session id>/tasks`)
+  whose first line is the launch prompt.
+- `run_in_background` is often absent (agent frontmatter default); `background` comes from the
+  result text (`Agent started|queued|resumed in background.`).
+- A thread can switch session files (`thread/identity` → `pi_<uuid>` then `thr_<id>`); every
+  providerThreadId seen in events is read.
+- `subagents:record` is written for top-level agents only, foreground included. Nested agents
+  get their status from the parent transcript: the nested `Agent` result (`Nested agent started
+  in background. Agent ID: <id>` or the inline report) and nested `get_subagent_result` results.
+  Their `.output` lives in the same `tasks/` dir as the parent's.
+- `threads.events.list` rejects `limit` above 100; paging stops on a short page.
+- Only `thread/identity`, `turn/*` and `item/*` events are fetched: `provider/unhandled` also
+  carries the records but includes the 64 KB system prompt each turn.
 
 ## Surfaces
 
@@ -81,3 +105,7 @@ panel `useRpc("threadSubagents", {threadId})` → server `events.list` (cached p
 seq) → `parseLaunches` → for each launch, `readTranscript(outputFile, fromOffset)` + session
 records → `Subagent[]` → `AgentCard`. While a subagent runs, the poll re-reads only the bytes
 appended since the last offset.
+
+`summaries` without thread ids covers pi threads (including hidden) that are not idle or were
+updated within 24 h, newest 50, and returns only threads with at least one subagent. Idle threads
+whose `updatedAt` hasn't moved are not re-fetched; their files are only re-statted.
