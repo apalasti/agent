@@ -27,6 +27,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import type { WorktreeStatus } from "../contract";
 import { rollupIndicator, type ProjectNode, type ThreadNode, type WorktreeNode } from "../group";
 import { collapseKey, useIsOnScreen, useWorktreeStatus } from "./data";
 import { IndicatorGlyph, RollupGlyph, RowStatusGlyph, rowStatusWins, withDraft } from "./glyphs";
@@ -39,6 +40,7 @@ export type ListContextValue = {
   openNewTask: (projectId: string) => void;
   openNewThreadIn: (projectId: string, group: WorktreeNode) => void;
   openRemove: (projectId: string, group: WorktreeNode) => void;
+  openWorkflow: (projectId: string, group: WorktreeNode) => void;
   openSettings: (projectId: string) => void;
   refresh: () => void;
 };
@@ -238,11 +240,11 @@ export function ProjectRow({ node }: { node: ProjectNode }) {
       passive={collapsed ? <RollupGlyph rollup={rollupIndicator(allThreads)} /> : null}
       actions={
         <>
-          <HoverButton label={`New task in ${project.name}`} icon="GitBranchPlus" onClick={() => list.openNewTask(project.id)} />
+          <HoverButton label={`New task in ${project.name}`} icon="Plus" onClick={() => list.openNewTask(project.id)} />
           <MoreMenu
             label={`${project.name} actions`}
             entries={[
-              { kind: "item", label: "New task…", icon: "GitBranchPlus", onSelect: () => list.openNewTask(project.id) },
+              { kind: "item", label: "New task…", icon: "Plus", onSelect: () => list.openNewTask(project.id) },
               {
                 kind: "item",
                 label: "New thread",
@@ -253,7 +255,7 @@ export function ProjectRow({ node }: { node: ProjectNode }) {
                 },
               },
               { kind: "separator" },
-              { kind: "item", label: "Refresh worktrees", icon: "RefreshCw", onSelect: list.refresh },
+              { kind: "item", label: "Refresh worktrees", icon: "RotateCcw", onSelect: list.refresh },
               { kind: "item", label: "Worktree settings…", icon: "Settings", onSelect: () => list.openSettings(project.id) },
             ]}
           />
@@ -266,7 +268,39 @@ export function ProjectRow({ node }: { node: ProjectNode }) {
 function worktreeIcon(group: WorktreeNode): string {
   if (group.kind === "other") return "MessageSquare";
   if (group.kind === "unmatched") return "Folder";
-  return group.worktree?.isMain ? "Home" : "GitBranch";
+  return group.worktree?.isMain ? "FolderGit" : "GitBranch";
+}
+
+function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
+}
+
+export function statusSummary({ dirtyFiles, ahead, behind, upstream }: WorktreeStatus): string | null {
+  const parts: string[] = [];
+  if (dirtyFiles > 0) parts.push(plural(dirtyFiles, "uncommitted file"));
+  const target = upstream ?? "upstream";
+  if (ahead > 0 && behind > 0) parts.push(`${ahead} ahead, ${behind} behind ${target}`);
+  else if (ahead > 0) parts.push(`${ahead} ahead of ${target}`);
+  else if (behind > 0) parts.push(`${behind} behind ${target}`);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+export function IdleWorktreesRow({ count, collapsed, onToggle }: { count: number; collapsed: boolean; onToggle: () => void }) {
+  const label = `${count} idle ${count === 1 ? "worktree" : "worktrees"}`;
+  return (
+    <div className={cn(GROUP_ROW, "text-xs")} style={indent(0)}>
+      <button type="button" aria-hidden="true" tabIndex={-1} onClick={onToggle} className="absolute inset-0 rounded-md outline-none" />
+      <span className="pointer-events-none relative z-10 inline-flex size-4 shrink-0 items-center justify-center">
+        <Icon name="Layers" className="size-4" aria-hidden="true" />
+      </span>
+      <span className="pointer-events-none relative z-10 flex min-w-0 flex-1 items-center gap-1 opacity-75">
+        <span className="min-w-0 truncate">{label}</span>
+        <span className="pointer-events-auto">
+          <Chevron collapsed={collapsed} onToggle={onToggle} label={label} />
+        </span>
+      </span>
+    </div>
+  );
 }
 
 async function copyText(text: string, what: string) {
@@ -278,7 +312,7 @@ async function copyText(text: string, what: string) {
   }
 }
 
-export function WorktreeRow({ projectId, group }: { projectId: string; group: WorktreeNode }) {
+export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string; group: WorktreeNode; depth?: number }) {
   const list = useList();
   const [ref, isOnScreen] = useIsOnScreen<HTMLDivElement>();
   const status = useWorktreeStatus(projectId, group.kind === "worktree" ? group.path : null, isOnScreen);
@@ -291,6 +325,9 @@ export function WorktreeRow({ projectId, group }: { projectId: string; group: Wo
   const entries: MenuEntry[] = [];
   if (canCreate) {
     entries.push({ kind: "item", label: "New thread here", icon: "MessageSquarePlus", onSelect: () => list.openNewThreadIn(projectId, group) });
+  }
+  if (group.kind === "worktree") {
+    entries.push({ kind: "item", label: "Workflow…", icon: "Workflow", onSelect: () => list.openWorkflow(projectId, group) });
   }
   if (group.path !== null) {
     const path = group.path;
@@ -314,12 +351,13 @@ export function WorktreeRow({ projectId, group }: { projectId: string; group: Wo
   const ahead = status?.ahead ?? 0;
   const behind = status?.behind ?? 0;
   const dirty = status?.dirtyFiles ?? 0;
+  const summary = status ? statusSummary(status) : null;
 
   return (
     <div
       ref={ref}
       className={GROUP_ROW}
-      style={indent(0)}
+      style={indent(depth)}
       title={group.path ?? undefined}
       data-worktree-path={group.path ?? undefined}
     >
@@ -338,24 +376,24 @@ export function WorktreeRow({ projectId, group }: { projectId: string; group: Wo
         <span className={cn("min-w-0 truncate", group.kind === "worktree" && group.worktree?.isMain && "text-sidebar-foreground/90")}>
           {group.label}
         </span>
+        {group.worktree?.isDetached ? <span className="shrink-0 text-subtle-foreground">· detached</span> : null}
         {group.worktree?.isLocked ? <Icon name="Lock" className="size-3 shrink-0" aria-label="Locked worktree" /> : null}
-        {dirty > 0 ? (
-          <span
-            role="img"
-            aria-label={`${dirty} uncommitted ${dirty === 1 ? "change" : "changes"}`}
-            title={`${dirty} uncommitted ${dirty === 1 ? "change" : "changes"}`}
-            className="pointer-events-auto size-1.5 shrink-0 rounded-full bg-amber-500/80"
-          />
-        ) : null}
-        {ahead > 0 || behind > 0 ? (
-          <span
-            className="pointer-events-auto shrink-0 text-[11px] tabular-nums text-subtle-foreground"
-            title={`${ahead} ahead, ${behind} behind ${status?.upstream ?? "upstream"}`}
-          >
-            {ahead > 0 ? `↑${ahead}` : null}
-            {ahead > 0 && behind > 0 ? " " : null}
-            {behind > 0 ? `↓${behind}` : null}
-          </span>
+        {summary ? (
+          <Tooltip delayDuration={350} disableHoverableContent>
+            <TooltipTrigger asChild>
+              <span role="img" aria-label={summary} title={summary} className="pointer-events-auto flex h-7 shrink-0 items-center gap-1.5 px-0.5">
+                {dirty > 0 ? <span className="size-1.5 shrink-0 rounded-full bg-amber-500/80" /> : null}
+                {ahead > 0 || behind > 0 ? (
+                  <span className="text-[11px] tabular-nums text-subtle-foreground">
+                    {ahead > 0 ? `↑${ahead}` : null}
+                    {ahead > 0 && behind > 0 ? " " : null}
+                    {behind > 0 ? `↓${behind}` : null}
+                  </span>
+                ) : null}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{summary}</TooltipContent>
+          </Tooltip>
         ) : null}
         {isEmpty ? null : (
           <span className="pointer-events-auto">
@@ -423,7 +461,7 @@ function threadEntries(
     {
       kind: "item",
       label: "Copy link",
-      icon: "Link",
+      icon: "Copy",
       onSelect: () => void copyText(new URL(thread.href, window.location.origin).toString(), "link"),
     },
     { kind: "separator" },

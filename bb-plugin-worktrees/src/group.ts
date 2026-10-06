@@ -25,6 +25,8 @@ export type ProjectNode = {
   project: PluginSidebarProject;
   worktreesLoaded: boolean;
   worktrees: WorktreeNode[];
+  /** Thread-less worktrees other than the main checkout, folded into one trailing row. */
+  idleWorktrees: WorktreeNode[];
   threadCount: number;
 };
 
@@ -235,10 +237,12 @@ function groupProject(
     };
   });
   nodes.sort(compareWorktreeGroups);
+  const isIdle = (node: WorktreeNode) => node.kind === "worktree" && node.threadCount === 0 && !node.worktree?.isMain;
   return {
     project,
     worktreesLoaded: worktrees !== undefined,
-    worktrees: nodes,
+    worktrees: nodes.filter((node) => !isIdle(node)),
+    idleWorktrees: nodes.filter(isIdle),
     threadCount: nodes.reduce((sum, node) => sum + node.threadCount, 0),
   };
 }

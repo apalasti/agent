@@ -3,21 +3,25 @@
 Brings the `task.sh` / `delete-worktree.sh` workflow from irrops-ml into bb, and makes
 **worktrees a first-class level inside each project** in the sidebar.
 
-Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit2`.
+Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `FolderGit2`, which is not a bb icon name and drew the Zap fallback).
 
 ## User-facing surfaces
 
 1. **Sidebar thread list "Worktrees"** (`app.slots.experimental_threadList`).
    Pinned threads first, then `Project → Worktree → Thread (→ child threads)`.
-   Every git worktree of the project's repo is listed (from `git worktree list`), including
-   worktrees with no threads yet and ones created outside bb (gtr, the terminal).
-   The main checkout is listed first; the rest are sorted by most recent thread activity,
-   then by branch name. Threads whose environment path matches no git worktree get their
+   Every git worktree of the project's repo is known (from `git worktree list`), including
+   ones created outside bb (gtr, the terminal). The main checkout is listed first, then every
+   worktree with live threads, sorted by most recent thread activity, then by branch name.
+   The remaining thread-less worktrees fold into one trailing "N idle worktrees" row,
+   collapsed by default, that expands in place (was: every worktree listed as its own row,
+   which buried other projects under idle rows). Threads whose environment path matches no git worktree get their
    own group keyed by path; threads without an environment go in a trailing "Other" group.
    - Project row: name, collapse chevron, `+` → **New task** dialog.
-   - Worktree row: branch (or dir name when detached), dirty dot, ahead/behind count,
+   - Worktree row: branch (or dir name plus a muted "· detached" when detached), dirty dot
+     and ahead/behind count sharing one tooltip ("3 uncommitted files · 2 ahead of origin/x"),
      thread count when collapsed; hover `+` → new thread *in this worktree*; `⋯` menu:
-     New thread here, Copy path, Remove worktree… (not for the main checkout).
+     New thread here, Workflow… (opens `WorkflowDialog`), Copy path, Copy branch name,
+     Remove worktree… (not for the main checkout).
    - Thread row: bb's own row semantics (status indicator glyph, unread, title, pin/archive
      actions, keyboard DOM contract, split drag).
 2. **New task dialog** — the `task.sh` port. Fields: Branch (required), Base ref (defaults
@@ -89,7 +93,8 @@ bb-plugin-worktrees/
   src/overlay.ts            applyOverlay({ sourceRoot, worktreePath, overlayDir, log })
   src/config.ts             ProjectConfig schema, loadConfig/saveConfig over bb.storage, resolveConfig
   src/group.ts              pure: groupSidebar(threads, projects, worktreesByProject) → SidebarTree
-                            { pinned, projects: ProjectNode[], personal }, plus rollupIndicator
+                            { pinned, projects: ProjectNode[], personal }, plus rollupIndicator;
+                            ProjectNode splits worktrees (shown) from idleWorktrees (folded)
                             (was groupSidebar(threads, worktreesByProject, prefs) → ProjectNode[];
                             collapse prefs live in the UI, pinned/personal needed their own groups)
   src/taskRequest.ts        pure: taskSpawnRequest(request, inputs) — composer request → task-worktree spawn
@@ -100,7 +105,10 @@ bb-plugin-worktrees/
   src/ui/fields.tsx         branch + base fields, debounced validateBranch, branch suggestions
   src/ui/taskDraft.ts       lets the composer's task-worktree chip mirror an open NewTaskDialog
   src/ui/NewTaskDialog.tsx  branch + base + NewThreadComposer
-  src/ui/NewThreadInWorktreeDialog.tsx  composer → RPC spawnInWorktree, for worktrees no live thread runs in
+  src/ui/NewThreadInWorktreeDialog.tsx  composer → RPC spawnInWorktree, for worktrees no live thread runs in;
+                            a callout names the worktree because the composer's environment chips can't
+                            (a `project-checkout` defaultEnvironment seed still shows the main checkout)
+  src/ui/WorkflowDialog.tsx WorkflowDialog({ projectId, worktreePath, worktreeLabel, open, onOpenChange })
   src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
   src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu

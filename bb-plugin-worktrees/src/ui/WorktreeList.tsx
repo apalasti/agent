@@ -12,12 +12,14 @@ import { NewTaskDialog } from "./NewTaskDialog";
 import { NewThreadInWorktreeDialog } from "./NewThreadInWorktreeDialog";
 import { ProjectSettingsDialog } from "./ProjectSettings";
 import { RemoveWorktreeDialog } from "./RemoveWorktreeDialog";
-import { GroupHeader, ListContext, ProjectRow, ThreadRow, WorktreeRow, type ListContextValue } from "./rows";
+import { GroupHeader, IdleWorktreesRow, ListContext, ProjectRow, ThreadRow, WorktreeRow, type ListContextValue } from "./rows";
+import { WorkflowDialog } from "./WorkflowDialog";
 
 type OpenDialog =
   | { kind: "new-task"; projectId: string }
   | { kind: "new-thread"; projectId: string; group: WorktreeNode }
   | { kind: "remove"; projectId: string; group: WorktreeNode }
+  | { kind: "workflow"; projectId: string; group: WorktreeNode }
   | { kind: "settings"; projectId: string };
 
 export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListProps) {
@@ -61,6 +63,7 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
       openNewTask: (projectId) => setDialog({ kind: "new-task", projectId }),
       openNewThreadIn,
       openRemove: (projectId, group) => setDialog({ kind: "remove", projectId, group }),
+      openWorkflow: (projectId, group) => setDialog({ kind: "workflow", projectId, group }),
       openSettings: (projectId) => setDialog({ kind: "settings", projectId }),
       refresh: () => setManualEpoch((value) => value + 1),
     }),
@@ -101,6 +104,8 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
             {tree.projects.map((projectNode) => {
               const projectId = projectNode.project.id;
               const projectCollapsed = isCollapsed(collapseKey.project(projectId));
+              const idleKey = collapseKey.idleExpanded(projectId);
+              const idleCollapsed = !isCollapsed(idleKey);
               return (
                 <section key={projectId} aria-label={projectNode.project.name} className="mt-2 flex flex-col gap-px first:mt-0">
                   <ProjectRow node={projectNode} />
@@ -111,7 +116,10 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
                           Couldn't list worktrees: {errors[projectId]}
                         </p>
                       ) : null}
-                      {projectNode.worktrees.length === 0 && projectNode.worktreesLoaded && !errors[projectId] ? (
+                      {projectNode.worktrees.length === 0 &&
+                      projectNode.idleWorktrees.length === 0 &&
+                      projectNode.worktreesLoaded &&
+                      !errors[projectId] ? (
                         <p className="px-2 py-1 text-xs text-muted-foreground">No worktrees</p>
                       ) : null}
                       {projectNode.worktrees.map((group) => (
@@ -122,6 +130,20 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
                             : group.threads.map((node) => <ThreadRow key={node.thread.id} node={node} depth={1} />)}
                         </div>
                       ))}
+                      {projectNode.idleWorktrees.length > 0 ? (
+                        <>
+                          <IdleWorktreesRow
+                            count={projectNode.idleWorktrees.length}
+                            collapsed={idleCollapsed}
+                            onToggle={() => toggle(idleKey)}
+                          />
+                          {idleCollapsed
+                            ? null
+                            : projectNode.idleWorktrees.map((group) => (
+                                <WorktreeRow key={group.key} projectId={projectId} group={group} depth={1} />
+                              ))}
+                        </>
+                      ) : null}
                     </>
                   )}
                 </section>
@@ -156,6 +178,15 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
             group={dialog.group}
             activeThreadId={activeThreadId}
             onClose={closeDialog}
+          />
+        ) : null}
+        {dialog?.kind === "workflow" ? (
+          <WorkflowDialog
+            projectId={dialog.projectId}
+            worktreePath={dialog.group.path ?? ""}
+            worktreeLabel={dialog.group.label}
+            open
+            onOpenChange={(open) => !open && closeDialog()}
           />
         ) : null}
         {dialog?.kind === "settings" ? (

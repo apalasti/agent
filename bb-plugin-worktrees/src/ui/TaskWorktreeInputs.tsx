@@ -24,7 +24,7 @@ const Chip = forwardRef<HTMLButtonElement, ChipProps>(({ branch, base, ...props 
     className="h-7 max-w-64 gap-1.5 px-2 text-xs font-normal text-muted-foreground disabled:opacity-100"
     {...props}
   >
-    <Icon name="GitBranchPlus" className="size-3.5 shrink-0" />
+    <Icon name="GitBranch" className="size-3.5 shrink-0" />
     <span className="truncate font-mono">{branch ?? "auto branch"}</span>
     {base ? <span className="shrink-0 truncate text-subtle-foreground">from {base}</span> : null}
   </Button>

@@ -39,6 +39,12 @@ function rpcHandlers(overrides: Partial<PluginRpcTestHandlers<typeof rpcContract
     setConfig: () => {
       throw new Error("unused");
     },
+    scratch: ({ path }) => ({ root: path, scratchDir: `${path}/.scratch`, efforts: [] }),
+    runTicket: () => ({ threadId: "new" }),
+    orchestrate: () => ({ threadId: "new" }),
+    chart: () => ({ threadId: "new" }),
+    handoff: () => ({ threadId: "new" }),
+    agentDefaults: () => null,
     ...overrides,
   } satisfies PluginRpcTestHandlers<typeof rpcContract>;
 }
@@ -93,12 +99,13 @@ afterEach(() => {
 });
 
 describe("Worktrees thread list", () => {
-  it("renders project → worktrees → threads, including empty worktrees, and skips an empty personal project", async () => {
+  it("renders project → worktrees → threads, folds idle worktrees, and skips an empty personal project", async () => {
     const slot = await renderList();
     await slot.findByText("feat/a");
     expect(slot.getByText("irrops")).toBeTruthy();
     expect(slot.getByText("main")).toBeTruthy();
-    expect(slot.getByText("idle")).toBeTruthy();
+    expect(slot.getByText("1 idle worktree")).toBeTruthy();
+    expect(slot.queryByText("idle")).toBeNull();
     expect(slot.queryByText("Personal")).toBeNull();
 
     const anchors = Array.from(slot.container.querySelectorAll("a[data-sidebar-thread-shortcut-target]"));
@@ -107,13 +114,34 @@ describe("Worktrees thread list", () => {
     expect(anchors[0]!.getAttribute("aria-current")).toBe("page");
   });
 
-  it("orders worktrees: main first, then by activity, then by name", async () => {
+  it("expands the idle fold in place and remembers it", async () => {
     const slot = await renderList();
-    await slot.findByText("idle");
+    fireEvent.click(await slot.findByRole("button", { name: "Expand 1 idle worktree" }));
     const rows = Array.from(slot.container.querySelectorAll("[data-worktree-path]")).map((row) =>
       row.getAttribute("data-worktree-path"),
     );
     expect(rows).toEqual([MAIN, FEAT, IDLE]);
+    expect(JSON.parse(localStorage.getItem("bb-plugin-worktrees:collapsed") ?? "[]")).toContain("idle-expanded:p1");
+
+    cleanup();
+    const again = await renderList();
+    await again.findByText("idle");
+  });
+
+  it("opens the workflow dialog from a worktree's menu", async () => {
+    const slot = await renderList();
+    fireEvent.pointerDown(await slot.findByRole("button", { name: "feat/a actions" }), { button: 0, ctrlKey: false });
+    fireEvent.click(await slot.findByRole("menuitem", { name: "Workflow…" }));
+    await slot.findByText(/feat\/a/, { selector: "h2" });
+  });
+
+  it("orders worktrees: main first, then by activity, then by name", async () => {
+    const slot = await renderList();
+    await slot.findByText("feat/a");
+    const rows = Array.from(slot.container.querySelectorAll("[data-worktree-path]")).map((row) =>
+      row.getAttribute("data-worktree-path"),
+    );
+    expect(rows).toEqual([MAIN, FEAT]);
   });
 
   it("opens a thread through the host and closes the drawer", async () => {
@@ -138,7 +166,7 @@ describe("Worktrees thread list", () => {
 
   it("asks the backend for the status of on-screen worktrees and shows dirty/ahead", async () => {
     const slot = await renderList();
-    await slot.findByLabelText("2 uncommitted changes");
+    await slot.findByLabelText("2 uncommitted files · 1 ahead of origin/feat/a");
     expect(slot.inspection.rpcCalls.some((call) => call.method === "worktreeStatus")).toBe(true);
     expect(slot.getAllByText("↑1").length).toBeGreaterThan(0);
   });

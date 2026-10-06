@@ -180,7 +180,7 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
       id: TASK_WORKTREE_PROVIDER_ID,
       displayName: "Task worktree",
       description: "Create a git worktree for a new branch, with the project's agent overlay applied.",
-      icon: "FolderGit2",
+      icon: "GitBranch",
       requires: { gitCheckout: true },
       inputs: taskWorktreeInputsSchema,
       async availability({ host }) {

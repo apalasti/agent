@@ -182,5 +182,6 @@ export const collapseKey = {
   personal: "personal",
   project: (projectId: string) => `project:${projectId}`,
   worktree: (projectId: string, key: string) => `worktree:${projectId}:${key}`,
+  idleExpanded: (projectId: string) => `idle-expanded:${projectId}`,
   thread: (threadId: string) => `thread:${threadId}`,
 };

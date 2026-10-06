@@ -65,22 +65,49 @@ describe("groupSidebar", () => {
     expect(tree.projects[0]!.worktrees.map((g) => [g.key, g.threadCount])).toEqual([[FEAT, 1]]);
   });
 
-  it("orders main first, then by latest thread activity, then by name; empty worktrees stay", () => {
+  it("orders main first, then by latest thread activity, then by name", () => {
     const tree = groupSidebar(
-      [makeThread("t1", { latestAttentionAt: 50, environment: { path: FIX } })],
+      [
+        makeThread("t1", { latestAttentionAt: 50, environment: { path: FIX } }),
+        makeThread("t2", { latestAttentionAt: 90, environment: { path: FEAT } }),
+      ],
       [project],
       { p1: worktrees },
     );
     expect(tree.projects[0]!.worktrees.map((g) => [g.label, g.threadCount])).toEqual([
       ["main", 0],
+      ["feat/a", 1],
       ["fix-b", 1],
-      ["feat/a", 0],
     ]);
+  });
+
+  it("keeps the main checkout but folds other thread-less worktrees into idle, sorted by name", () => {
+    const tree = groupSidebar(
+      [makeThread("t1", { environment: { path: FIX } })],
+      [project],
+      { p1: [...worktrees, makeWorktree("/repo-worktrees/a-idle", { branch: "a-idle" })] },
+    );
+    const node = tree.projects[0]!;
+    expect(node.worktrees.map((g) => g.label)).toEqual(["main", "fix-b"]);
+    expect(node.idleWorktrees.map((g) => g.label)).toEqual(["a-idle", "feat/a"]);
+  });
+
+  it("treats a worktree whose only threads are archived, hidden or pinned as idle", () => {
+    const tree = groupSidebar(
+      [
+        makeThread("archived", { isArchived: true, archivedAt: 1, environment: { path: FEAT } }),
+        makeThread("hidden", { isHidden: true, environment: { path: FEAT } }),
+        makeThread("pinned", { isPinned: true, pinnedAt: 1, environment: { path: FEAT } }),
+      ],
+      [project],
+      { p1: worktrees },
+    );
+    expect(tree.projects[0]!.idleWorktrees.map((g) => g.key)).toEqual([FEAT, FIX]);
   });
 
   it("labels a detached worktree by its directory name", () => {
     const tree = groupSidebar([], [project], {
-      p1: [makeWorktree("/repo-worktrees/hotfix", { branch: null, isDetached: true })],
+      p1: [makeWorktree("/repo-worktrees/hotfix", { branch: null, isDetached: true, isMain: true })],
     });
     expect(tree.projects[0]!.worktrees[0]!.label).toBe("hotfix");
   });

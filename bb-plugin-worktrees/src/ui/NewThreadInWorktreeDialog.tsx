@@ -5,6 +5,7 @@ import {
 } from "@get-bb/plugin-sdk/app";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Icon } from "@/components/ui/icon";
 import { formatHomePathForDisplay } from "@/lib/utils";
 import type { WorktreeNode } from "../group";
 import { errorMessage, useWorktreesRpc } from "./data";
@@ -47,10 +48,21 @@ export function NewThreadInWorktreeDialog({
       <DialogContent className="w-[min(52rem,calc(100vw-2rem))] max-w-none gap-5">
         <DialogHeader>
           <DialogTitle>New thread in {group.label}</DialogTitle>
-          <DialogDescription className="truncate" title={path}>
-            Runs in {formatHomePathForDisplay(path)} — the environment choice below is replaced by this worktree.
-          </DialogDescription>
+          <DialogDescription>Starts a thread in this worktree's existing checkout.</DialogDescription>
         </DialogHeader>
+        {/* The composer cannot show a worktree path in its environment chips, and has no prop to hide them. */}
+        <div className="flex items-start gap-2.5 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+          <Icon name="GitBranch" className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-medium">{group.label}</div>
+            <div className="truncate font-mono text-xs text-muted-foreground" title={path}>
+              {formatHomePathForDisplay(path)}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              The project, environment and branch pickers under the prompt don't apply: the thread always runs here.
+            </div>
+          </div>
+        </div>
         <div className="min-w-0">
           <NewThreadComposer
             defaultProjectId={projectId}

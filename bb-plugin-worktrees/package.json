@@ -14,7 +14,7 @@
     "name": "Worktrees",
     "description": "Worktrees as a first-class level in the sidebar: start agent tasks in fresh git worktrees, see every worktree with its threads, and remove them cleanly.",
     "branding": {
-      "icon": "FolderGit2"
+      "icon": "FolderGit"
     },
     "server": "./server.ts",
     "app": "./app.tsx"
