@@ -8,6 +8,7 @@ import {
   pillText,
   shortId,
   tally,
+  toolSummary,
 } from "../src/ui/format";
 import { makeSubagent } from "./uiFixtures";
 
@@ -70,6 +71,13 @@ describe("labels", () => {
   it("shortens agent ids to the segment bb's rows show first", () => {
     expect(shortId("27e7abbc-45cf-47d0-9b1a-000000000000")).toBe("27e7abbc");
     expect(shortId("plain")).toBe("plain");
+  });
+});
+
+describe("toolSummary", () => {
+  it("drops a repeated tool name prefix", () => {
+    expect(toolSummary("bash", "bash: sleep 20")).toBe("sleep 20");
+    expect(toolSummary("read", "README.md")).toBe("README.md");
   });
 });
 

@@ -92,6 +92,10 @@ export function finalTextIndex(entries: readonly TranscriptEntry[], result: stri
   return -1;
 }
 
+export function toolSummary(name: string, summary: string): string {
+  return summary.startsWith(`${name}: `) ? summary.slice(name.length + 2) : summary;
+}
+
 export function pollInterval(anyRunning: boolean): number {
   return anyRunning ? 2_000 : 30_000;
 }

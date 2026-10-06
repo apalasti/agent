@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import type { Subagent, TranscriptEntry } from "../contract";
 import { useStickToBottom, type TranscriptState } from "./data";
-import { finalTextIndex, isRunning, orderSubagents } from "./format";
+import { finalTextIndex, isRunning, orderSubagents, toolSummary } from "./format";
 
 const PRE =
   "max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-md bg-muted/50 px-2.5 py-2 font-mono text-xs leading-relaxed text-foreground/90";
@@ -51,7 +51,7 @@ function ToolEntry({ entry }: { entry: Extract<TranscriptEntry, { kind: "tool" }
       summary={
         <span className="flex min-w-0 flex-1 items-baseline gap-2 font-mono">
           <span className={cn("shrink-0 font-medium", entry.isError ? "text-destructive" : "text-foreground/80")}>{entry.name}</span>
-          <span className="min-w-0 truncate">{entry.summary}</span>
+          <span className="min-w-0 truncate">{toolSummary(entry.name, entry.summary)}</span>
           {entry.result === null ? <span className="shrink-0 font-sans text-subtle-foreground">running…</span> : null}
         </span>
       }
