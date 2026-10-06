@@ -162,8 +162,8 @@ export function AgentCard({
             <span className="flex-1" />
             <Elapsed agent={agent} />
           </div>
-          <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-            {agent.model ? <span className="min-w-0 truncate">{agent.model}</span> : null}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
+            {agent.model ? <span className="shrink-0">{agent.model}</span> : null}
             {agent.model ? <span aria-hidden>·</span> : null}
             <span className="shrink-0">{activityCounts(agent)}</span>
             {filesLabel(agent.filesTouched) ? (
