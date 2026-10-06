@@ -36,18 +36,24 @@ thread turn still active), which beats `unknown`.
 
 - **Thread header pill** (`experimental_threadHeaderAction`): shown only when the thread has
   subagents. Reads "⟳ 2 running · 3 done", or "5 subagents" when none are running. A click
-  opens the panel.
+  opens the panel. It reads `summaries({ threadIds: [threadId] })`, not `threadSubagents`, so
+  the always-mounted pill stays cheap.
 - **Thread panel "Subagents"** (`threadPanelAction`, layout flush): one card per subagent with
   description, type, model, status, elapsed time, turn and tool-call counts, the last activity
   line (e.g. `bash: sleep 20`) and the short id, so the `get_subagent_result` rows can be
   matched up. A card expands to its live transcript: prompt, then a compact tool-call line per
   call (expandable args and result), assistant text as markdown, and the final result. Nested
   subagents (an `Agent` call inside a transcript) render as child cards. It polls every 2 s
-  while anything is running, every 30 s otherwise, and refreshes on realtime.
+  while anything is running, every 30 s otherwise, and refreshes on realtime. An expanded
+  transcript scrolls inside its own bounded card and sticks to the bottom while the agent runs,
+  since several transcripts can be open at once.
 - **Sidebar row status** (content script + `experimental_setThreadRowStatus`): any thread with
   running subagents gets `{ icon, label: "2 subagents running", tone: "running" }` in whatever
   thread list is active (bb's or Worktrees), and is cleared when none are running. The content
-  script polls a cheap backend summary of all threads with subagents.
+  script only hands its `experimental_setThreadRowStatus` to a render-nothing
+  `experimental_appOverlay` (`RowStatusPoller`), which polls `summaries` every 3 s through
+  `useRpc` while the document is visible. This replaces "the content script polls", because a
+  content-script context has no rpc client.
 - **CLI** `bb subagents list [--thread <id>|--self]` and `bb subagents show <agentId> [--tail N]`,
   so a lead agent (or the user) can inspect workers. Bounded output, with `--json`.
 
@@ -62,7 +68,8 @@ bb-plugin-subagents/
   src/session.ts         pure: pi session JSONL → Map<agentId, SessionRecord>
   src/collect.ts         server: joins the three per thread; caches by file size/mtime
   src/ui/HeaderPill.tsx, src/ui/SubagentsPanel.tsx, src/ui/AgentCard.tsx, src/ui/Transcript.tsx
-  src/rowStatus.ts       content script
+  src/ui/format.ts       pure: ordering, elapsed, labels; src/ui/data.ts polling hooks
+  src/rowStatus.ts       content script (setter) + RowStatusPoller overlay + pure diff
   skills/subagents/SKILL.md
   test/*.test.ts         fixtures copied from real files (see test/fixtures/)
 ```
