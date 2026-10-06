@@ -33,11 +33,14 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit2`.
    project's teardown command, then `git gtr rm` / `git worktree remove`.
 5. **CLI `bb task`** (agents use it too; documented in `skills/worktrees/SKILL.md`):
    ```
-   bb task new <branch> [prompt] [--from <ref>] [--project <id|name>] [--prompt-file <path|->]
+   bb task new <branch> [prompt] [--from <ref>] [--project <id|name>] [--title <t>]
+               [--prompt-file <path> | --prompt-stdin]
    bb task list [--project <id|name>]          # worktrees + their threads
    bb task rm <branch|path> [--delete-branch] [--force] [--project ...]
-   bb task config [--project ...] [--base <ref>] [--overlay <dir>] [--teardown <cmd>] [--setup <cmd>]
+   bb task config [--project ...] [--base <ref>] [--overlay <dir>] [--teardown <cmd>] [--setup <cmd>] [--tool <t>]
    ```
+   (Replaced `--prompt-file -`: plugin CLIs run on the server and only see stdin through
+   the SDK's `--<option>-stdin` rewrite, so stdin is `--prompt-stdin`.)
 6. **Per-project settings section** (`app.slots.settingsSection`): base ref, overlay dir,
    setup command, teardown command, worktree tool (auto / gtr / git).
 
@@ -104,11 +107,17 @@ bb-plugin-worktrees/
 `realpath(thread.environment.path) === worktree.path` → `WorktreeRow`.
 
 **A task becomes a thread.** NewTaskDialog `{branch, from}` + composer `NewThreadRequest`
-→ `sdk.threads.spawn({...request, environment: {type: "new", environmentProviderId:
-"task-worktree", inputs: {branch, from}}})` (exact environment request shape: check SDK
-types) → core calls provider `create` → worktree path → thread runs there → realtime
+→ `sdk.threads.spawn({...request, environment: {type: "provider", environmentProviderId:
+"task-worktree", inputs: {branch, from}}})` (was `type: "new"`; the SDK's union is
+`reuse | host | project-default | provider`) → core calls provider `create` → worktree path → thread runs there → realtime
 `worktrees-changed` published by `create` → sidebar refetch shows the new worktree row
 with its thread.
+
+**A thread joins an existing worktree.** Worktree row `+` → RPC `spawnInWorktree({projectId,
+path, request})` → if a ready environment already has that path, `environment: {type:
+"reuse", environmentId}`; else `{type: "provider", environmentProviderId:
+"project-checkout", inputs: {path}, machine: {type: "existing", hostId}}` (bb's built-in
+provider, which attaches without creating anything).
 
 **Remove.** RemoveWorktreeDialog → RPC `removeWorktree({projectId, path, deleteBranch,
 force})` → archive every thread whose environment path is that worktree → teardownCommand
