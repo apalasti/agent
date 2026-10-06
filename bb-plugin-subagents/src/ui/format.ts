@@ -1,4 +1,6 @@
-import type { Subagent, TranscriptEntry } from "../contract";
+import type { ExperimentalLiveFileTarget } from "@get-bb/plugin-sdk/app";
+import type { FileTouch, Subagent, ThreadEnvironment, TranscriptEntry } from "../contract";
+import { pathRoots, relativePath } from "../paths";
 
 export function isRunning(agent: Pick<Subagent, "status">): boolean {
   return agent.status === "running";
@@ -98,4 +100,72 @@ export function toolSummary(name: string, summary: string): string {
 
 export function pollInterval(anyRunning: boolean): number {
   return anyRunning ? 2_000 : 30_000;
+}
+
+export const STALE_AFTER_MS = 15_000;
+export const SILENT_AFTER_MS = 10 * 60_000;
+
+function formatAgo(ms: number): string {
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+/** How long a running agent's transcript has been quiet; transcripts are written once per turn, so this is all that is known. */
+export function staleness(agent: Subagent, now: number): { text: string; warn: boolean } | null {
+  if (!isRunning(agent) || agent.updatedAt === null) return null;
+  const quiet = now - Date.parse(agent.updatedAt);
+  if (Number.isNaN(quiet) || quiet < STALE_AFTER_MS) return null;
+  return quiet >= SILENT_AFTER_MS
+    ? { text: `no activity for ${formatAgo(quiet)}`, warn: true }
+    : { text: `updated ${formatAgo(quiet)} ago`, warn: false };
+}
+
+export function filesLabel(files: readonly FileTouch[]): string | null {
+  return files.length === 0 ? null : `edited ${plural(files.length, "file")}`;
+}
+
+export function fileOps({ writes, edits }: FileTouch): string {
+  return [writes > 0 ? plural(writes, "write") : null, edits > 0 ? plural(edits, "edit") : null].filter(Boolean).join(", ");
+}
+
+export function displayPath(path: string, environment: ThreadEnvironment | null): string {
+  return relativePath(path, pathRoots([environment?.path]));
+}
+
+export function fileTarget(path: string, environment: ThreadEnvironment | null): ExperimentalLiveFileTarget | null {
+  if (environment === null) return null;
+  const relative = displayPath(path, environment);
+  if (relative !== path && relative !== ".") return { kind: "workspace", environmentId: environment.id, path: relative };
+  return environment.hostId !== null && path.startsWith("/") ? { kind: "host", hostId: environment.hostId, path } : null;
+}
+
+/** "2 running · 5 done · 3m 12s total", where total sums every agent's elapsed time. */
+export function panelSummary(agents: readonly Subagent[], now: number): string {
+  const count = (status: Subagent["status"]) => agents.filter((agent) => agent.status === status).length;
+  const parts = [
+    [count("running"), "running"],
+    [count("completed"), "done"],
+    [count("failed"), "failed"],
+    [count("stopped"), "stopped"],
+    [count("unknown"), "unknown"],
+  ]
+    .filter(([n]) => (n as number) > 0)
+    .map(([n, label]) => `${n} ${label}`);
+  const total = agents.reduce((sum, agent) => sum + (elapsedMs(agent, now) ?? 0), 0);
+  if (total > 0) parts.push(`${formatDuration(total)} total`);
+  return parts.join(" · ");
+}
+
+export function clockTime(iso: string | null): string | null {
+  if (iso === null) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return [date.getHours(), date.getMinutes(), date.getSeconds()].map((part) => String(part).padStart(2, "0")).join(":");
+}
+
+export function firstLine(text: string): string {
+  return text.trim().split("\n", 1)[0] ?? "";
 }

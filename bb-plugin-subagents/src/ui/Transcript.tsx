@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import type { Subagent, TranscriptEntry } from "../contract";
 import { useStickToBottom, type TranscriptState } from "./data";
-import { finalTextIndex, isRunning, orderSubagents, toolSummary } from "./format";
+import { clockTime, finalTextIndex, isRunning, orderSubagents, toolSummary } from "./format";
 
 const PRE =
   "max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-md bg-muted/50 px-2.5 py-2 font-mono text-xs leading-relaxed text-foreground/90";
@@ -37,6 +37,26 @@ function Disclosure({
   );
 }
 
+const STAMP = "shrink-0 font-sans text-[11px] tabular-nums text-subtle-foreground opacity-0 transition-opacity";
+
+function Stamp({ at, className }: { at: string | null; className: string }) {
+  const time = clockTime(at);
+  return time === null ? null : (
+    <time dateTime={at ?? undefined} className={cn(STAMP, className)}>
+      {time}
+    </time>
+  );
+}
+
+function TextEntry({ entry }: { entry: Extract<TranscriptEntry, { kind: "text" }> }) {
+  return (
+    <div className="group/text relative">
+      <Stamp at={entry.at} className="absolute right-0 top-0 bg-card pl-1.5 group-hover/text:opacity-100" />
+      <Markdown content={entry.text} className="text-sm" />
+    </div>
+  );
+}
+
 function PromptEntry({ text }: { text: string }) {
   return (
     <Disclosure summary={<span className="min-w-0 flex-1 truncate">Prompt — {text.split("\n")[0]}</span>}>
@@ -45,14 +65,15 @@ function PromptEntry({ text }: { text: string }) {
   );
 }
 
-function ToolEntry({ entry }: { entry: Extract<TranscriptEntry, { kind: "tool" }> }) {
+function ToolEntry({ entry, agentRunning }: { entry: Extract<TranscriptEntry, { kind: "tool" }>; agentRunning: boolean }) {
   return (
     <Disclosure
       summary={
         <span className="flex min-w-0 flex-1 items-baseline gap-2 font-mono">
           <span className={cn("shrink-0 font-medium", entry.isError ? "text-destructive" : "text-foreground/80")}>{entry.name}</span>
           <span className="min-w-0 truncate">{toolSummary(entry.name, entry.summary)}</span>
-          {entry.result === null ? <span className="shrink-0 font-sans text-subtle-foreground">running…</span> : null}
+          {entry.result === null && !agentRunning ? <span className="shrink-0 font-sans text-subtle-foreground">no result</span> : null}
+          <Stamp at={entry.at} className="ml-auto group-hover/disclosure:opacity-100" />
         </span>
       }
     >
@@ -128,12 +149,12 @@ export function Transcript({
             case "prompt":
               return <PromptEntry key={index} text={entry.text} />;
             case "tool":
-              return <ToolEntry key={entry.callId ?? index} entry={entry} />;
+              return <ToolEntry key={entry.callId ?? index} entry={entry} agentRunning={isRunning(agent)} />;
             case "text":
               return index === finalIndex ? (
                 <FinalResult key={index} text={entry.text} failed={failed} />
               ) : (
-                <Markdown key={index} content={entry.text} className="text-sm" />
+                <TextEntry key={index} entry={entry} />
               );
           }
         })}

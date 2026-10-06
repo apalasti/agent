@@ -26,6 +26,7 @@ describe("Subagents panel", () => {
         rpc: rpcHandlers({
           threadSubagents: ({ threadId }) => ({
             threadId,
+            environment: null,
             subagents: [
               makeSubagent("done", { description: "count files", startedAt: "2026-10-06T11:00:00Z" }),
               makeSubagent("live", {
@@ -47,7 +48,73 @@ describe("Subagents panel", () => {
     expect(cards[0]!.textContent).toContain("2 turns · 3 tools");
     expect(cards[0]!.textContent).toContain("bash: sleep 30");
     expect(rendered.getByRole("button", { name: "Copy agent id 27e7abbc-45cf-47d0-9b1a-0000" }).textContent).toContain("27e7abbc");
-    expect(rendered.getByText("1 running · 1 done")).toBeTruthy();
+    expect(rendered.getByText(/^1 running · 1 done · \S.* total$/)).toBeTruthy();
+  });
+
+  it("summarizes files touched and the result, and lists the files with links when expanded", async () => {
+    const { panel } = await slots();
+    const rendered = renderSlot(
+      panel,
+      { threadId: "thr_1", params: null },
+      {
+        rpc: rpcHandlers({
+          threadSubagents: ({ threadId }) => ({
+            threadId,
+            environment: { id: "env_1", hostId: "host_1", path: "/w" },
+            subagents: [
+              makeSubagent("ok", {
+                description: "writer",
+                result: "Wrote the note.\nMore detail.",
+                lastActivity: "Wrote the note.",
+                filesTouched: [
+                  { path: "/w/src/a.ts", writes: 0, edits: 2 },
+                  { path: "/elsewhere/b.md", writes: 1, edits: 0 },
+                ],
+              }),
+              makeSubagent("bad", { description: "broken", status: "failed", result: "Agent failed: boom" }),
+            ],
+          }),
+          transcript: () => ({ entries: [], truncated: false, children: [] }),
+        }),
+      },
+    );
+    const writer = await rendered.findByRole("article", { name: "writer" });
+    expect(writer.textContent).toContain("edited 2 files");
+    expect(writer.textContent).toContain("Result:Wrote the note.");
+    expect(writer.textContent).not.toContain("More detail.");
+    expect(rendered.getByText("Agent failed: boom").className).toContain("text-destructive");
+
+    fireEvent.click(rendered.getByRole("button", { name: "Show transcript of writer" }));
+    const files = await rendered.findByRole("region", { name: "Files touched" });
+    const links = Array.from(files.querySelectorAll("a"));
+    expect(links.map((link) => link.textContent)).toEqual(["src/a.ts", "/elsewhere/b.md"]);
+    expect(files.textContent).toContain("2 edits");
+    expect(files.textContent).toContain("1 write");
+  });
+
+  it("says how long a running agent's transcript has been quiet", async () => {
+    const { panel } = await slots();
+    const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
+    const rendered = renderSlot(
+      panel,
+      { threadId: "thr_1", params: null },
+      {
+        rpc: rpcHandlers({
+          threadSubagents: ({ threadId }) => ({
+            threadId,
+            environment: null,
+            subagents: [
+              makeSubagent("fresh", { description: "fresh", status: "running", finishedAt: null, updatedAt: ago(2_000) }),
+              makeSubagent("slow", { description: "slow", status: "running", finishedAt: null, updatedAt: ago(42_000) }),
+              makeSubagent("silent", { description: "silent", status: "running", finishedAt: null, updatedAt: ago(12 * 60_000) }),
+            ],
+          }),
+        }),
+      },
+    );
+    expect((await rendered.findByRole("article", { name: "fresh" })).textContent).not.toMatch(/updated|no activity/);
+    expect(rendered.getByRole("article", { name: "slow" }).textContent).toMatch(/updated 4\ds ago/);
+    expect(rendered.getByText("no activity for 12m").className).toContain("text-warning-text");
   });
 
   it("explains itself when the thread has no subagents", async () => {
@@ -55,7 +122,7 @@ describe("Subagents panel", () => {
     const rendered = renderSlot(
       panel,
       { threadId: "thr_1", params: null },
-      { rpc: rpcHandlers({ threadSubagents: ({ threadId }) => ({ threadId, subagents: [] }) }) },
+      { rpc: rpcHandlers({ threadSubagents: ({ threadId }) => ({ threadId, subagents: [], environment: null }) }) },
     );
     expect((await rendered.findByRole("status")).textContent).toMatch(/launched with the Agent tool/);
   });
@@ -69,6 +136,7 @@ describe("Subagents panel", () => {
         rpc: rpcHandlers({
           threadSubagents: ({ threadId }) => ({
             threadId,
+            environment: null,
             subagents: [makeSubagent("parent", { description: "lead", result: "All 3 files counted." })],
           }),
           transcript: ({ callId }) =>
@@ -115,7 +183,7 @@ describe("Subagents panel", () => {
         rpc: rpcHandlers({
           threadSubagents: ({ threadId }) => {
             count += 1;
-            return { threadId, subagents: Array.from({ length: count }, (_, index) => makeSubagent(`a${index}`)) };
+            return { threadId, environment: null, subagents: Array.from({ length: count }, (_, index) => makeSubagent(`a${index}`)) };
           },
         }),
       },

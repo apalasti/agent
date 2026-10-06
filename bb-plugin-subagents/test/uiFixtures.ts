@@ -19,6 +19,7 @@ export function makeSubagent(callId: string, overrides: Partial<Subagent> = {}):
     result: null,
     outputFile: "/tmp/agent.output",
     parentAgentId: null,
+    filesTouched: [],
     ...overrides,
   };
 }

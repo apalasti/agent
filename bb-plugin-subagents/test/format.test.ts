@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   activityCounts,
+  clockTime,
+  fileTarget,
+  panelSummary,
+  staleness,
   elapsedMs,
   finalTextIndex,
   formatDuration,
@@ -91,5 +95,57 @@ describe("finalTextIndex", () => {
     expect(finalTextIndex(entries, "The count is 3.")).toBe(1);
     expect(finalTextIndex(entries, "Something else")).toBe(-1);
     expect(finalTextIndex(entries, null)).toBe(-1);
+  });
+});
+
+describe("staleness", () => {
+  const now = Date.parse("2026-10-06T10:30:00Z");
+  const running = (updatedAt: string) => makeSubagent("a", { status: "running", finishedAt: null, updatedAt });
+
+  it("stays quiet for fresh or finished agents", () => {
+    expect(staleness(running("2026-10-06T10:29:50Z"), now)).toBeNull();
+    expect(staleness(makeSubagent("a", { updatedAt: "2026-10-06T09:00:00Z" }), now)).toBeNull();
+  });
+
+  it("ticks up, then warns after ten minutes", () => {
+    expect(staleness(running("2026-10-06T10:29:18Z"), now)).toEqual({ text: "updated 42s ago", warn: false });
+    expect(staleness(running("2026-10-06T10:25:00Z"), now)).toEqual({ text: "updated 5m ago", warn: false });
+    expect(staleness(running("2026-10-06T10:18:00Z"), now)).toEqual({ text: "no activity for 12m", warn: true });
+    expect(staleness(running("2026-10-06T08:00:00Z"), now)).toEqual({ text: "no activity for 2h 30m", warn: true });
+  });
+});
+
+describe("panelSummary", () => {
+  it("counts by status and sums elapsed time", () => {
+    const now = Date.parse("2026-10-06T10:01:00Z");
+    const agents = [
+      makeSubagent("a", { status: "running", finishedAt: null, startedAt: "2026-10-06T10:00:00Z" }),
+      makeSubagent("b", { startedAt: "2026-10-06T10:00:00Z", finishedAt: "2026-10-06T10:02:12Z" }),
+      makeSubagent("c", { status: "failed", startedAt: null }),
+    ];
+    expect(panelSummary(agents, now)).toBe("1 running · 1 done · 1 failed · 3m 12s total");
+    expect(panelSummary([], now)).toBe("");
+  });
+});
+
+describe("fileTarget", () => {
+  const env = { id: "env_1", hostId: "host_1", path: "/tmp/wt-demo" };
+  it("links files under the environment as workspace files and others as host files", () => {
+    expect(fileTarget("/private/tmp/wt-demo/scratch-note.txt", env)).toEqual({
+      kind: "workspace",
+      environmentId: "env_1",
+      path: "scratch-note.txt",
+    });
+    expect(fileTarget("/etc/hosts", env)).toEqual({ kind: "host", hostId: "host_1", path: "/etc/hosts" });
+    expect(fileTarget("relative.txt", env)).toBeNull();
+    expect(fileTarget("/etc/hosts", null)).toBeNull();
+  });
+});
+
+describe("clockTime", () => {
+  it("formats local HH:MM:SS", () => {
+    const at = new Date(2026, 9, 6, 9, 5, 7).toISOString();
+    expect(clockTime(at)).toBe("09:05:07");
+    expect(clockTime(null)).toBeNull();
   });
 });

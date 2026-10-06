@@ -3,8 +3,8 @@ import type { PluginThreadPanelProps } from "@get-bb/plugin-sdk/app";
 import { Icon } from "@/components/ui/icon";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AgentCard } from "./AgentCard";
-import { useThreadSubagents } from "./data";
-import { orderSubagents, pillText, tally } from "./format";
+import { useNow, useThreadSubagents } from "./data";
+import { orderSubagents, panelSummary, tally } from "./format";
 import { RunningGlyph } from "./glyphs";
 
 function Notice({ children }: { children: ReactNode }) {
@@ -19,16 +19,17 @@ function Notice({ children }: { children: ReactNode }) {
 }
 
 export function SubagentsPanel({ threadId }: PluginThreadPanelProps) {
-  const { subagents, error, refetch } = useThreadSubagents(threadId);
+  const { subagents, environment, error, refetch } = useThreadSubagents(threadId);
   const ordered = subagents === null ? null : orderSubagents(subagents);
   const counts = subagents === null ? null : tally(subagents);
+  const now = useNow(counts !== null && counts.running > 0);
 
   return (
     <TooltipProvider>
       <div className="flex h-full min-h-0 flex-col">
         <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3 text-xs text-muted-foreground">
           {counts !== null && counts.running > 0 ? <RunningGlyph className="size-3.5" /> : null}
-          <span className="min-w-0 flex-1 truncate">{counts === null || counts.total === 0 ? "Subagents" : pillText(counts)}</span>
+          <span className="min-w-0 flex-1 truncate tabular-nums">{subagents === null ? null : panelSummary(subagents, now)}</span>
           <button
             type="button"
             aria-label="Refresh subagents"
@@ -53,7 +54,7 @@ export function SubagentsPanel({ threadId }: PluginThreadPanelProps) {
                 each with its live transcript.
               </Notice>
             ) : (
-              ordered.map((agent) => <AgentCard key={agent.callId} threadId={threadId} agent={agent} />)
+              ordered.map((agent) => <AgentCard key={agent.callId} threadId={threadId} agent={agent} environment={environment} />)
             )}
           </div>
         </div>

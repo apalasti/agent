@@ -5,7 +5,8 @@ Makes pi subagents visible in bb. When a pi thread runs the `Agent` tool, bb onl
 
 - A pill in the thread header: "2 running · 3 done". Click it to open the Subagents panel.
 - A Subagents panel with one card per subagent (status, model, elapsed time, turns, tool
-  calls, last activity) that expands into its live transcript, nested subagents included.
+  calls, files edited, last activity or result) that expands into the files it touched and
+  its live transcript, nested subagents included.
 - A running-subagents badge on sidebar thread rows.
 - `bb subagents list` and `bb subagents show <id>`, so a lead agent can check on its workers.
 

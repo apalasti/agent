@@ -24,6 +24,7 @@ async function load() {
               .map((row) => ({ id: `evt_${row.seq}`, scope: { kind: "thread" }, threadId: PROBE, ...row })),
         },
         list: async () => [{ id: PROBE, providerId: "pi", status: "idle", updatedAt: NOW - 1000 }],
+        get: async () => ({ id: PROBE, environment: { id: "env_1", hostId: "host_1", path: "/tmp/wt-demo" } }),
       },
     } as never,
   });
@@ -88,8 +89,27 @@ describe("cli", () => {
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("27e7abbc-45cf-47d  completed Explore (bg)  read readme");
     expect(result.stdout).toContain("> Read README*");
-    expect(result.stdout).toContain("$ read: /private/tmp/wt-demo/README.md");
+    expect(result.stdout).toContain("$ read: README.md");
     expect(result.stdout).toContain("Result: `/private/tmp/wt-demo/README.md` contains only");
+  });
+
+  it("counts and lists the files a subagent touched", async () => {
+    const message = {
+      role: "assistant",
+      content: [{ type: "toolCall", id: "w1", name: "write", arguments: { path: "notes.txt", content: "x" } }],
+    };
+    const resultMessage = { role: "toolResult", toolCallId: "w1", toolName: "write", content: [], isError: false };
+    fs.append(
+      `${PROBE_TASKS}/3a2ff4b2-3d37-45c.output`,
+      [message, resultMessage].map((m) => `${JSON.stringify({ timestamp: "2026-10-06T20:12:30Z", message: m })}\n`).join(""),
+    );
+    const harness = await load();
+    const list = await harness.behavior.runCli(["list", "--thread", PROBE]);
+    expect(list.stdout).toContain("count files  [4 turns, 3 tools, 1 file edited]");
+    const show = await harness.behavior.runCli(["show", "3a2ff4b2", "--thread", PROBE]);
+    expect(show.stdout).toContain("files touched (1):\n  notes.txt  (1 write)");
+    const rpc = await harness.behavior.callRpc("threadSubagents", { threadId: PROBE });
+    expect(rpc).toMatchObject({ environment: { id: "env_1", hostId: "host_1", path: "/tmp/wt-demo" } });
   });
 
   it("uses the calling thread for --self and refuses unknown ids", async () => {

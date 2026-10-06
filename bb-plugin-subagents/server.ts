@@ -2,9 +2,10 @@ import { open, readdir, realpath, stat } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { PluginCliError, cliCommand, defineCli, type BbPluginApi } from "@get-bb/plugin-sdk";
-import { SUBAGENTS_CHANGED, rpcContract, type Subagent, type TranscriptEntry } from "./src/contract";
+import { SUBAGENTS_CHANGED, rpcContract, type FileTouch, type Subagent, type TranscriptEntry } from "./src/contract";
 import { createCollector, type CollectFs, type CollectSdk, type Collector } from "./src/collect";
 import { EVENT_TYPES, type EventRow } from "./src/events";
+import { pathRoots, relativePath } from "./src/paths";
 import { clip } from "./src/transcript";
 
 export type { rpcContract } from "./src/contract";
@@ -71,14 +72,29 @@ function bbSdkAdapter(bb: BbPluginApi): CollectSdk {
         updatedAt: thread.updatedAt,
       }));
     },
+    async threadEnvironment(threadId) {
+      const thread = await bb.sdk.threads.get({ threadId, include: "environment" });
+      const environment = "environment" in thread ? thread.environment : null;
+      if (environment == null || environment.path == null) return null;
+      return { id: environment.id, hostId: environment.hostId ?? null, path: environment.path };
+    },
   };
 }
 
 function statusLine(subagent: Subagent): string {
   const id = subagent.agentId ?? subagent.callId;
-  const counts = `${subagent.turns} turns, ${subagent.toolCalls} tools`;
+  const files = subagent.filesTouched.length;
+  const counts = `${subagent.turns} turns, ${subagent.toolCalls} tools${files > 0 ? `, ${files} file${files === 1 ? "" : "s"} edited` : ""}`;
   const mode = subagent.background ? "bg" : "fg";
   return `${id}  ${subagent.status.padEnd(9)} ${subagent.type} (${mode})  ${subagent.description}  [${counts}]`;
+}
+
+function fileLine(file: FileTouch, roots: readonly string[]): string {
+  const ops = [
+    ...(file.writes > 0 ? [`${file.writes} write${file.writes === 1 ? "" : "s"}`] : []),
+    ...(file.edits > 0 ? [`${file.edits} edit${file.edits === 1 ? "" : "s"}`] : []),
+  ];
+  return `  ${relativePath(file.path, roots)}  (${ops.join(", ")})`;
 }
 
 function entryText(entry: TranscriptEntry): string {
@@ -107,7 +123,10 @@ export function createPlugin(options: PluginOptions = {}) {
     });
 
     bb.rpc.register(rpcContract, {
-      threadSubagents: async ({ threadId }) => ({ threadId, subagents: await collector.threadSubagents(threadId) }),
+      async threadSubagents({ threadId }) {
+        const subagents = await collector.threadSubagents(threadId);
+        return { threadId, subagents, environment: collector.environment(threadId) };
+      },
       async transcript({ threadId, callId, limit }) {
         const found = await collector.transcript(threadId, callId, limit);
         if (found === null) throw new Error(`No subagent ${callId} in thread ${threadId}`);
@@ -181,11 +200,15 @@ export function createPlugin(options: PluginOptions = {}) {
                   .transcript(candidate, positionals.id, options.tail + 1)
                   .catch((cause: unknown) => (threadId === null ? null : cliFailure(cause)));
                 if (found === null) continue;
-                const { subagent, entries, truncated, children } = found;
+                const { subagent, entries, truncated, children, environment } = found;
+                const roots = pathRoots([environment?.path]);
                 const lines = [
                   statusLine(subagent),
                   `thread ${candidate}  model ${subagent.model ?? "?"}  started ${subagent.startedAt ?? "?"}  updated ${subagent.updatedAt ?? "?"}`,
                   ...(subagent.outputFile ? [`transcript ${subagent.outputFile}`] : []),
+                  ...(subagent.filesTouched.length > 0
+                    ? [`files touched (${subagent.filesTouched.length}):`, ...subagent.filesTouched.map((file) => fileLine(file, roots))]
+                    : []),
                   ...children.map((child) => `  child ${statusLine(child)}`),
                   "",
                   ...entries.flatMap((entry, index) => (truncated && index === 1 ? ["…", entryText(entry)] : [entryText(entry)])),

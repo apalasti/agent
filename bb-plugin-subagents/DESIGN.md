@@ -53,6 +53,13 @@ Measured details the join relies on:
   in background. Agent ID: <id>` or the inline report) and nested `get_subagent_result` results.
   Their `.output` lives in the same `tasks/` dir as the parent's.
 - `threads.events.list` rejects `limit` above 100; paging stops on a short page.
+- pi's file tools are `write` / `edit` with a `path` argument, absolute or relative to the session
+  cwd (Claude-Code-style `Write`/`Edit`/`MultiEdit` `file_path` and `NotebookEdit` `notebook_path` are
+  also read). A call counts toward `filesTouched` once its non-error result is in the transcript.
+- The thread's environment (`threads.get({ include: "environment" })`: id, hostId, path) is fetched
+  once per thread. Paths under it or the session cwd (`/tmp` and `/private/tmp` are the same) are
+  shown relative; tool summaries drop a leading `cd <that dir> &&` and abbreviate other `cd`
+  targets to `…/<basename>`. The full text stays in the expanded args.
 - Only `thread/identity`, `turn/*` and `item/*` events are fetched: `provider/unhandled` also
   carries the records but includes the 64 KB system prompt each turn.
 
@@ -62,11 +69,18 @@ Measured details the join relies on:
   subagents. Reads "⟳ 2 running · 3 done", or "5 subagents" when none are running. A click
   opens the panel. It reads `summaries({ threadIds: [threadId] })`, not `threadSubagents`, so
   the always-mounted pill stays cheap.
-- **Thread panel "Subagents"** (`threadPanelAction`, layout flush): one card per subagent with
-  description, type, model, status, elapsed time, turn and tool-call counts, the last activity
-  line (e.g. `bash: sleep 20`) and the short id, so the `get_subagent_result` rows can be
-  matched up. A card expands to its live transcript: prompt, then a compact tool-call line per
-  call (expandable args and result), assistant text as markdown, and the final result. Nested
+- **Thread panel "Subagents"** (`threadPanelAction`, layout flush): a top bar summarizing the
+  thread ("2 running · 5 done · 3m 12s total", total = summed elapsed time) plus refresh, then one
+  card per subagent with description, type, model, status, elapsed time, turn and tool-call
+  counts, "edited N files", and the short id (its copy button copies the full pi id, for
+  `get_subagent_result` / `steer_subagent`). The last line is the last activity (e.g. `bash:
+  sleep 20`) while running and `Result: <first line>` once finished (red when failed). Because the
+  transcript is written once per turn, a running card can't know what tool is in flight; when it
+  has been quiet for 15 s it says "updated 42s ago", and after 10 min, in amber, "no activity for
+  12m". A card expands to the files it touched (relative to the environment, each an
+  `experimental_FileLink`: a workspace target under the environment, a host target elsewhere)
+  and its live transcript: prompt, then a compact tool-call line per call (expandable args and
+  result; local HH:MM:SS on hover), assistant text as markdown, and the final result. Nested
   subagents (an `Agent` call inside a transcript) render as child cards. It polls every 2 s
   while anything is running, every 30 s otherwise, and refreshes on realtime. An expanded
   transcript scrolls inside its own bounded card and sticks to the bottom while the agent runs,
@@ -78,8 +92,9 @@ Measured details the join relies on:
   `experimental_appOverlay` (`RowStatusPoller`), which polls `summaries` every 3 s through
   `useRpc` while the document is visible. This replaces "the content script polls", because a
   content-script context has no rpc client.
-- **CLI** `bb subagents list [--thread <id>|--self]` and `bb subagents show <agentId> [--tail N]`,
-  so a lead agent (or the user) can inspect workers. Bounded output, with `--json`.
+- **CLI** `bb subagents list [--thread <id>|--self]` (with files-edited counts) and `bb subagents
+  show <agentId> [--tail N]` (lists the files touched, relative to the environment), so a lead
+  agent (or the user) can inspect workers. Bounded output, with `--json`.
 
 ## Files
 
@@ -91,6 +106,7 @@ bb-plugin-subagents/
   src/transcript.ts      pure: .output JSONL text → TranscriptEntry[] + stats; incremental by byte offset
   src/session.ts         pure: pi session JSONL → Map<agentId, SessionRecord>
   src/collect.ts         server: joins the three per thread; caches by file size/mtime
+  src/paths.ts           pure: environment-relative paths, summary shortening (also used by the UI)
   src/ui/HeaderPill.tsx, src/ui/SubagentsPanel.tsx, src/ui/AgentCard.tsx, src/ui/Transcript.tsx
   src/ui/format.ts       pure: ordering, elapsed, labels; src/ui/data.ts polling hooks
   src/rowStatus.ts       content script (setter) + RowStatusPoller overlay + pure diff

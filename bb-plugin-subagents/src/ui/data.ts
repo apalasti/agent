@@ -53,16 +53,13 @@ function useLatest<T>(load: (rpc: Rpc) => Promise<T>, deps: readonly unknown[]) 
 }
 
 export function useThreadSubagents(threadId: string) {
-  const { data, error, refetch } = useLatest(
-    (rpc) => rpc.call("threadSubagents", { threadId }).then((result) => result.subagents),
-    [threadId],
-  );
-  const anyRunning = data?.some(isRunning) ?? false;
+  const { data, error, refetch } = useLatest((rpc) => rpc.call("threadSubagents", { threadId }), [threadId]);
+  const anyRunning = data?.subagents.some(isRunning) ?? false;
   useInterval(refetch, pollInterval(anyRunning));
   useRealtime(SUBAGENTS_CHANGED, (payload) => {
     if (concernsThread(payload, threadId)) refetch();
   });
-  return { subagents: data, error, refetch };
+  return { subagents: data?.subagents ?? null, environment: data?.environment ?? null, error, refetch };
 }
 
 export function useThreadTally(threadId: string) {

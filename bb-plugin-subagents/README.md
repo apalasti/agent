@@ -8,6 +8,7 @@ status rules and surfaces.
   `subagents-changed` signal, and the `bb subagents list|show` CLI.
 - `src/events.ts`, `src/transcript.ts`, `src/session.ts` — pure parsers for bb events,
   `.output` transcripts and pi session files; `src/collect.ts` joins and caches them.
+  `src/paths.ts` — pure path display: relative to the environment, `cd` stripping.
 - `app.tsx`, `src/ui/`, `src/rowStatus.ts` — header pill, Subagents panel, sidebar row status.
 - `skills/subagents/SKILL.md` — tells agents how to use `bb subagents`.
 

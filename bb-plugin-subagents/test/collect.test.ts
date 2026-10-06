@@ -66,6 +66,7 @@ describe("threadSubagents", () => {
       result: expect.stringMatching(/^The repo has 3 files/),
       outputFile: `${PROBE_TASKS}/3a2ff4b2-3d37-45c.output`,
       parentAgentId: null,
+      filesTouched: [],
     });
     expect(subagents[1]).toMatchObject({ agentId: "27e7abbc-45cf-47d", status: "completed", turns: 3, toolCalls: 3 });
   });
@@ -218,6 +219,39 @@ describe("transcript", () => {
     expect(child?.entries).toEqual([{ kind: "prompt", at: "2026-10-06T20:12:41Z", text: "kid task" }]);
 
     expect(await collect.transcript(PROBE, "nope", 10)).toBeNull();
+  });
+});
+
+describe("files touched and display paths", () => {
+  const output = `${PROBE_TASKS}/3a2ff4b2-3d37-45c.output`;
+  const line = (message: object) =>
+    `${JSON.stringify({ isSidechain: true, agentId: "3a2ff4b2-3d37-45c", type: "x", timestamp: "2026-10-06T20:12:30Z", message })}\n`;
+
+  it("resolves relative paths against the session cwd and shortens summaries under the environment", async () => {
+    seedProbe(fs);
+    sdk.events.set(PROBE, fixtureEvents("probe-events.json"));
+    sdk.environments.set(PROBE, { id: "env_1", hostId: "host_1", path: "/tmp/wt-demo" });
+    fs.append(
+      output,
+      line({
+        role: "assistant",
+        content: [
+          { type: "toolCall", id: "w1", name: "write", arguments: { path: "notes.txt", content: "x" } },
+          { type: "toolCall", id: "e1", name: "edit", arguments: { path: "/private/tmp/wt-demo/notes.txt", edits: [] } },
+          { type: "toolCall", id: "b1", name: "bash", arguments: { command: "cd /tmp/wt-demo && ls /private/tmp/wt-demo/src" } },
+        ],
+      }) +
+        line({ role: "toolResult", toolCallId: "w1", toolName: "write", content: [{ type: "text", text: "ok" }], isError: false }) +
+        line({ role: "toolResult", toolCallId: "e1", toolName: "edit", content: [{ type: "text", text: "ok" }], isError: false }) +
+        line({ role: "toolResult", toolCallId: "b1", toolName: "bash", content: [{ type: "text", text: "a" }], isError: false }),
+    );
+    const collect = collector();
+    const [first] = await collect.threadSubagents(PROBE);
+    expect(first?.filesTouched).toEqual([{ path: "/private/tmp/wt-demo/notes.txt", writes: 1, edits: 1 }]);
+    expect(first?.lastActivity).toBe("bash: ls src");
+    expect(collect.environment(PROBE)).toEqual({ id: "env_1", hostId: "host_1", path: "/tmp/wt-demo" });
+    const found = await collect.transcript(PROBE, "3a2ff4b2", 400);
+    expect(found?.entries.at(-1)).toMatchObject({ kind: "tool", summary: "bash: ls src", args: expect.stringContaining("cd /tmp/wt-demo") });
   });
 });
 

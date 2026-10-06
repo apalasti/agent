@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { CollectFs, CollectSdk, ThreadInfo } from "../src/collect";
+import type { ThreadEnvironment } from "../src/contract";
 import type { EventRow } from "../src/events";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
@@ -56,6 +57,10 @@ export class FakeSdk implements CollectSdk {
   }
   async listThreads() {
     return this.threads;
+  }
+  environments = new Map<string, ThreadEnvironment>();
+  async threadEnvironment(threadId: string) {
+    return this.environments.get(threadId) ?? null;
   }
 }
 

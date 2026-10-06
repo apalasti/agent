@@ -22,6 +22,20 @@ export const transcriptEntrySchema = z.discriminatedUnion("kind", [
 ]);
 export type TranscriptEntry = z.infer<typeof transcriptEntrySchema>;
 
+export const fileTouchSchema = z.object({
+  path: z.string(),
+  writes: z.number().int(),
+  edits: z.number().int(),
+});
+export type FileTouch = z.infer<typeof fileTouchSchema>;
+
+export const threadEnvironmentSchema = z.object({
+  id: z.string(),
+  hostId: z.string().nullable(),
+  path: z.string(),
+});
+export type ThreadEnvironment = z.infer<typeof threadEnvironmentSchema>;
+
 export const subagentSchema = z.object({
   agentId: z.string().nullable(),
   callId: z.string(),
@@ -39,6 +53,8 @@ export const subagentSchema = z.object({
   result: z.string().nullable(),
   outputFile: z.string().nullable(),
   parentAgentId: z.string().nullable(),
+  /** Successful write/edit calls per file, absolute paths, in first-touch order. */
+  filesTouched: z.array(fileTouchSchema),
 });
 export type Subagent = z.infer<typeof subagentSchema>;
 
@@ -52,7 +68,11 @@ export type ThreadSummary = z.infer<typeof threadSummarySchema>;
 export const rpcContract = defineRpcContract({
   threadSubagents: {
     input: z.object({ threadId: z.string().min(1) }),
-    output: z.object({ threadId: z.string(), subagents: z.array(subagentSchema) }),
+    output: z.object({
+      threadId: z.string(),
+      subagents: z.array(subagentSchema),
+      environment: threadEnvironmentSchema.nullable(),
+    }),
   },
   transcript: {
     input: z.object({

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { applyEvents, parseLaunchResult, parseLaunches, parseStatusRef, turnActive } from "../src/events";
 import { appendSession, emptySession, encodeCwd, parseSession } from "../src/session";
-import { appendTranscript, emptyTranscript, parseTranscript, summarizeToolCall, tailEntries, transcriptPrompt } from "../src/transcript";
+import { appendTranscript, emptyTranscript, fileOp, parseTranscript, summarizeToolCall, tailEntries, transcriptPrompt } from "../src/transcript";
 import { fixture, fixtureEvents, lines } from "./fakes";
 
 describe("parseLaunches", () => {
@@ -148,5 +148,41 @@ describe("session", () => {
   it("encodes a cwd like pi-subagents", () => {
     expect(encodeCwd("/private/tmp/wt-demo")).toBe("private-tmp-wt-demo");
     expect(encodeCwd("/Users/andraspalasti/fun/agent")).toBe("Users-andraspalasti-fun-agent");
+  });
+});
+
+describe("files touched", () => {
+  it("counts successful pi edits and writes from real transcript lines", () => {
+    const edits = parseTranscript(fixture("edits-59054a62.output"));
+    expect([...edits.files]).toEqual([
+      ["/Users/andraspalasti/fun/agent/bb-plugin-worktrees/src/group.ts", { writes: 0, edits: 1 }],
+      ["/Users/andraspalasti/fun/agent/bb-plugin-worktrees/src/ui/glyphs.tsx", { writes: 0, edits: 1 }],
+      ["/Users/andraspalasti/fun/agent/bb-plugin-worktrees/src/ui/rows.tsx", { writes: 0, edits: 2 }],
+      ["/Users/andraspalasti/fun/agent/bb-plugin-worktrees/test/list.test.tsx", { writes: 0, edits: 1 }],
+    ]);
+    const write = parseTranscript(fixture("write-3aed4568.output"));
+    expect([...write.files]).toEqual([
+      ["/Users/andraspalasti/fun/agent/.scratch/plugin-demo/research/05-survey-plugin-landscape.md", { writes: 1, edits: 0 }],
+    ]);
+  });
+
+  it("waits for the result and skips failed calls", () => {
+    const state = emptyTranscript();
+    const call = (id: string, path: string) =>
+      JSON.stringify({ timestamp: "t", message: { role: "assistant", content: [{ type: "toolCall", id, name: "edit", arguments: { path } }] } });
+    const result = (id: string, isError: boolean) =>
+      JSON.stringify({ timestamp: "t", message: { role: "toolResult", toolCallId: id, toolName: "edit", content: [], isError } });
+    appendTranscript(state, Buffer.from(`${call("a", "x.ts")}\n${call("b", "y.ts")}\n`));
+    expect(state.files.size).toBe(0);
+    appendTranscript(state, Buffer.from(`${result("a", false)}\n${result("b", true)}\n`));
+    expect([...state.files]).toEqual([["x.ts", { writes: 0, edits: 1 }]]);
+  });
+
+  it("knows Claude Code tool names", () => {
+    expect(fileOp("Write", { file_path: "/a", content: "" })).toEqual({ path: "/a", op: "writes" });
+    expect(fileOp("MultiEdit", { file_path: "/a", edits: [] })).toEqual({ path: "/a", op: "edits" });
+    expect(fileOp("NotebookEdit", { notebook_path: "/n.ipynb" })).toEqual({ path: "/n.ipynb", op: "edits" });
+    expect(fileOp("bash", { command: "echo > a" })).toBeNull();
+    expect(fileOp("write", { content: "no path" })).toBeNull();
   });
 });

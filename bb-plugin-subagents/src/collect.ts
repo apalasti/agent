@@ -1,9 +1,11 @@
 import { dirname, isAbsolute, join, normalize, sep } from "node:path";
-import type { Subagent, SubagentStatus, ThreadSummary, TranscriptEntry } from "./contract";
+import type { FileTouch, Subagent, SubagentStatus, ThreadEnvironment, ThreadSummary, TranscriptEntry } from "./contract";
 import { applyEvents, emptyLaunchState, turnActive, type EventRow, type LaunchState, type SubagentLaunch } from "./events";
+import { SUMMARY_DISPLAY_LIMIT, pathRoots, resolvePath, shortenSummary } from "./paths";
 import { appendSession, emptySession, encodeCwd, type SessionAgentResult, type SessionRecord, type SessionState } from "./session";
 import {
   appendTranscript,
+  clip,
   emptyTranscript,
   tailEntries,
   transcriptPrompt,
@@ -34,6 +36,7 @@ export interface CollectSdk {
   /** Every event after `afterSeq` (exclusive) of the types in `EVENT_TYPES`, ascending. */
   listEvents(threadId: string, afterSeq: number): Promise<EventRow[]>;
   listThreads(): Promise<ThreadInfo[]>;
+  threadEnvironment(threadId: string): Promise<ThreadEnvironment | null>;
 }
 
 export interface CollectorOptions {
@@ -66,6 +69,11 @@ interface ThreadCache {
   listedUpdatedAt: number | null;
   listedStatus: string | null;
   fingerprint: string | null;
+  environment: ThreadEnvironment | null;
+  environmentFetched: boolean;
+  /** The pi session's cwd: what relative tool paths resolve against. */
+  cwd: string | null;
+  roots: string[];
 }
 
 interface Resolved {
@@ -123,6 +131,22 @@ function transcriptOutcome(transcript: TranscriptState | null): SubagentStatus |
 function fetchedResult(text: string): string {
   const split = text.indexOf("\n\n");
   return split === -1 ? text : text.slice(split + 2);
+}
+
+function displaySummary(summary: string | null, roots: readonly string[]): string | null {
+  return summary === null ? null : clip(shortenSummary(summary, roots), SUMMARY_DISPLAY_LIMIT);
+}
+
+function filesTouched(transcript: TranscriptState | null, cwd: string | null): FileTouch[] {
+  const merged = new Map<string, FileTouch>();
+  for (const [path, counts] of transcript?.files ?? []) {
+    const absolute = resolvePath(path, cwd);
+    const touch = merged.get(absolute) ?? { path: absolute, writes: 0, edits: 0 };
+    touch.writes += counts.writes;
+    touch.edits += counts.edits;
+    merged.set(absolute, touch);
+  }
+  return [...merged.values()];
 }
 
 async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
@@ -243,7 +267,17 @@ export function createCollector(options: CollectorOptions) {
   function threadCache(threadId: string): ThreadCache {
     let cache = threads.get(threadId);
     if (cache === undefined) {
-      cache = { launches: emptyLaunchState(), fetched: false, listedUpdatedAt: null, listedStatus: null, fingerprint: null };
+      cache = {
+        launches: emptyLaunchState(),
+        fetched: false,
+        listedUpdatedAt: null,
+        listedStatus: null,
+        fingerprint: null,
+        environment: null,
+        environmentFetched: false,
+        cwd: null,
+        roots: [],
+      };
       threads.set(threadId, cache);
     }
     return cache;
@@ -259,6 +293,7 @@ export function createCollector(options: CollectorOptions) {
     const agentResults: SessionAgentResult[] = [];
     const taskDirs = new Set<string>();
     for (const session of sessionStates) {
+      cache.cwd = session.cwd ?? cache.cwd;
       for (const [id, record] of session.records) records.set(id, record);
       agentResults.push(...session.agentResults);
       if (session.sessionId !== null && session.cwd !== null) {
@@ -267,6 +302,7 @@ export function createCollector(options: CollectorOptions) {
     }
     for (const launch of launches) if (launch.outputFile !== null) taskDirs.add(dirname(launch.outputFile));
     const dirs = [...taskDirs];
+    cache.roots = pathRoots([cache.cwd, cache.environment?.path]);
     const active = turnActive(cache.launches);
     const claimed = new Set(launches.flatMap((launch) => (launch.agentId === null ? [] : [launch.agentId])));
     const consumedResults = new Set<SessionAgentResult>();
@@ -351,10 +387,11 @@ export function createCollector(options: CollectorOptions) {
           finishedAt: iso(finishedAt),
           turns: transcript?.turns ?? 0,
           toolCalls: transcript?.toolCalls ?? 0,
-          lastActivity: transcript?.lastActivity ?? null,
+          lastActivity: displaySummary(transcript?.lastActivity ?? null, cache.roots),
           result,
           outputFile,
           parentAgentId: null,
+          filesTouched: filesTouched(transcript, cache.cwd),
         },
       });
     }
@@ -367,25 +404,40 @@ export function createCollector(options: CollectorOptions) {
     return resolved;
   }
 
+  async function refreshEnvironment(threadId: string, cache: ThreadCache) {
+    if (cache.environmentFetched) return;
+    cache.environment = await sdk.threadEnvironment(threadId).catch(() => null);
+    cache.environmentFetched = cache.environment !== null;
+  }
+
   function loadThread(threadId: string, fetchEvents = true): Promise<Resolved[]> {
     return serialized(threadId, async () => {
       const cache = threadCache(threadId);
       if (fetchEvents || !cache.fetched) await refreshEvents(threadId, cache);
+      if (cache.launches.launches.size > 0) await refreshEnvironment(threadId, cache);
       return resolveThread(threadId, cache);
     });
   }
 
-  async function nestedChildren(parent: Subagent, transcript: TranscriptState | null, parentRunning: boolean): Promise<Subagent[]> {
+  async function nestedChildren(
+    cache: ThreadCache,
+    parent: Subagent,
+    transcript: TranscriptState | null,
+    parentRunning: boolean,
+  ): Promise<Subagent[]> {
     if (transcript === null || transcript.nested.length === 0 || parent.outputFile === null) return [];
     const dirs = [dirname(parent.outputFile)];
     const claimed = new Set(transcript.nested.flatMap((child) => (child.agentId === null ? [] : [child.agentId])));
     if (parent.agentId !== null) claimed.add(parent.agentId);
     const children: Subagent[] = [];
-    for (const child of transcript.nested) children.push(await resolveNested(child, transcript, parent, dirs, claimed, parentRunning));
+    for (const child of transcript.nested) {
+      children.push(await resolveNested(cache, child, transcript, parent, dirs, claimed, parentRunning));
+    }
     return children;
   }
 
   async function resolveNested(
+    cache: ThreadCache,
     child: NestedLaunch,
     parentTranscript: TranscriptState,
     parent: Subagent,
@@ -434,10 +486,11 @@ export function createCollector(options: CollectorOptions) {
       finishedAt: status === "running" || status === "unknown" ? null : (transcript?.updatedAt ?? null),
       turns: transcript?.turns ?? 0,
       toolCalls: transcript?.toolCalls ?? 0,
-      lastActivity: transcript?.lastActivity ?? null,
+      lastActivity: displaySummary(transcript?.lastActivity ?? null, cache.roots),
       result,
       outputFile,
       parentAgentId: parent.agentId,
+      filesTouched: filesTouched(transcript, cache.cwd),
     };
   }
 
@@ -447,13 +500,14 @@ export function createCollector(options: CollectorOptions) {
   /** Finds a subagent by call id, agent id or agent-id prefix, searching nested children two levels deep. */
   async function findSubagent(threadId: string, ref: string) {
     const resolved = await loadThread(threadId);
+    const cache = threadCache(threadId);
     const top = resolved.find((entry) => matches(entry.subagent, ref));
     if (top !== undefined) return { subagent: top.subagent, transcript: top.transcript };
     let level = resolved.map((entry) => ({ subagent: entry.subagent, transcript: entry.transcript }));
     for (let depth = 0; depth < 2; depth++) {
       const next: typeof level = [];
       for (const parent of level) {
-        for (const child of await nestedChildren(parent.subagent, parent.transcript, parent.subagent.status === "running")) {
+        for (const child of await nestedChildren(cache, parent.subagent, parent.transcript, parent.subagent.status === "running")) {
           const transcript = child.outputFile === null ? null : await readTranscript(child.outputFile);
           if (matches(child, ref)) return { subagent: child, transcript };
           next.push({ subagent: child, transcript });
@@ -492,16 +546,29 @@ export function createCollector(options: CollectorOptions) {
       return (await loadThread(threadId)).map((entry) => entry.subagent);
     },
 
+    /** The thread's environment as of its last load. */
+    environment: (threadId: string): ThreadEnvironment | null => threads.get(threadId)?.environment ?? null,
+
     async transcript(
       threadId: string,
       ref: string,
       limit: number,
-    ): Promise<{ subagent: Subagent; entries: TranscriptEntry[]; truncated: boolean; children: Subagent[] } | null> {
+    ): Promise<{
+      subagent: Subagent;
+      entries: TranscriptEntry[];
+      truncated: boolean;
+      children: Subagent[];
+      environment: ThreadEnvironment | null;
+    } | null> {
       const found = await findSubagent(threadId, ref);
       if (found === null) return null;
-      const { entries, truncated } = tailEntries(found.transcript?.entries ?? [], limit);
-      const children = await nestedChildren(found.subagent, found.transcript, found.subagent.status === "running");
-      return { subagent: found.subagent, entries, truncated, children };
+      const cache = threadCache(threadId);
+      const tail = tailEntries(found.transcript?.entries ?? [], limit);
+      const entries = tail.entries.map((entry) =>
+        entry.kind === "tool" ? { ...entry, summary: displaySummary(entry.summary, cache.roots) ?? "" } : entry,
+      );
+      const children = await nestedChildren(cache, found.subagent, found.transcript, found.subagent.status === "running");
+      return { subagent: found.subagent, entries, truncated: tail.truncated, children, environment: cache.environment };
     },
 
     async summaries(threadIds?: readonly string[]): Promise<ThreadSummary[]> {

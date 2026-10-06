@@ -3,7 +3,22 @@ import type { TranscriptEntry } from "./contract";
 const TEXT_LIMIT = 20_000;
 const ARGS_LIMIT = 4_000;
 const RESULT_LIMIT = 4_000;
-const SUMMARY_LIMIT = 120;
+const SUMMARY_LIMIT = 400;
+
+/** Path-argument name of each file-mutating tool: pi's `write`/`edit`, and Claude Code's names. */
+const FILE_TOOLS: Record<string, { key: string; op: "writes" | "edits" }> = {
+  write: { key: "path", op: "writes" },
+  edit: { key: "path", op: "edits" },
+  Write: { key: "file_path", op: "writes" },
+  Edit: { key: "file_path", op: "edits" },
+  MultiEdit: { key: "file_path", op: "edits" },
+  NotebookEdit: { key: "notebook_path", op: "edits" },
+};
+
+export interface FileOp {
+  path: string;
+  op: "writes" | "edits";
+}
 
 export interface NestedLaunch {
   callId: string;
@@ -39,7 +54,10 @@ export interface TranscriptState {
   nested: NestedLaunch[];
   /** Latest nested `get_subagent_result` reading per child agent id. */
   nestedRefs: Map<string, NestedStatusRef>;
+  /** Successful file writes/edits per path as the tool received it (possibly relative). */
+  files: Map<string, { writes: number; edits: number }>;
   toolIndex: Map<string, number>;
+  pendingFiles: Map<string, FileOp>;
   pendingNested: Map<string, NestedLaunch>;
   pendingRefs: Map<string, string>;
 }
@@ -59,7 +77,9 @@ export function emptyTranscript(): TranscriptState {
     lastText: null,
     nested: [],
     nestedRefs: new Map(),
+    files: new Map(),
     toolIndex: new Map(),
+    pendingFiles: new Map(),
     pendingNested: new Map(),
     pendingRefs: new Map(),
   };
@@ -111,6 +131,18 @@ function stringify(value: unknown): string {
 
 const NESTED_BACKGROUND = /^Nested agent started in background\. Agent ID: (\S+)/;
 
+function countFile(state: TranscriptState, { path, op }: FileOp) {
+  const counts = state.files.get(path) ?? { writes: 0, edits: 0 };
+  counts[op] += 1;
+  state.files.set(path, counts);
+}
+
+export function fileOp(name: string, args: unknown): FileOp | null {
+  const tool = FILE_TOOLS[name];
+  const path = tool !== undefined && isRecord(args) ? str(args[tool.key]) : null;
+  return tool !== undefined && path !== null && path !== "" ? { path, op: tool.op } : null;
+}
+
 function addPrompt(state: TranscriptState, at: string | null, text: string) {
   const previous = state.entries.at(-1);
   if (previous?.kind === "prompt" && previous.text === text) return;
@@ -145,6 +177,11 @@ function addAssistant(state: TranscriptState, at: string | null, message: Record
         result: null,
         isError: false,
       });
+      const file = fileOp(name, block.arguments);
+      if (file !== null) {
+        if (callId === null) countFile(state, file);
+        else state.pendingFiles.set(callId, file);
+      }
       const args = isRecord(block.arguments) ? block.arguments : {};
       if (name === "Agent" && callId !== null) {
         const launch: NestedLaunch = {
@@ -178,6 +215,11 @@ function addToolResult(state: TranscriptState, message: Record<string, unknown>)
     entry.isError = isError;
   }
   if (callId === null) return;
+  const file = state.pendingFiles.get(callId);
+  if (file !== undefined) {
+    state.pendingFiles.delete(callId);
+    if (!isError) countFile(state, file);
+  }
   const launch = state.pendingNested.get(callId);
   if (launch !== undefined) {
     state.pendingNested.delete(callId);
