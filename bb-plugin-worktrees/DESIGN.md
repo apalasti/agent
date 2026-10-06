@@ -19,7 +19,10 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
    - Project row: name, collapse chevron, `+` → **New task** dialog.
    - Worktree row: branch (or dir name plus a muted "· detached" when detached), dirty dot
      and ahead/behind count sharing one tooltip ("3 uncommitted files · 2 ahead of origin/x"),
-     thread count when collapsed; hover `+` → new thread *in this worktree*; `⋯` menu:
+     thread count when collapsed; a muted `ListTodo` badge with the count of frontier tickets +
+     open issues + hand-off-ready maps in its `.scratch` (tooltip "3 ready tickets · 2 open
+     issues — open Workflow"; click opens `WorkflowDialog`; there is no `Map` host icon);
+     hover `+` → new thread *in this worktree*; `⋯` menu:
      New thread here, Workflow… (opens `WorkflowDialog`), Copy path, Copy branch name,
      Remove worktree… (not for the main checkout).
    - Thread row: bb's own row semantics (status indicator glyph, unread, title, pin/archive
@@ -28,7 +31,17 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
    to the project's configured base, e.g. `wizz/main`), plus an embedded
    `experimental_NewThreadComposer` so the prompt, provider, model and permission pickers
    are bb's own. Submit → thread spawns in a fresh worktree through the `task-worktree`
-   environment provider.
+   environment provider, the dialog closes and the app navigates to the thread
+   (`useBbNavigate().toThread`; was `experimental_useSidebarThreadActions().open`, which left
+   the app where it was). The composer's `onSubmit` carries no key modifiers, so there is no
+   ⌘-submit-to-stay here, unlike the Workflow dialog. The same applies to the
+   new-thread-in-worktree dialog.
+   **Composer seed:** when the project has no remembered execution choice, both composer
+   dialogs seed `defaultProviderId/defaultModel/defaultReasoningLevel` from `agentDefaults`
+   (which skips providers with no models), so the picker never opens on an uninstalled
+   provider; a remembered choice is left to the composer. The composer mounts only after
+   `agentDefaults` answers, because a `default*` prop that changes after mount re-seeds every
+   selection.
 3. **Environment provider "Task worktree"** (`task-worktree`) — the same thing available
    from bb's ordinary new-thread composer environment picker, with a compact inputs chip
    (branch + base ref).
@@ -98,10 +111,13 @@ bb-plugin-worktrees/
                             ProjectNode splits worktrees (shown) from idleWorktrees (folded)
                             (was groupSidebar(threads, worktreesByProject, prefs) → ProjectNode[];
                             collapse prefs live in the UI, pinned/personal needed their own groups)
-  src/taskRequest.ts        pure: taskSpawnRequest(request, inputs) — composer request → task-worktree spawn
+  src/taskRequest.ts        pure: taskSpawnRequest(request, inputs) — composer request → task-worktree spawn;
+                            composerSeed(agentDefaults) → NewThreadComposer default* props ({} for a remembered choice)
   src/ui/WorktreeList.tsx   the thread-list component; owns dialog state
   src/ui/rows.tsx           GroupHeader, ProjectRow, WorktreeRow, ThreadRow (+ hover/⋯/context menus)
-  src/ui/data.ts            listWorktrees per expanded project, lazy worktreeStatus store, collapse state
+  src/ui/data.ts            listWorktrees per expanded project; PathStore<T> — lazy per-path cache for on-screen
+                            rows, used for worktreeStatus and scratchSummary (was WorktreeStatusStore);
+                            useAgentDefaults; collapse state
   src/ui/glyphs.tsx         status glyphs mirroring bb's indicator mapping
   src/ui/fields.tsx         branch + base fields, debounced validateBranch, branch suggestions
   src/ui/taskDraft.ts       lets the composer's task-worktree chip mirror an open NewTaskDialog
@@ -109,14 +125,14 @@ bb-plugin-worktrees/
   src/ui/NewThreadInWorktreeDialog.tsx  composer → RPC spawnInWorktree, for worktrees no live thread runs in;
                             a callout names the worktree because the composer's environment chips can't
                             (a `project-checkout` defaultEnvironment seed still shows the main checkout)
-  src/ui/WorkflowDialog.tsx WorkflowDialog({ projectId, worktreePath, worktreeLabel, open, onOpenChange })
   src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
   src/ui/WorkflowDialog.tsx  .scratch efforts of one worktree: Run / Orchestrate / Chart / Hand off
   src/scratch.ts            pure .scratch scanner + pi prompt composition (see `.scratch/` workflow)
   src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu
   skills/worktrees/SKILL.md the `bb task` CLI for agents
-  test/*.test.ts            git.test (temp repos), overlay.test, group.test, server.test (harness)
+  test/*.test.ts(x)         git, overlay, group, scratch, taskRequest, server (fake host), list, inputs,
+                            workflow (app harness)
 ```
 
 ## Traces
@@ -176,16 +192,24 @@ src/scratch.ts   node:fs, no bb imports
   ticketPrompt(templatesDir, effort, ticket, timestamp?) / handoffPrompt(templatesDir, effort, timestamp?)
   chartPrompt(templatesDir, root, idea) / orchestratePrompt(templatesDir, batch)
   promptTimestamp() → "YYYY-MM-DDTHH:MMZ"
+src/scratch.ts   (round 3) ticketTemplate(ticket), summarizeScratch(index) → ScratchSummary,
+                 mentionsSubagent(text, names), piSubagentActions(templatesDir, index, names),
+                 liveWorkflowThreads([{threadId, metadata}], root) → LiveWorkflowThread[]
 src/contract.ts  (appended) ScratchTicket {ref, number, slug, title, type, status, claimed,
                  blockedBy, blockers, state: frontier|blocked|done, path}, ScratchIssue,
                  ScratchEffort {slug, dir, mapPath|null, tickets, issues, handoffReady},
-                 ScratchIndex {root, scratchDir, efforts}, AgentSelection, WorkflowThreadMetadata
-                 RPC: scratch({projectId, path}) → ScratchIndex
+                 ScratchIndex {root, scratchDir, efforts}, AgentSelection, WorkflowThreadMetadata,
+                 ScratchView = ScratchIndex + {liveThreads: {kind: ticket|issue, ref, threadId}[],
+                 piSubagents: {orchestrate, tickets: ref[]}}, ScratchSummary {readyTickets,
+                 openIssues, handoffs}, AgentDefaults = AgentSelection + {source: project|preferred|default}
+                 RPC: scratch({projectId, path}) → ScratchView (was ScratchIndex; fields appended)
+                      scratchSummary({projectId, path}) → ScratchSummary
                       runTicket({…target, ref}) / orchestrate({…target, effort, issues}) /
                       chart({…target, idea}) / handoff({…target, effort}) → {threadId}
                         where target = {projectId, path, request?}
-                      agentDefaults({projectId}) → AgentSelection | null
-server.ts        settings.templatesDir (string, default ~/fun/agent/extensions, read per run)
+                      agentDefaults({projectId, prefer?}) → AgentDefaults | null
+server.ts        settings.templatesDir (string, default ~/fun/agent/extensions, read per run);
+                 option piAgentsDir (default ~/.pi/agent/agents; its *.md names are the subagent types)
                  worktreeScratch, spawnWorkflow, runTicket, orchestrate, chart, handoff,
                  agentDefaults; CLI scratch/run/orchestrate/chart/handoff + cliWorktreePath
 src/ui/WorkflowDialog.tsx  WorkflowDialog({projectId, worktreePath, worktreeLabel, open, onOpenChange})
@@ -211,11 +235,31 @@ dialog: reuse a ready environment at that path, else `project-checkout` with `in
 → `{threadId}` → dialog closes and `useBbNavigate().toThread(threadId)`; with ⌘/Ctrl held it
 stays open, toasts with an Open action, and rescans.
 
-**The agent choice.** `agentDefaults` → `system.config().generalSettings.defaultProviderId`
-(else the first available provider) → `providers.models` default model + its default
-reasoning → dialog seeds `experimental_ProviderModelPicker` → the picked value rides as
-`request` on every spawn. When defaults cannot be resolved the picker is hidden and bb's own
-defaults apply. The CLI never sends `request`.
+**The agent choice.** `agentDefaults({projectId, prefer: "pi"})` → the project's remembered
+`projects.defaultExecutionOptions` when its provider is available (`source: "project"`) → else
+the first available provider with models in the order `prefer`, `generalSettings.defaultProviderId`,
+`providerOrder` → its default model + default reasoning → dialog seeds
+`experimental_ProviderModelPicker` → the picked value rides as `request` on every spawn. (Was:
+bb's global provider order only, which picked Claude Code for workflows whose orchestrate
+template dispatches pi-only subagents.) When the picked provider is not `pi` and the dialog
+offers orchestration (open issues and `piSubagents.orchestrate`) or a frontier ticket whose
+template names a pi subagent, a muted line under the picker says "Orchestration uses pi
+subagents; other providers can't run them." A template names a subagent when it contains a
+`~/.pi/agent/agents/*.md` basename in backticks (orchestrate.md does; no wayfinder template
+does today). When defaults cannot be resolved the picker is hidden and bb's own defaults
+apply. The CLI never sends `request`.
+
+**A ticket that already has a thread.** RPC `scratch` → `threads.list({projectId,
+originPluginId: "worktrees", archived: false, limit: 100})` → keep threads whose
+`environmentPath` is null or realpaths to the worktree, at most 40 → `getPluginMetadata` each
+→ `liveWorkflowThreads` (newest first wins per ref; an orchestrate ref `e/01,02` covers issues
+`e/01` and `e/02`; metadata `path` must equal the worktree root) → `liveThreads` → the dialog
+shows **Open** (closes, `navigate.toThread`) instead of Run, with **Run again** in a `⋯` menu;
+an issue gets a small Open button beside its status. Archiving the thread brings Run back.
+
+**The row badge.** `WorktreeRow` on screen → `PathStore.request` once per refresh epoch (bumped
+by realtime `worktrees-changed` and every 30 s) → RPC `scratchSummary({projectId, path})` →
+`findProjectWorktree` + `scanScratch` + `summarizeScratch` → counts only, never the full scan.
 
 **CLI `--path` default.** `ctx.threadId` → `threads.get` → `environmentId` → the worktree whose
 `environmentIds` contain it; otherwise the main checkout. (Plugin CLIs run on the server, so

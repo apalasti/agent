@@ -1,5 +1,5 @@
-import type { NewThreadRequest } from "@get-bb/plugin-sdk/app";
-import { TASK_WORKTREE_PROVIDER_ID, type TaskWorktreeInputs } from "./contract";
+import type { NewThreadComposerProps, NewThreadRequest } from "@get-bb/plugin-sdk/app";
+import { TASK_WORKTREE_PROVIDER_ID, type AgentDefaults, type TaskWorktreeInputs } from "./contract";
 
 type EnvironmentArgs = NewThreadRequest["environment"];
 type ProviderEnvironment = Extract<EnvironmentArgs, { type: "provider" }>;
@@ -23,4 +23,16 @@ export function taskWorktreeEnvironment(environment: EnvironmentArgs, inputs: Ta
 
 export function taskSpawnRequest(request: NewThreadRequest, inputs: TaskWorktreeInputs): NewThreadRequest {
   return { ...request, environment: taskWorktreeEnvironment(request.environment, inputs) };
+}
+
+type ComposerSeed = Pick<NewThreadComposerProps, "defaultProviderId" | "defaultModel" | "defaultReasoningLevel">;
+
+/** Seeds the composer only when the project remembers nothing; the composer applies a remembered choice itself. */
+export function composerSeed(defaults: AgentDefaults | null): ComposerSeed {
+  if (defaults === null || defaults.source === "project") return {};
+  return {
+    defaultProviderId: defaults.providerId,
+    defaultModel: defaults.model,
+    defaultReasoningLevel: defaults.reasoningLevel as NewThreadComposerProps["defaultReasoningLevel"],
+  };
 }

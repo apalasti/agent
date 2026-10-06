@@ -7,6 +7,8 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Icon } from "@/components/ui/icon";
 import {
   Dialog,
   DialogContent,
@@ -17,8 +19,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn, formatHomePathForDisplay } from "@/lib/utils";
-import type { ScratchEffort, ScratchIndex, ScratchTicket } from "../contract";
-import { errorMessage, useWorktreesRpc } from "./data";
+import type { ScratchEffort, ScratchTicket, ScratchView } from "../contract";
+import { errorMessage, useAgentDefaults, useWorktreesRpc } from "./data";
+
+const PI_PROVIDER_ID = "pi";
+
+/** The thread to open per `ticket:<ref>` / `issue:<ref>`. */
+type LiveThreads = ReadonlyMap<string, string>;
+
+export function needsPiWarning(view: ScratchView | null, providerId: string | null): boolean {
+  if (view === null || providerId === null || providerId === PI_PROVIDER_ID) return false;
+  const hasOpenIssues = view.efforts.some((effort) => effort.issues.some((issue) => issue.status !== "done"));
+  return (view.piSubagents.orchestrate && hasOpenIssues) || view.piSubagents.tickets.length > 0;
+}
 
 type AgentRequest = { request?: Record<string, unknown> };
 type Modifiers = { metaKey: boolean; ctrlKey: boolean };
@@ -34,7 +47,7 @@ export function WorkflowDialog(props: {
   const { projectId, worktreePath: path, worktreeLabel, open, onOpenChange } = props;
   const rpc = useWorktreesRpc();
   const navigate = useBbNavigate();
-  const [index, setIndex] = useState<ScratchIndex | null>(null);
+  const [index, setIndex] = useState<ScratchView | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [agent, setAgent] = useState<ExperimentalProviderModelPickerValue | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -54,17 +67,18 @@ export function WorkflowDialog(props: {
     if (open) reload();
   }, [open, reload]);
 
+  const { defaults } = useAgentDefaults(projectId, PI_PROVIDER_ID);
   useEffect(() => {
-    if (!open || agent !== null) return;
-    let cancelled = false;
-    rpc.call("agentDefaults", { projectId }).then(
-      (defaults) => !cancelled && defaults !== null && setAgent(defaults as ExperimentalProviderModelPickerValue),
-      () => undefined,
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [rpc, open, projectId, agent]);
+    if (agent !== null || defaults === null) return;
+    const { providerId, model, reasoningLevel, serviceTier } = defaults;
+    setAgent({ providerId, model, reasoningLevel, ...(serviceTier ? { serviceTier } : {}) } as ExperimentalProviderModelPickerValue);
+  }, [defaults, agent]);
+
+  const liveThreads: LiveThreads = new Map(index?.liveThreads.map((live) => [`${live.kind}:${live.ref}`, live.threadId]) ?? []);
+  const openThread = (threadId: string) => {
+    onOpenChange(false);
+    navigate.toThread(threadId);
+  };
 
   const launch: Launch = (key, label, event, start) => {
     const stay = event.metaKey || event.ctrlKey;
@@ -121,6 +135,8 @@ export function WorkflowDialog(props: {
                 key={effort.slug}
                 effort={effort}
                 busy={busy}
+                liveThreads={liveThreads}
+                onOpenThread={openThread}
                 onRunTicket={(ticket, event) =>
                   launch(ticket.ref, ticket.ref, event, (agentRequest) => rpc.call("runTicket", { ...target, ref: ticket.ref, ...agentRequest }))
                 }
@@ -160,7 +176,12 @@ export function WorkflowDialog(props: {
 
         <DialogFooter className="items-center sm:justify-between">
           {agent !== null ? (
-            <ProviderModelPicker value={agent} onChange={setAgent} disabled={busy !== null} />
+            <div className="grid gap-1">
+              <ProviderModelPicker value={agent} onChange={setAgent} disabled={busy !== null} />
+              {needsPiWarning(index, agent.providerId) ? (
+                <p className="text-xs text-muted-foreground">Orchestration uses pi subagents; other providers can't run them.</p>
+              ) : null}
+            </div>
           ) : (
             <span />
           )}
@@ -174,12 +195,16 @@ export function WorkflowDialog(props: {
 function EffortSection({
   effort,
   busy,
+  liveThreads,
+  onOpenThread,
   onRunTicket,
   onHandoff,
   onOrchestrate,
 }: {
   effort: ScratchEffort;
   busy: string | null;
+  liveThreads: LiveThreads;
+  onOpenThread: (threadId: string) => void;
   onRunTicket: (ticket: ScratchTicket, event: Modifiers) => void;
   onHandoff: (event: Modifiers) => void;
   onOrchestrate: (numbers: string[], event: Modifiers) => void;
@@ -225,15 +250,13 @@ function EffortSection({
               meta={ticket.claimed ? `${ticket.type} · claimed` : ticket.type}
               hint={ticket.claimed ? `Claimed ${ticket.claimed}; running it takes the claim over` : undefined}
             >
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7"
-                disabled={busy !== null}
-                onClick={(event) => onRunTicket(ticket, event)}
-              >
-                {busy === ticket.ref ? "Starting…" : "Run"}
-              </Button>
+              <TicketAction
+                ticket={ticket}
+                busy={busy}
+                liveThreadId={liveThreads.get(`ticket:${ticket.ref}`) ?? null}
+                onOpenThread={onOpenThread}
+                onRun={(event) => onRunTicket(ticket, event)}
+              />
             </Row>
           ))}
           {blocked.map((ticket) => (
@@ -259,18 +282,32 @@ function EffortSection({
       {openIssues.length > 0 ? (
         <div className="grid gap-1">
           <ul className="grid">
-            {openIssues.map((issue) => (
-              <li key={issue.ref}>
-                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-state-hover">
-                  <Checkbox checked={selected.has(issue.number)} onCheckedChange={(value) => toggle(issue.number, value === true)} />
-                  <span className="w-6 shrink-0 font-mono text-xs text-muted-foreground">{issue.number}</span>
-                  <span className="min-w-0 flex-1 truncate" title={issue.title}>
-                    {issue.title}
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{issue.status}</span>
-                </label>
-              </li>
-            ))}
+            {openIssues.map((issue) => {
+              const liveThreadId = liveThreads.get(`issue:${issue.ref}`);
+              return (
+                <li key={issue.ref} className="flex items-center gap-1 rounded-md pr-2 hover:bg-state-hover">
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 px-2 py-1">
+                    <Checkbox checked={selected.has(issue.number)} onCheckedChange={(value) => toggle(issue.number, value === true)} />
+                    <span className="w-6 shrink-0 font-mono text-xs text-muted-foreground">{issue.number}</span>
+                    <span className="min-w-0 flex-1 truncate" title={issue.title}>
+                      {issue.title}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">{issue.status}</span>
+                  </label>
+                  {liveThreadId !== undefined ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs"
+                      aria-label={`Open ${issue.ref} thread`}
+                      onClick={() => onOpenThread(liveThreadId)}
+                    >
+                      Open
+                    </Button>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
           <div className="flex justify-end px-2">
             <Button size="sm" variant="outline" className="h-7" disabled={busy !== null || batch.length === 0} onClick={(event) => onOrchestrate(batch, event)}>
@@ -280,6 +317,49 @@ function EffortSection({
         </div>
       ) : null}
     </section>
+  );
+}
+
+function TicketAction({
+  ticket,
+  busy,
+  liveThreadId,
+  onOpenThread,
+  onRun,
+}: {
+  ticket: ScratchTicket;
+  busy: string | null;
+  liveThreadId: string | null;
+  onOpenThread: (threadId: string) => void;
+  onRun: (event: Modifiers) => void;
+}) {
+  const label = busy === ticket.ref ? "Starting…" : "Run";
+  if (liveThreadId === null) {
+    return (
+      <Button size="sm" variant="outline" className="h-7" disabled={busy !== null} onClick={onRun}>
+        {label}
+      </Button>
+    );
+  }
+  return (
+    <span className="flex shrink-0 items-center gap-0.5">
+      <Button size="sm" variant="outline" className="h-7" onClick={() => onOpenThread(liveThreadId)}>
+        Open
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost" className="size-7" aria-label={`More for ${ticket.ref}`} disabled={busy !== null}>
+            <Icon name="MoreHorizontal" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => onRun({ metaKey: false, ctrlKey: false })}>
+            <Icon name="RotateCcw" aria-hidden="true" />
+            {busy === ticket.ref ? "Starting…" : "Run again"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </span>
   );
 }
 

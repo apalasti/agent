@@ -6,7 +6,7 @@ import {
 } from "@get-bb/plugin-sdk/app";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { groupSidebar, rollupIndicator, type WorktreeNode } from "../group";
-import { collapseKey, StatusStoreContext, useCollapsed, useProjectWorktrees, useRefreshEpoch, useStatusStore } from "./data";
+import { collapseKey, PathStoresContext, useCollapsed, usePathStores, useProjectWorktrees, useRefreshEpoch } from "./data";
 import { RollupGlyph } from "./glyphs";
 import { NewTaskDialog } from "./NewTaskDialog";
 import { NewThreadInWorktreeDialog } from "./NewThreadInWorktreeDialog";
@@ -35,7 +35,7 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
     [projects, isCollapsed],
   );
   const { worktrees, errors } = useProjectWorktrees(expandedProjectIds, epoch);
-  const statusStore = useStatusStore(epoch);
+  const pathStores = usePathStores(epoch);
   const tree = useMemo(() => groupSidebar(threads, projects, worktrees), [threads, projects, worktrees]);
   const personalProject = projects.find((project) => project.isPersonal);
 
@@ -75,7 +75,7 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
 
   return (
     <ListContext.Provider value={list}>
-      <StatusStoreContext.Provider value={statusStore}>
+      <PathStoresContext.Provider value={pathStores}>
         <TooltipProvider>
           <nav aria-label="Threads by worktree" className="flex flex-col gap-px px-2 pb-3">
             {status === "loading" && threads.length === 0 ? (
@@ -192,7 +192,7 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
         {dialog?.kind === "settings" ? (
           <ProjectSettingsDialog projectId={dialog.projectId} projectName={projectName(dialog.projectId)} onClose={closeDialog} />
         ) : null}
-      </StatusStoreContext.Provider>
+      </PathStoresContext.Provider>
     </ListContext.Provider>
   );
 }

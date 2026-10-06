@@ -92,6 +92,28 @@ export const scratchIndexSchema = z.object({
 });
 export type ScratchIndex = z.infer<typeof scratchIndexSchema>;
 
+export const liveWorkflowThreadSchema = z.object({
+  kind: z.enum(["ticket", "issue"]),
+  ref: z.string(),
+  threadId: z.string(),
+});
+export type LiveWorkflowThread = z.infer<typeof liveWorkflowThreadSchema>;
+
+export const scratchViewSchema = scratchIndexSchema.extend({
+  /** The most recent unarchived thread this plugin spawned per ticket/issue ref. */
+  liveThreads: z.array(liveWorkflowThreadSchema),
+  /** Which actions' prompt templates name pi subagent types. */
+  piSubagents: z.object({ orchestrate: z.boolean(), tickets: z.array(z.string()) }),
+});
+export type ScratchView = z.infer<typeof scratchViewSchema>;
+
+export const scratchSummarySchema = z.object({
+  readyTickets: z.number().int(),
+  openIssues: z.number().int(),
+  handoffs: z.number().int(),
+});
+export type ScratchSummary = z.infer<typeof scratchSummarySchema>;
+
 export const agentSelectionSchema = z.object({
   providerId: z.string(),
   model: z.string(),
@@ -99,6 +121,12 @@ export const agentSelectionSchema = z.object({
   serviceTier: z.string().optional(),
 });
 export type AgentSelection = z.infer<typeof agentSelectionSchema>;
+
+export const agentDefaultsSchema = agentSelectionSchema.extend({
+  /** project: the project's remembered choice; preferred: the requested `prefer` provider; default: bb's provider order. */
+  source: z.enum(["project", "preferred", "default"]),
+});
+export type AgentDefaults = z.infer<typeof agentDefaultsSchema>;
 
 /** `request` carries the provider/model/reasoning/permission choice; prompt and environment are the plugin's. */
 const workflowTarget = projectRef.extend({
@@ -160,7 +188,7 @@ export const rpcContract = defineRpcContract({
   },
   scratch: {
     input: projectRef.extend({ path: z.string().min(1) }),
-    output: scratchIndexSchema,
+    output: scratchViewSchema,
   },
   runTicket: {
     input: workflowTarget.extend({ ref: z.string().min(1) }),
@@ -179,8 +207,12 @@ export const rpcContract = defineRpcContract({
     output: z.object({ threadId: z.string() }),
   },
   agentDefaults: {
-    input: projectRef,
-    output: agentSelectionSchema.nullable(),
+    input: projectRef.extend({ prefer: z.string().min(1).optional() }),
+    output: agentDefaultsSchema.nullable(),
+  },
+  scratchSummary: {
+    input: projectRef.extend({ path: z.string().min(1) }),
+    output: scratchSummarySchema,
   },
 });
 

@@ -39,7 +39,14 @@ function rpcHandlers(overrides: Partial<PluginRpcTestHandlers<typeof rpcContract
     setConfig: () => {
       throw new Error("unused");
     },
-    scratch: ({ path }) => ({ root: path, scratchDir: `${path}/.scratch`, efforts: [] }),
+    scratch: ({ path }) => ({
+      root: path,
+      scratchDir: `${path}/.scratch`,
+      efforts: [],
+      liveThreads: [],
+      piSubagents: { orchestrate: true, tickets: [] },
+    }),
+    scratchSummary: ({ path }) => ({ readyTickets: path === FEAT ? 3 : 0, openIssues: path === FEAT ? 2 : 0, handoffs: 0 }),
     runTicket: () => ({ threadId: "new" }),
     orchestrate: () => ({ threadId: "new" }),
     chart: () => ({ threadId: "new" }),
@@ -132,6 +139,14 @@ describe("Worktrees thread list", () => {
     const slot = await renderList();
     fireEvent.pointerDown(await slot.findByRole("button", { name: "feat/a actions" }), { button: 0, ctrlKey: false });
     fireEvent.click(await slot.findByRole("menuitem", { name: "Workflow…" }));
+    await slot.findByText(/feat\/a/, { selector: "h2" });
+  });
+
+  it("badges a worktree with runnable .scratch work and opens the workflow dialog from it", async () => {
+    const slot = await renderList();
+    const badge = await slot.findByRole("button", { name: "3 ready tickets · 2 open issues — open Workflow" });
+    expect(slot.queryAllByRole("button", { name: /open Workflow/ })).toHaveLength(1);
+    fireEvent.click(badge);
     await slot.findByText(/feat\/a/, { selector: "h2" });
   });
 

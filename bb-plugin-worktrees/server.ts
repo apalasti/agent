@@ -1,3 +1,4 @@
+import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, isAbsolute, join } from "node:path";
 import { PluginCliError, cliCommand, defineCli, type BbPluginApi, type JsonValue } from "@get-bb/plugin-sdk";
@@ -7,10 +8,11 @@ import {
   WORKTREES_CHANGED,
   rpcContract,
   taskWorktreeInputsSchema,
-  type AgentSelection,
+  type AgentDefaults,
   type ProjectConfig,
   type ResolvedConfig,
   type ScratchIndex,
+  type ScratchView,
   type Worktree,
   type WorkflowThreadMetadata,
 } from "./src/contract";
@@ -37,9 +39,12 @@ import {
   findEffort,
   findRunnableTicket,
   handoffPrompt,
+  liveWorkflowThreads,
   orchestratePrompt,
+  piSubagentActions,
   scanScratch,
   selectIssues,
+  summarizeScratch,
   ticketPrompt,
 } from "./src/scratch";
 
@@ -71,6 +76,8 @@ function boundedLog() {
 
 export interface PluginOptions {
   runner?: Runner;
+  /** Where pi's subagent definitions live; their file names are the subagent types. */
+  piAgentsDir?: string;
 }
 
 const AGENT_REQUEST_KEYS = [
@@ -94,7 +101,20 @@ const truncate = (text: string, max: number) => (text.length > max ? `${text.sli
 
 const expandHome = (path: string) => (path === "~" || path.startsWith("~/") ? join(homedir(), path.slice(1)) : path);
 
-export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
+const LIVE_THREAD_SCAN_LIMIT = 100;
+const LIVE_THREAD_METADATA_LIMIT = 40;
+
+function agentNames(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((file) => file.endsWith(".md"))
+    .map((file) => file.slice(0, -3));
+}
+
+export function createPlugin({
+  runner = spawnRunner,
+  piAgentsDir = join(homedir(), ".pi", "agent", "agents"),
+}: PluginOptions = {}) {
   return async function plugin(bb: BbPluginApi) {
     const kv = bb.storage.kv;
     const settings = bb.settings.define({
@@ -177,6 +197,38 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
       return scanScratch(worktree.path);
     }
 
+    async function liveThreadsIn(projectId: string, root: string) {
+      const threads = await bb.sdk.threads.list({
+        projectId,
+        originPluginId: bb.pluginId,
+        archived: false,
+        includeHidden: true,
+        limit: LIVE_THREAD_SCAN_LIMIT,
+      });
+      const candidates = threads
+        .filter((thread) => thread.environmentPath === null || realpathOr(thread.environmentPath) === root)
+        .slice(0, LIVE_THREAD_METADATA_LIMIT);
+      const withMetadata = await Promise.all(
+        candidates.map(async (thread) => ({
+          threadId: thread.id,
+          metadata: (await bb.sdk.threads.getPluginMetadata({ threadId: thread.id }).catch(() => ({}))) as Partial<WorkflowThreadMetadata>,
+        })),
+      );
+      return liveWorkflowThreads(withMetadata, root);
+    }
+
+    async function scratchView(projectId: string, path: string): Promise<ScratchView> {
+      const index = await worktreeScratch(projectId, path);
+      const [liveThreads, dir] = await Promise.all([
+        liveThreadsIn(projectId, index.root).catch((cause: unknown) => {
+          bb.log.warn(`listing workflow threads failed: ${errorMessage(cause)}`);
+          return [];
+        }),
+        templatesDir(),
+      ]);
+      return { ...index, liveThreads, piSubagents: piSubagentActions(dir, index, agentNames(piAgentsDir)) };
+    }
+
     type WorkflowTarget = { projectId: string; path: string; request?: Record<string, unknown> };
 
     async function spawnWorkflow(
@@ -252,23 +304,31 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
       );
     }
 
-    async function agentDefaults(projectId: string): Promise<AgentSelection | null> {
+    async function agentDefaults(projectId: string, prefer: string | undefined): Promise<AgentDefaults | null> {
       try {
         const { hostId } = await projectSource(projectId);
+        const available = (await bb.sdk.providers.list({ hostId })).filter((provider) => provider.available);
+        const remembered = await bb.sdk.projects.defaultExecutionOptions({ projectId }).catch(() => null);
+        if (remembered != null && available.some((provider) => provider.id === remembered.providerId)) {
+          const { providerId, model, reasoningLevel } = remembered;
+          return { providerId, model, reasoningLevel, source: "project" };
+        }
         const { generalSettings } = await bb.sdk.system.config();
-        const preference = [generalSettings.defaultProviderId, ...generalSettings.providerOrder];
+        const preference = [...(prefer ? [prefer] : []), generalSettings.defaultProviderId, ...generalSettings.providerOrder];
         const rank = (id: string) => {
           const index = preference.indexOf(id);
           return index === -1 ? preference.length : index;
         };
-        const providers = (await bb.sdk.providers.list({ hostId }))
-          .filter((provider) => provider.available)
-          .sort((a, b) => rank(a.id) - rank(b.id));
-        for (const provider of providers) {
+        for (const provider of available.sort((a, b) => rank(a.id) - rank(b.id))) {
           const { models } = await bb.sdk.providers.models({ hostId, providerId: provider.id });
           const model = models.find((candidate) => candidate.isDefault) ?? models[0];
           if (model !== undefined) {
-            return { providerId: provider.id, model: model.model, reasoningLevel: model.defaultReasoningEffort };
+            return {
+              providerId: provider.id,
+              model: model.model,
+              reasoningLevel: model.defaultReasoningEffort,
+              source: provider.id === prefer ? "preferred" : "default",
+            };
           }
         }
         return null;
@@ -475,12 +535,13 @@ export function createPlugin({ runner = spawnRunner }: PluginOptions = {}) {
         await saveConfig(kv, projectId, config);
         return projectConfig(projectId);
       },
-      scratch: ({ projectId, path }) => worktreeScratch(projectId, path),
+      scratch: ({ projectId, path }) => scratchView(projectId, path),
+      scratchSummary: async ({ projectId, path }) => summarizeScratch(await worktreeScratch(projectId, path)),
       runTicket: (input) => runTicket(input),
       orchestrate: (input) => orchestrate(input),
       chart: (input) => chart(input),
       handoff: (input) => handoff(input),
-      agentDefaults: ({ projectId }) => agentDefaults(projectId),
+      agentDefaults: ({ projectId, prefer }) => agentDefaults(projectId, prefer),
     });
 
     async function resolveProjectId(requested: string | undefined, contextProjectId: string | undefined) {

@@ -27,9 +27,9 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { WorktreeStatus } from "../contract";
+import type { ScratchSummary, WorktreeStatus } from "../contract";
 import { rollupIndicator, type ProjectNode, type ThreadNode, type WorktreeNode } from "../group";
-import { collapseKey, useIsOnScreen, useWorktreeStatus } from "./data";
+import { collapseKey, useIsOnScreen, useScratchSummary, useWorktreeStatus } from "./data";
 import { IndicatorGlyph, RollupGlyph, RowStatusGlyph, rowStatusWins, withDraft } from "./glyphs";
 
 export type ListContextValue = {
@@ -285,6 +285,39 @@ export function statusSummary({ dirtyFiles, ahead, behind, upstream }: WorktreeS
   return parts.length > 0 ? parts.join(" · ") : null;
 }
 
+export function scratchSummaryText({ readyTickets, openIssues, handoffs }: ScratchSummary): string | null {
+  const parts: string[] = [];
+  if (readyTickets > 0) parts.push(plural(readyTickets, "ready ticket"));
+  if (openIssues > 0) parts.push(plural(openIssues, "open issue"));
+  if (handoffs > 0) parts.push(`${plural(handoffs, "map")} ready to hand off`);
+  return parts.length > 0 ? `${parts.join(" · ")} — open Workflow` : null;
+}
+
+function ScratchBadge({ summary, onOpen }: { summary: ScratchSummary; onOpen: () => void }) {
+  const text = scratchSummaryText(summary);
+  if (text === null) return null;
+  const count = summary.readyTickets + summary.openIssues + summary.handoffs;
+  return (
+    <Tooltip delayDuration={350} disableHoverableContent>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={text}
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpen();
+          }}
+          className="pointer-events-auto flex h-5 shrink-0 items-center gap-0.5 rounded px-1 text-[11px] tabular-nums text-subtle-foreground outline-none ring-sidebar-ring hover:bg-state-hover hover:text-muted-foreground focus-visible:ring-2"
+        >
+          <Icon name="ListTodo" className="size-3" aria-hidden="true" />
+          {count}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{text}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function IdleWorktreesRow({ count, collapsed, onToggle }: { count: number; collapsed: boolean; onToggle: () => void }) {
   const label = `${count} idle ${count === 1 ? "worktree" : "worktrees"}`;
   return (
@@ -316,6 +349,7 @@ export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string
   const list = useList();
   const [ref, isOnScreen] = useIsOnScreen<HTMLDivElement>();
   const status = useWorktreeStatus(projectId, group.kind === "worktree" ? group.path : null, isOnScreen);
+  const scratch = useScratchSummary(projectId, group.kind === "worktree" ? group.path : null, isOnScreen);
   const key = collapseKey.worktree(projectId, group.key);
   const collapsed = list.isCollapsed(key);
   const isEmpty = group.threadCount === 0;
@@ -395,6 +429,7 @@ export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string
             <TooltipContent side="bottom">{summary}</TooltipContent>
           </Tooltip>
         ) : null}
+        {scratch ? <ScratchBadge summary={scratch} onOpen={() => list.openWorkflow(projectId, group)} /> : null}
         {isEmpty ? null : (
           <span className="pointer-events-auto">
             <Chevron collapsed={collapsed} onToggle={() => list.toggle(key)} label={`${group.label} threads`} revealOnHover={!collapsed} />

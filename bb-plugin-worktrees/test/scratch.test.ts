@@ -8,9 +8,13 @@ import {
   findEffort,
   findRunnableTicket,
   handoffPrompt,
+  liveWorkflowThreads,
+  mentionsSubagent,
   orchestratePrompt,
+  piSubagentActions,
   scanScratch,
   selectIssues,
+  summarizeScratch,
   ticketPrompt,
 } from "../src/scratch";
 import { write } from "./repo";
@@ -175,5 +179,54 @@ describe("prompts", () => {
       orchestratePrompt(real, findEffort(index, "auth").issues),
     ];
     for (const prompt of prompts) expect(prompt).not.toMatch(/\{\{\w+\}\}/);
+  });
+});
+
+describe("summarizeScratch", () => {
+  it("counts frontier tickets, open issues, and maps ready to hand off", () => {
+    expect(summarizeScratch(scanScratch(root))).toEqual({ readyTickets: 1, openIssues: 3, handoffs: 0 });
+  });
+});
+
+describe("pi subagents", () => {
+  const agents = ["issue-planner", "Plan"];
+
+  it("matches an agent name only in backticks", () => {
+    expect(mentionsSubagent("Spawn `issue-planner` first", agents)).toBe(true);
+    expect(mentionsSubagent("Plan, do not do.", agents)).toBe(false);
+  });
+
+  it("flags orchestrate and the frontier tickets whose template names a subagent", () => {
+    write(join(templates, "wayfinder", "task.md"), "Ask `Plan` for help with {{ticket_path}}\n");
+    expect(piSubagentActions(templates, scanScratch(root), agents)).toEqual({ orchestrate: false, tickets: ["demo/02"] });
+    write(join(templates, "issues", "orchestrate.md"), "Spawn `issue-planner`\n");
+    expect(piSubagentActions(templates, scanScratch(root), agents).orchestrate).toBe(true);
+    expect(piSubagentActions(join(templates, "nope"), scanScratch(root), agents)).toEqual({ orchestrate: false, tickets: [] });
+  });
+
+  it("finds subagents in the real orchestrate template", () => {
+    const real = fileURLToPath(new URL("../../extensions", import.meta.url));
+    expect(piSubagentActions(real, scanScratch(root), ["issue-planner", "issue-implementer"]).orchestrate).toBe(true);
+  });
+});
+
+describe("liveWorkflowThreads", () => {
+  it("keeps the newest thread per ref, splits orchestrate batches into issues, and skips other worktrees", () => {
+    const live = liveWorkflowThreads(
+      [
+        { threadId: "t3", metadata: { kind: "ticket", effort: "demo", ref: "demo/02", path: root } },
+        { threadId: "t2", metadata: { kind: "ticket", effort: "demo", ref: "demo/02", path: root } },
+        { threadId: "t1", metadata: { kind: "orchestrate", effort: "auth", ref: "auth/01,03", path: root } },
+        { threadId: "t0", metadata: { kind: "ticket", effort: "demo", ref: "demo/03", path: "/elsewhere" } },
+        { threadId: "tc", metadata: { kind: "chart", effort: null, ref: null, path: root } },
+        { threadId: "tx", metadata: {} },
+      ],
+      root,
+    );
+    expect(live).toEqual([
+      { kind: "ticket", ref: "demo/02", threadId: "t3" },
+      { kind: "issue", ref: "auth/01", threadId: "t1" },
+      { kind: "issue", ref: "auth/03", threadId: "t1" },
+    ]);
   });
 });

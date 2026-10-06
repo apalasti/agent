@@ -1,6 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRealtime, useRpc } from "@get-bb/plugin-sdk/app";
-import { WORKTREES_CHANGED, type rpcContract, type Worktree, type WorktreeStatus } from "../contract";
+import {
+  WORKTREES_CHANGED,
+  type AgentDefaults,
+  type rpcContract,
+  type ScratchSummary,
+  type Worktree,
+  type WorktreeStatus,
+} from "../contract";
 
 export const REFRESH_INTERVAL_MS = 30_000;
 
@@ -62,61 +69,98 @@ export function useProjectWorktrees(projectIds: readonly string[], epoch: number
   return state;
 }
 
-type StatusEntry = { status: WorktreeStatus | null; epoch: number; inFlight: boolean };
+type PathEntry<T> = { value: T | null; epoch: number; inFlight: boolean };
 
-/** Caches worktreeStatus per path; a row asks only while it is on screen. */
-export class WorktreeStatusStore {
-  private entries = new Map<string, StatusEntry>();
+/** Caches one backend answer per worktree path; a row asks only while it is on screen. */
+export class PathStore<T> {
+  private entries = new Map<string, PathEntry<T>>();
   private listeners = new Set<() => void>();
 
-  constructor(private readonly fetchStatus: (projectId: string, path: string) => Promise<WorktreeStatus>) {}
+  constructor(private readonly fetchValue: (projectId: string, path: string) => Promise<T>) {}
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => void this.listeners.delete(listener);
   };
 
-  get(path: string): WorktreeStatus | null {
-    return this.entries.get(path)?.status ?? null;
+  get(path: string): T | null {
+    return this.entries.get(path)?.value ?? null;
   }
 
   request(projectId: string, path: string, epoch: number): void {
     const entry = this.entries.get(path);
     if (entry !== undefined && (entry.inFlight || entry.epoch >= epoch)) return;
-    this.entries.set(path, { status: entry?.status ?? null, epoch, inFlight: true });
-    this.fetchStatus(projectId, path).then(
-      (status) => this.settle(path, epoch, status),
-      () => this.settle(path, epoch, entry?.status ?? null),
+    this.entries.set(path, { value: entry?.value ?? null, epoch, inFlight: true });
+    this.fetchValue(projectId, path).then(
+      (value) => this.settle(path, epoch, value),
+      () => this.settle(path, epoch, entry?.value ?? null),
     );
   }
 
-  private settle(path: string, epoch: number, status: WorktreeStatus | null) {
-    this.entries.set(path, { status, epoch, inFlight: false });
+  private settle(path: string, epoch: number, value: T | null) {
+    this.entries.set(path, { value, epoch, inFlight: false });
     for (const listener of this.listeners) listener();
   }
 }
 
-export const StatusStoreContext = createContext<{ store: WorktreeStatusStore; epoch: number } | null>(null);
+export type PathStores = {
+  status: PathStore<WorktreeStatus>;
+  scratch: PathStore<ScratchSummary>;
+  epoch: number;
+};
 
-export function useStatusStore(epoch: number) {
+export const PathStoresContext = createContext<PathStores | null>(null);
+
+export function usePathStores(epoch: number): PathStores {
   const rpc = useWorktreesRpc();
-  const store = useMemo(
-    () => new WorktreeStatusStore((projectId, path) => rpc.call("worktreeStatus", { projectId, path })),
+  const stores = useMemo(
+    () => ({
+      status: new PathStore((projectId, path) => rpc.call("worktreeStatus", { projectId, path })),
+      scratch: new PathStore((projectId, path) => rpc.call("scratchSummary", { projectId, path })),
+    }),
     [rpc],
   );
-  return useMemo(() => ({ store, epoch }), [store, epoch]);
+  return useMemo(() => ({ ...stores, epoch }), [stores, epoch]);
+}
+
+function usePathValue<T>(
+  pick: (stores: PathStores) => PathStore<T>,
+  projectId: string,
+  path: string | null,
+  isVisible: boolean,
+): T | null {
+  const context = useContext(PathStoresContext);
+  const store = context ? pick(context) : null;
+  const value = useSyncExternalStore(store?.subscribe ?? noopSubscribe, () => (store && path ? store.get(path) : null));
+  useEffect(() => {
+    if (context && store && path && isVisible) store.request(projectId, path, context.epoch);
+  }, [context, store, projectId, path, isVisible]);
+  return value;
 }
 
 export function useWorktreeStatus(projectId: string, path: string | null, isVisible: boolean): WorktreeStatus | null {
-  const context = useContext(StatusStoreContext);
-  const status = useSyncExternalStore(
-    context?.store.subscribe ?? noopSubscribe,
-    () => (context && path ? context.store.get(path) : null),
-  );
+  return usePathValue((stores) => stores.status, projectId, path, isVisible);
+}
+
+export function useScratchSummary(projectId: string, path: string | null, isVisible: boolean): ScratchSummary | null {
+  return usePathValue((stores) => stores.scratch, projectId, path, isVisible);
+}
+
+/** `loaded` turns true once the backend answered, so a composer can mount with its seed already in place. */
+export function useAgentDefaults(projectId: string, prefer?: string): { loaded: boolean; defaults: AgentDefaults | null } {
+  const rpc = useWorktreesRpc();
+  const [state, setState] = useState<{ loaded: boolean; defaults: AgentDefaults | null }>({ loaded: false, defaults: null });
   useEffect(() => {
-    if (context && path && isVisible) context.store.request(projectId, path, context.epoch);
-  }, [context, projectId, path, isVisible]);
-  return status;
+    let cancelled = false;
+    rpc.call("agentDefaults", { projectId, ...(prefer ? { prefer } : {}) }).then(
+      (defaults) => !cancelled && setState({ loaded: true, defaults }),
+      () => !cancelled && setState({ loaded: true, defaults: null }),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [rpc, projectId, prefer]);
+  return state;
 }
 
 const noopSubscribe = () => () => {};

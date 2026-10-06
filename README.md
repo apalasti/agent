@@ -68,6 +68,22 @@ Watch an Azure DevOps PR for build errors and unresolved comments, and auto-depl
 
 See [`extensions/watch-pr/README.md`](extensions/watch-pr/README.md) for details.
 
+## bb
+
+[`bb-plugin-worktrees/`](bb-plugin-worktrees/README.md) is a [bb](https://getbb.app) plugin: a
+sidebar of projects → git worktrees → threads, a New task dialog that starts each task in a
+fresh worktree, and a Workflow dialog for the `.scratch` maps and issues above.
+
+```bash
+cd bb-plugin-worktrees && npm install && bb plugin build && cd ..
+bb plugin install ./bb-plugin-worktrees
+```
+
+pi slash commands such as `/wayfinder` and `/orchestrate` do not work inside bb: they drive
+pi's interactive UI (pickers, editor prefill), which bb's pi bridge does not render. Use the
+plugin's Workflow dialog (worktree `⋯` → Workflow…) or `bb task run | orchestrate | chart`
+instead; they fill in the same prompt templates from `extensions/`.
+
 ## Adding new skills/extensions/agents
 
 1. Create the skill directory in `skills/`, extension in `extensions/`, or agent `.md` in `agents/`

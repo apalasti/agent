@@ -1,6 +1,14 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
-import type { ScratchEffort, ScratchIndex, ScratchIssue, ScratchTicket } from "./contract";
+import type {
+  LiveWorkflowThread,
+  ScratchEffort,
+  ScratchIndex,
+  ScratchIssue,
+  ScratchSummary,
+  ScratchTicket,
+  WorkflowThreadMetadata,
+} from "./contract";
 
 const TICKET_TYPES = ["research", "prototype", "seam", "grilling", "task"];
 
@@ -183,14 +191,17 @@ function wayfinderPrompt(
     .replace(/\{\{map_bookkeeping\}\}/g, bookkeeping);
 }
 
+export function ticketTemplate(ticket: ScratchTicket): string {
+  return TICKET_TYPES.includes(ticket.type) ? ticket.type : "grilling";
+}
+
 export function ticketPrompt(
   templatesDir: string,
   effort: ScratchEffort,
   ticket: ScratchTicket,
   timestamp = promptTimestamp(),
 ): string {
-  const template = TICKET_TYPES.includes(ticket.type) ? ticket.type : "grilling";
-  return wayfinderPrompt(templatesDir, template, effort, ticket, timestamp);
+  return wayfinderPrompt(templatesDir, ticketTemplate(ticket), effort, ticket, timestamp);
 }
 
 export function handoffPrompt(templatesDir: string, effort: ScratchEffort, timestamp = promptTimestamp()): string {
@@ -206,4 +217,63 @@ export function chartPrompt(templatesDir: string, root: string, idea: string): s
 export function orchestratePrompt(templatesDir: string, batch: readonly ScratchIssue[]): string {
   const list = batch.map((i) => `- ${i.number} — ${i.title} — status: ${i.status} — \`${i.path}\``).join("\n");
   return readTemplate(templatesDir, "issues/orchestrate.md").replace(/\{\{issues\}\}/g, () => list);
+}
+
+export function summarizeScratch(index: ScratchIndex): ScratchSummary {
+  const efforts = index.efforts;
+  return {
+    readyTickets: efforts.reduce((sum, effort) => sum + effort.tickets.filter((ticket) => ticket.state === "frontier").length, 0),
+    openIssues: efforts.reduce((sum, effort) => sum + effort.issues.filter((issue) => issue.status !== "done").length, 0),
+    handoffs: efforts.filter((effort) => effort.handoffReady).length,
+  };
+}
+
+/** A template names a subagent the way orchestrate.md does: the agent name in backticks. */
+export function mentionsSubagent(template: string, agentNames: readonly string[]): boolean {
+  return agentNames.some((name) => template.includes(`\`${name}\``));
+}
+
+/** Which of the index's actions run a template that names one of `agentNames`. */
+export function piSubagentActions(
+  templatesDir: string,
+  index: ScratchIndex,
+  agentNames: readonly string[],
+): { orchestrate: boolean; tickets: string[] } {
+  const cache = new Map<string, boolean>();
+  const uses = (relativePath: string) => {
+    let hit = cache.get(relativePath);
+    if (hit === undefined) {
+      const path = join(templatesDir, relativePath);
+      hit = existsSync(path) && mentionsSubagent(readFileSync(path, "utf8"), agentNames);
+      cache.set(relativePath, hit);
+    }
+    return hit;
+  };
+  const tickets = index.efforts.flatMap((effort) =>
+    effort.tickets
+      .filter((ticket) => ticket.state === "frontier" && uses(`wayfinder/${ticketTemplate(ticket)}.md`))
+      .map((ticket) => ticket.ref),
+  );
+  return { orchestrate: uses("issues/orchestrate.md"), tickets };
+}
+
+/** `threads` newest first; the first thread per ticket/issue ref wins. An orchestrate ref `e/01,02` covers each issue. */
+export function liveWorkflowThreads(
+  threads: readonly { threadId: string; metadata: Partial<WorkflowThreadMetadata> }[],
+  root: string,
+): LiveWorkflowThread[] {
+  const seen = new Map<string, LiveWorkflowThread>();
+  const add = (kind: LiveWorkflowThread["kind"], ref: string, threadId: string) => {
+    const key = `${kind}:${ref}`;
+    if (!seen.has(key)) seen.set(key, { kind, ref, threadId });
+  };
+  for (const { threadId, metadata } of threads) {
+    if (metadata.path !== root || typeof metadata.ref !== "string") continue;
+    if (metadata.kind === "ticket") add("ticket", metadata.ref, threadId);
+    if (metadata.kind === "orchestrate") {
+      const [effort, numbers] = metadata.ref.split("/");
+      for (const number of numbers?.split(",") ?? []) add("issue", `${effort}/${number}`, threadId);
+    }
+  }
+  return [...seen.values()];
 }

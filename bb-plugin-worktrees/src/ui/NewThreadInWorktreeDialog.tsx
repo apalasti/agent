@@ -1,6 +1,6 @@
 import {
   experimental_NewThreadComposer as NewThreadComposer,
-  experimental_useSidebarThreadActions,
+  useBbNavigate,
   type NewThreadRequest,
 } from "@get-bb/plugin-sdk/app";
 import { toast } from "sonner";
@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Icon } from "@/components/ui/icon";
 import { formatHomePathForDisplay } from "@/lib/utils";
 import type { WorktreeNode } from "../group";
-import { errorMessage, useWorktreesRpc } from "./data";
+import { composerSeed } from "../taskRequest";
+import { errorMessage, useAgentDefaults, useWorktreesRpc } from "./data";
 
 /** For a worktree no live thread runs in yet, so there is no bb environment to reuse. */
 export function NewThreadInWorktreeDialog({
@@ -23,7 +24,8 @@ export function NewThreadInWorktreeDialog({
   onNavigate: () => void;
 }) {
   const rpc = useWorktreesRpc();
-  const actions = experimental_useSidebarThreadActions();
+  const navigate = useBbNavigate();
+  const agent = useAgentDefaults(projectId);
   const path = group.path ?? "";
 
   const submit = async (request: NewThreadRequest) => {
@@ -34,7 +36,7 @@ export function NewThreadInWorktreeDialog({
         request: request as unknown as Record<string, unknown>,
       });
       onClose();
-      actions.open(threadId);
+      navigate.toThread(threadId);
       onNavigate();
     } catch (cause) {
       const message = errorMessage(cause);
@@ -64,12 +66,15 @@ export function NewThreadInWorktreeDialog({
           </div>
         </div>
         <div className="min-w-0">
-          <NewThreadComposer
-            defaultProjectId={projectId}
-            layout="document"
-            draftKey={`worktrees:new-thread:${path}`}
-            onSubmit={submit}
-          />
+          {agent.loaded ? (
+            <NewThreadComposer
+              {...composerSeed(agent.defaults)}
+              defaultProjectId={projectId}
+              layout="document"
+              draftKey={`worktrees:new-thread:${path}`}
+              onSubmit={submit}
+            />
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

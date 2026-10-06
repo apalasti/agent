@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { NewThreadRequest } from "@get-bb/plugin-sdk/app";
-import { taskSpawnRequest } from "../src/taskRequest";
+import { composerSeed, taskSpawnRequest } from "../src/taskRequest";
 
 const base = {
   projectId: "p1",
@@ -46,5 +46,18 @@ describe("taskSpawnRequest", () => {
 
     const fromDefault = taskSpawnRequest({ ...base, environment: { type: "project-default" } } as NewThreadRequest, {});
     expect(fromDefault.environment).toEqual({ type: "provider", environmentProviderId: "task-worktree", inputs: {} });
+  });
+});
+
+describe("composerSeed", () => {
+  const pick = { providerId: "claude-code", model: "opus", reasoningLevel: "high" };
+  it("seeds bb's fallback choice but leaves a remembered project choice to the composer", () => {
+    expect(composerSeed(null)).toEqual({});
+    expect(composerSeed({ ...pick, source: "project" })).toEqual({});
+    expect(composerSeed({ ...pick, source: "default" })).toEqual({
+      defaultProviderId: "claude-code",
+      defaultModel: "opus",
+      defaultReasoningLevel: "high",
+    });
   });
 });

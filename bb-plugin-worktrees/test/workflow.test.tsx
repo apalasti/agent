@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, waitFor } from "@testing-library/react";
 import { loadPluginApp, renderSlot, type PluginRpcTestHandlers } from "@get-bb/plugin-sdk/testing/app";
-import type { rpcContract, ScratchIndex, ScratchTicket } from "../src/contract";
+import type { AgentDefaults, rpcContract, ScratchTicket, ScratchView } from "../src/contract";
+import { needsPiWarning } from "../src/ui/WorkflowDialog";
 
 const PATH = "/repo-worktrees/feat";
 
@@ -20,7 +21,7 @@ const ticket = (number: string, title: string, state: ScratchTicket["state"], bl
   path: `${PATH}/.scratch/demo/tickets/${number}-x.md`,
 });
 
-const INDEX: ScratchIndex = {
+const INDEX: ScratchView = {
   root: PATH,
   scratchDir: `${PATH}/.scratch`,
   efforts: [
@@ -37,9 +38,13 @@ const INDEX: ScratchIndex = {
       handoffReady: false,
     },
   ],
+  liveThreads: [],
+  piSubagents: { orchestrate: true, tickets: [] },
 };
 
-function handlers() {
+const PI_WARNING = "Orchestration uses pi subagents; other providers can't run them.";
+
+function handlers(view: ScratchView = INDEX, defaults: AgentDefaults | null = null) {
   const unused = () => {
     throw new Error("unused");
   };
@@ -52,22 +57,23 @@ function handlers() {
     removeWorktree: unused,
     getConfig: unused,
     setConfig: unused,
-    scratch: () => INDEX,
+    scratch: () => view,
+    scratchSummary: unused,
     runTicket: () => ({ threadId: "thr_ticket" }),
     orchestrate: () => ({ threadId: "thr_batch" }),
     chart: () => ({ threadId: "thr_chart" }),
     handoff: unused,
-    agentDefaults: () => null,
+    agentDefaults: () => defaults,
   } satisfies PluginRpcTestHandlers<typeof rpcContract>;
 }
 
-async function renderDialog(onOpenChange = vi.fn()) {
+async function renderDialog(onOpenChange = vi.fn(), rpc = handlers()) {
   await loadPluginApp(() => import("../app"));
   const { WorkflowDialog } = await import("../src/ui/WorkflowDialog");
   const view = renderSlot(
     { component: WorkflowDialog },
     { projectId: "p1", worktreePath: PATH, worktreeLabel: "feat", open: true, onOpenChange },
-    { rpc: handlers() },
+    { rpc },
   );
   await view.findByText("Wire it");
   return { view, onOpenChange };
@@ -123,5 +129,40 @@ describe("WorkflowDialog", () => {
     await waitFor(() =>
       expect(view.inspection.rpcCalls.find((call) => call.method === "chart")?.input).toMatchObject({ idea: "cost tracking" }),
     );
+  });
+
+  it("opens a ticket's live thread instead of running it, and offers Run again", async () => {
+    const view = { ...INDEX, liveThreads: [{ kind: "ticket" as const, ref: "demo/02", threadId: "thr_live" }] };
+    const { view: dialog, onOpenChange } = await renderDialog(vi.fn(), handlers(view));
+    expect(dialog.queryByRole("button", { name: "Run" })).toBeNull();
+    fireEvent.click(dialog.getByRole("button", { name: "Open" }));
+    expect(dialog.inspection.navigateCalls).toEqual([{ method: "toThread", threadId: "thr_live" }]);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(dialog.getByRole("button", { name: "More for demo/02" })).toBeTruthy();
+  });
+
+  it("links an issue's live orchestrator thread", async () => {
+    const view = { ...INDEX, liveThreads: [{ kind: "issue" as const, ref: "demo/01", threadId: "thr_orch" }] };
+    const { view: dialog } = await renderDialog(vi.fn(), handlers(view));
+    fireEvent.click(dialog.getByRole("button", { name: "Open demo/01 thread" }));
+    expect(dialog.inspection.navigateCalls).toEqual([{ method: "toThread", threadId: "thr_orch" }]);
+  });
+
+  it("seeds the picker from agentDefaults and warns when orchestrating off pi", async () => {
+    const claude = { providerId: "claude-code", model: "opus", reasoningLevel: "high", source: "default" as const };
+    const { view } = await renderDialog(vi.fn(), handlers(INDEX, claude));
+    await view.findByText(PI_WARNING);
+    expect(view.inspection.rpcCalls.find((call) => call.method === "agentDefaults")?.input).toEqual({ projectId: "p1", prefer: "pi" });
+  });
+});
+
+describe("needsPiWarning", () => {
+  const noIssues: ScratchView = { ...INDEX, efforts: INDEX.efforts.map((effort) => ({ ...effort, issues: [] })) };
+  it("warns only off pi, and only when a pi-subagent action is on offer", () => {
+    expect(needsPiWarning(INDEX, "pi")).toBe(false);
+    expect(needsPiWarning(INDEX, "claude-code")).toBe(true);
+    expect(needsPiWarning(noIssues, "claude-code")).toBe(false);
+    expect(needsPiWarning({ ...noIssues, piSubagents: { orchestrate: true, tickets: ["demo/02"] } }, "codex")).toBe(true);
+    expect(needsPiWarning(null, "codex")).toBe(false);
   });
 });

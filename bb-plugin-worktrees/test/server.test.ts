@@ -2,8 +2,8 @@ import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createFakePluginHost, makeThreadResponse } from "@get-bb/plugin-sdk/testing";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import plugin from "../server";
-import { TASK_WORKTREE_PROVIDER_ID, WORKTREES_CHANGED, type ScratchIndex } from "../src/contract";
+import { createPlugin } from "../server";
+import { TASK_WORKTREE_PROVIDER_ID, WORKTREES_CHANGED, type ScratchIndex, type ScratchView } from "../src/contract";
 import { git, makeRepo, write, type TempRepo } from "./repo";
 
 const PROJECT_ID = "proj_demo";
@@ -11,8 +11,11 @@ const HOST_ID = "host_local";
 
 let repo: TempRepo;
 let environments: { id: string; path: string | null; status: string; lifecycle: { phase: string } }[];
+let pluginThreads: { id: string; environmentPath: string | null; metadata: Record<string, unknown> }[];
+let remembered: Record<string, string> | null;
+let providers: { id: string; available: boolean; models: string[] }[];
 
-async function load(settings: Record<string, string> = {}) {
+async function load(settings: Record<string, string> = {}, piAgentsDir = join(repo.root, "agents")) {
   const { bb, harness } = createFakePluginHost({
     pluginId: "worktrees",
     settings,
@@ -24,18 +27,39 @@ async function load(settings: Record<string, string> = {}) {
           sources: [{ hostId: HOST_ID, path: repo.repo, isDefault: true }],
         }),
         list: async () => [{ id: PROJECT_ID, name: "demo" }],
+        defaultExecutionOptions: async () => remembered,
       },
-      system: { config: async () => ({ primaryHostId: HOST_ID }) },
+      system: {
+        config: async () => ({
+          primaryHostId: HOST_ID,
+          generalSettings: { defaultProviderId: "claude-code", providerOrder: ["codex", "pi"] },
+        }),
+      },
+      providers: {
+        list: async () => providers.map(({ id, available }) => ({ id, available })),
+        models: async ({ providerId }: { providerId: string }) => ({
+          models: (providers.find((provider) => provider.id === providerId)?.models ?? []).map((model, index) => ({
+            model,
+            isDefault: index === 0,
+            defaultReasoningEffort: "medium",
+          })),
+        }),
+      },
       environments: { list: async () => environments },
       threads: {
         spawn: async () => ({ id: "thr_new" }),
         get: async () => makeThreadResponse({ id: "thr_caller", environmentId: "env_side" }),
-        list: async () => [makeThreadResponse({ id: "thr_in_worktree" })],
+        list: async (args: { originPluginId?: string }) =>
+          args.originPluginId === "worktrees"
+            ? pluginThreads.map((thread) => ({ ...makeThreadResponse({ id: thread.id }), environmentPath: thread.environmentPath }))
+            : [makeThreadResponse({ id: "thr_in_worktree" })],
+        getPluginMetadata: async ({ threadId }: { threadId: string }) =>
+          pluginThreads.find((thread) => thread.id === threadId)?.metadata ?? {},
         archive: async () => ({ ok: true }),
       },
     } as never,
   });
-  await plugin(bb);
+  await createPlugin({ piAgentsDir })(bb);
   await harness.behavior.callRpc("setConfig", { projectId: PROJECT_ID, config: { tool: "git" } });
   return harness;
 }
@@ -69,6 +93,13 @@ beforeEach(() => {
   write(join(repo.repo, ".myscripts", "agents", "AGENTS.md"), "personal\n");
   write(join(repo.repo, ".myscripts", "agents", "CODING_STANDARDS.md"), "standards\n");
   environments = [];
+  pluginThreads = [];
+  remembered = null;
+  providers = [
+    { id: "codex", available: true, models: [] },
+    { id: "claude-code", available: true, models: ["opus"] },
+    { id: "pi", available: true, models: ["pi-model"] },
+  ];
 });
 afterEach(() => repo.cleanup());
 
@@ -306,5 +337,53 @@ describe("workflow", () => {
     const result = await harness.behavior.runCli(["run", "demo/02"]);
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toMatch(/blocked by 01/);
+  });
+
+  it("reports each ticket's and issue's live plugin thread in this worktree, and pi-subagent actions", async () => {
+    write(join(repo.root, "agents", "issue-planner.md"), "planner\n");
+    write(join(templates, "issues", "orchestrate.md"), "Spawn `issue-planner`\n{{issues}}\n");
+    const harness = await load({ templatesDir: templates });
+    scratchIn(repo.repo);
+    pluginThreads = [
+      { id: "thr_ticket", environmentPath: repo.repo, metadata: { kind: "ticket", effort: "demo", ref: "demo/01", path: repo.repo } },
+      { id: "thr_batch", environmentPath: null, metadata: { kind: "orchestrate", effort: "demo", ref: "demo/01", path: repo.repo } },
+      { id: "thr_other", environmentPath: join(repo.root, "elsewhere"), metadata: { kind: "ticket", ref: "demo/01", path: repo.repo } },
+    ];
+    const view = (await harness.behavior.callRpc("scratch", { projectId: PROJECT_ID, path: repo.repo })) as ScratchView;
+    expect(view.liveThreads).toEqual([
+      { kind: "ticket", ref: "demo/01", threadId: "thr_ticket" },
+      { kind: "issue", ref: "demo/01", threadId: "thr_batch" },
+    ]);
+    expect(view.piSubagents).toEqual({ orchestrate: true, tickets: [] });
+    expect(harness.inspection.sdk.callsTo("threads.getPluginMetadata").map((args) => (args[0] as { threadId: string }).threadId)).toEqual([
+      "thr_ticket",
+      "thr_batch",
+    ]);
+  });
+
+  it("summarizes runnable .scratch work for a worktree row", async () => {
+    const harness = await load({ templatesDir: templates });
+    scratchIn(repo.repo);
+    expect(await harness.behavior.callRpc("scratchSummary", { projectId: PROJECT_ID, path: repo.repo })).toEqual({
+      readyTickets: 1,
+      openIssues: 1,
+      handoffs: 0,
+    });
+  });
+});
+
+describe("agentDefaults", () => {
+  it("prefers the project's remembered choice, then the preferred provider, then bb's order, skipping empty catalogs", async () => {
+    const harness = await load();
+    const ask = (prefer?: string) => harness.behavior.callRpc("agentDefaults", { projectId: PROJECT_ID, ...(prefer ? { prefer } : {}) });
+
+    expect(await ask()).toEqual({ providerId: "claude-code", model: "opus", reasoningLevel: "medium", source: "default" });
+    expect(await ask("pi")).toEqual({ providerId: "pi", model: "pi-model", reasoningLevel: "medium", source: "preferred" });
+
+    remembered = { providerId: "claude-code", model: "sonnet", reasoningLevel: "low", permissionMode: "auto", serviceTier: "default" };
+    expect(await ask("pi")).toEqual({ providerId: "claude-code", model: "sonnet", reasoningLevel: "low", source: "project" });
+
+    providers = providers.map((provider) => (provider.id === "pi" ? provider : { ...provider, available: false }));
+    expect(await ask()).toEqual({ providerId: "pi", model: "pi-model", reasoningLevel: "medium", source: "default" });
   });
 });
