@@ -82,3 +82,15 @@ describe("Composer meter", () => {
     await rendered.findByText(/41k \/ 200k/);
   });
 });
+
+describe("keepWindowWhileRecomputing", () => {
+  it("keeps the previous window size while the new session has no measurement", async () => {
+    const { keepWindowWhileRecomputing } = await import("../../src/ui/data");
+    const before = makeMeter();
+    const after = makeMeter({}, { contextWindow: null, autoCompactAt: null, recomputing: true, basis: "estimated" });
+    expect(keepWindowWhileRecomputing(before, after).window).toMatchObject({ contextWindow: 200_000, autoCompactAt: 167_000, basis: "estimated" });
+    expect(keepWindowWhileRecomputing(null, after).window.contextWindow).toBeNull();
+    const settled = makeMeter({}, { contextWindow: null, recomputing: false });
+    expect(keepWindowWhileRecomputing(before, settled).window.contextWindow).toBeNull();
+  });
+});

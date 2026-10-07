@@ -53,9 +53,11 @@ function ThreadMeter({ threadId }: { threadId: string }) {
       {meter.window.recomputing ? (
         <span className="shrink-0 whitespace-nowrap italic text-muted-foreground/80">recomputing</span>
       ) : null}
-      <span className="flex h-4 min-w-0 flex-1 flex-wrap items-center gap-x-3 overflow-hidden" data-top>
+      <span className="flex h-4 min-w-0 flex-1 flex-wrap items-center overflow-hidden" data-top>
+        {/* Holds the first line so a category that does not fit wraps out of sight instead of being clipped. */}
+        <span className="h-4 w-0" />
         {meter.top.map((segment) => (
-          <span key={segment.id} className="inline-flex h-4 shrink-0 items-center gap-1.5 whitespace-nowrap">
+          <span key={segment.id} className="inline-flex h-4 shrink-0 items-center gap-1.5 whitespace-nowrap pr-3">
             <span className={cn("size-1.5 rounded-full", CATEGORY_STYLE[segment.id].dot)} />
             {CATEGORY_STYLE[segment.id].short} {formatTokens(segment.tokens)}
           </span>

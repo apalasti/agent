@@ -11,7 +11,7 @@ function share(tokens: number, total: number): string {
   return `${Math.min(100, Math.max(0, (tokens / total) * 100))}%`;
 }
 
-/** Used segments fill from the left; the reserved buffer sits at the right end, where the window runs out. */
+/** Used segments fill from the left; the reserved buffer sits at the right end, where the window runs out. Without a known window the bar shows composition only, dimmed. */
 export function MeterBar({
   segments,
   total,
@@ -32,7 +32,10 @@ export function MeterBar({
   const styles = SIZE[size];
   return (
     <div className={cn("relative", className)} aria-hidden="true">
-      <div className={cn("relative flex w-full overflow-hidden rounded-full bg-muted", styles.track)}>
+      <div
+        className={cn("relative flex w-full overflow-hidden rounded-full bg-muted", styles.track, total === null && "opacity-50")}
+        data-window={total === null ? "unknown" : "known"}
+      >
         {used.map((segment) => (
           <div
             key={segment.id}

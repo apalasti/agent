@@ -126,8 +126,12 @@ describe("Context panel", () => {
   });
 
   it("disables actions on a turn that is not editable", async () => {
-    const rendered = await renderPanel(makeReport({ turns: [makeTurn(1, { editable: false }), makeTurn(2)] }));
-    expect((within(turnRow(rendered, 1)).getByRole("button", { name: "Edit from here…" }) as HTMLButtonElement).disabled).toBe(true);
+    const rendered = await renderPanel(
+      makeReport({ turns: [makeTurn(1, { editable: false, notEditableReason: "Sent by another thread or an agent" }), makeTurn(2)] }),
+    );
+    const edit = within(turnRow(rendered, 1)).getByRole("button", { name: "Edit from here…" }) as HTMLButtonElement;
+    expect(edit.disabled).toBe(true);
+    expect(edit.parentElement!.getAttribute("title")).toBe("Sent by another thread or an agent");
     expect((within(turnRow(rendered, 2)).getByRole("button", { name: "Edit from here…" }) as HTMLButtonElement).disabled).toBe(false);
   });
 

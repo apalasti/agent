@@ -30,7 +30,7 @@ function SourceThreadLink({ threadId }: { threadId: string }) {
 export function courseChangeText(change: CourseChange): string {
   switch (change.kind) {
     case "edited": {
-      const discarded = change.discardedTurns === null ? "later turns" : plural(change.discardedTurns, "turn");
+      const discarded = change.discardedTurns === null ? "earlier turns" : plural(change.discardedTurns, "turn");
       const freed =
         change.tokensBefore !== null && change.tokensAfter !== null && change.tokensBefore > change.tokensAfter
           ? ` (${formatTokens(change.tokensBefore - change.tokensAfter)})`

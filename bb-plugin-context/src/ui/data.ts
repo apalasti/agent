@@ -38,8 +38,19 @@ function useOnReconnect(callback: () => void) {
   }, [state]);
 }
 
+type WithWindow = { threadStatus: string; window: Meter["window"] };
+
+/** A new session reports no window until its first measurement; the window it ran in before the course change is the best guess. */
+export function keepWindowWhileRecomputing<T extends WithWindow>(previous: T | null, next: T): T {
+  if (previous === null || !next.window.recomputing || next.window.contextWindow !== null) return next;
+  return {
+    ...next,
+    window: { ...next.window, contextWindow: previous.window.contextWindow, autoCompactAt: next.window.autoCompactAt ?? previous.window.autoCompactAt },
+  };
+}
+
 /** Keeps the newest response and the last good data across errors; refetches on this thread's change signal. */
-function useThreadData<T extends { threadStatus: string }>(threadId: string, load: (rpc: Rpc, threadId: string) => Promise<T>) {
+function useThreadData<T extends WithWindow>(threadId: string, load: (rpc: Rpc, threadId: string) => Promise<T>) {
   const rpc = useRpc<typeof rpcContract>();
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +62,7 @@ function useThreadData<T extends { threadStatus: string }>(threadId: string, loa
     loadRef.current(rpc, threadId).then(
       (next) => {
         if (ticket !== sequence.current) return;
-        setData(next);
+        setData((previous) => keepWindowWhileRecomputing(previous, next));
         setError(null);
       },
       (cause: unknown) => {

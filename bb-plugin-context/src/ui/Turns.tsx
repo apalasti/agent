@@ -25,8 +25,13 @@ function message(cause: unknown): string {
 /** Why a turn's actions are unavailable, or null when they are available. */
 export function actionBlocker(turn: Turn, busy: boolean): string | null {
   if (busy || turn.running) return "Wait for the current turn to finish";
-  if (!turn.editable) return "This message can't be edited (it is not in the active timeline)";
+  if (!turn.editable) return turn.notEditableReason ?? "This message can't be edited";
   return null;
+}
+
+/** bb prefixes messages sent by another thread with a sender header that would fill the one-line preview. */
+export function displayPreview(preview: string): string {
+  return preview.replace(/^\[bb message from [^\]]*\]\s*/, "") || preview;
 }
 
 function added(turn: Turn): string | null {
@@ -189,7 +194,7 @@ function TurnRow({
     <li data-turn={turn.index} aria-label={`Turn ${turn.index}`}>
       <div
         className={cn(
-          "group flex min-w-0 items-center gap-2 px-4 py-1.5 text-sm transition-colors duration-700",
+          "group relative flex min-w-0 items-center gap-2 px-4 py-1.5 text-sm transition-colors duration-700",
           flashing ? "bg-accent" : "hover:bg-muted/40",
           greyed && "text-muted-foreground",
         )}
@@ -197,7 +202,7 @@ function TurnRow({
         <span className="w-7 shrink-0 tabular-nums text-xs text-muted-foreground">#{turn.index}</span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className={cn("truncate", greyed ? "text-muted-foreground" : "text-foreground")} title={turn.preview}>
-            {turn.preview}
+            {displayPreview(turn.preview)}
           </span>
           {greyed || turn.running ? (
             <span className="text-[11px] text-muted-foreground">
@@ -205,7 +210,7 @@ function TurnRow({
             </span>
           ) : null}
         </span>
-        <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(pointer:coarse)]:hidden">
+        <span className="pointer-events-none absolute right-11 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5 rounded-md bg-background opacity-0 shadow-sm transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 [@media(pointer:coarse)]:hidden">
           <ActionButton
             label="Edit from here…"
             icon={<Icon name="Edit" className="size-3.5" aria-hidden />}
