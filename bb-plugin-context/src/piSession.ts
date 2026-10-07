@@ -1,5 +1,6 @@
 import type { CategoryId } from "./contract";
 import { contentText, estimateContent, estimateTokens, oneLine } from "./estimate";
+import { attributeMeasured, type CallUsage } from "./measure";
 
 export interface SessionItem {
   key: string;
@@ -11,6 +12,8 @@ export interface SessionItem {
   userOrdinal: number | null;
   /** Set on user-message items, for matching to bb turns. */
   userText?: string;
+  /** Tokens derived from the provider's per-call usage; absent when only estimated. */
+  measuredTokens?: number;
 }
 
 export interface SessionCompaction {
@@ -24,6 +27,8 @@ export interface SessionContext {
   compactedBeforeOrdinal: number | null;
   /** Every compaction recorded in the file, oldest first, with the sizes the provider reported. */
   compactions: SessionCompaction[];
+  /** Calls after the first whose input growth did not fit the items appended before them, so those stayed estimates. */
+  fallbackSteps: number;
 }
 
 /** Line-at-a-time parser; `push` every complete JSONL line in order, `context()` at any point. */
@@ -36,7 +41,20 @@ export interface ContextEntry {
   id: string;
   summary: boolean;
   items: SessionItem[];
+  call?: CallUsage;
+  /** Compactions seen before this entry was added; usage from an earlier epoch measured a context that no longer exists. */
+  epoch: number;
 }
+
+/** Measured items of the in-context entries, using only calls made since the last compaction. */
+export function measuredContext(base: readonly SessionItem[], entries: readonly ContextEntry[], epoch: number) {
+  return attributeMeasured(
+    base,
+    entries.map((entry) => ({ items: entry.items, ...(entry.epoch === epoch && entry.call !== undefined ? { call: entry.call } : {}) })),
+  );
+}
+
+const asCount = (value: unknown) => (typeof value === "number" && Number.isFinite(value) && value > 0 ? value : 0);
 
 const DETAIL_MAX = 80;
 const COMMAND_MAX = 60;
@@ -100,8 +118,15 @@ export function createPiSessionParser(): SessionParser {
   let compactedBeforeOrdinal: number | null = null;
   const compactions: SessionCompaction[] = [];
   let anonymous = 0;
+  let epoch = 0;
 
   const ordinal = () => (users === 0 ? null : users - 1);
+
+  function callUsage(id: string, message: Record<string, unknown>): CallUsage | undefined {
+    if (message.role !== "assistant" || message.usage == null) return undefined;
+    const usage = asRecord(message.usage);
+    return { id, input: asCount(usage.input) + asCount(usage.cacheRead) + asCount(usage.cacheWrite), output: asCount(usage.output), reasoning: asCount(usage.reasoning) };
+  }
 
   function messageItems(id: string, message: Record<string, unknown>, replacedOrdinal?: number | null): SessionItem[] {
     const role = message.role;
@@ -180,20 +205,24 @@ export function createPiSessionParser(): SessionParser {
       case "message": {
         const message = asRecord(entry.message);
         if (message.role === "system") return applySystem(message);
+        // pi-ai's transformMessages never replays errored or aborted assistant messages.
+        if (message.role === "assistant" && (message.stopReason === "error" || message.stopReason === "aborted")) return;
         const items = messageItems(id, message);
-        if (items.length > 0) entries.push({ id, summary: false, items });
+        const call = callUsage(id, message);
+        if (items.length > 0 || call !== undefined) entries.push({ id, summary: false, items, epoch, ...(call !== undefined ? { call } : {}) });
         return;
       }
       case "custom_message": {
         const label = asString(entry.customType) ?? "custom message";
-        entries.push({ id, summary: false, items: [{ key: `${id}:0`, category: "other", label, detail: oneLine(contentText(entry.content), DETAIL_MAX) || null, estTokens: estimateContent(entry.content), userOrdinal: ordinal() }] });
+        entries.push({ id, summary: false, epoch, items: [{ key: `${id}:0`, category: "other", label, detail: oneLine(contentText(entry.content), DETAIL_MAX) || null, estTokens: estimateContent(entry.content), userOrdinal: ordinal() }] });
         return;
       }
       case "compaction": {
         const kept = entries.findIndex((candidate) => candidate.id === entry.firstKeptEntryId);
         entries = kept === -1 ? entries.filter((candidate) => !candidate.summary) : entries.slice(kept);
         const summary = asString(entry.summary) ?? "";
-        entries.unshift({ id, summary: true, items: [{ key: `${id}:0`, category: "summary", label: "Compaction summary", detail: null, estTokens: estimateTokens(summary), userOrdinal: ordinal() }] });
+        epoch += 1;
+        entries.unshift({ id, summary: true, epoch, items: [{ key: `${id}:0`, category: "summary", label: "Compaction summary", detail: null, estTokens: estimateTokens(summary), userOrdinal: ordinal() }] });
         compactedBeforeOrdinal = firstOrdinal(entries, users);
         compactions.push({ tokensBefore: typeof entry.tokensBefore === "number" ? entry.tokensBefore : null, tokensAfter: null });
         return;
@@ -204,7 +233,7 @@ export function createPiSessionParser(): SessionParser {
         const replacement = asRecord(entry.replacement);
         if (typeof replacement.role === "string") {
           const replacedOrdinal = entries[index]?.items[0]?.userOrdinal ?? null;
-          entries[index] = { id: String(entry.targetId), summary: false, items: messageItems(String(entry.targetId), replacement, replacedOrdinal) };
+          entries[index] = { id: String(entry.targetId), summary: false, epoch: entries[index]?.epoch ?? epoch, items: messageItems(String(entry.targetId), replacement, replacedOrdinal) };
         } else {
           entries.splice(index, 1);
         }
@@ -214,15 +243,15 @@ export function createPiSessionParser(): SessionParser {
   }
 
   function context(): SessionContext {
-    const items: SessionItem[] = [];
+    const base: SessionItem[] = [];
     for (const [name, estTokens] of sections) {
-      items.push({ key: `section:${name}`, category: SECTION_CATEGORY[name] ?? "system", label: name, detail: null, estTokens, userOrdinal: null });
+      base.push({ key: `section:${name}`, category: SECTION_CATEGORY[name] ?? "system", label: name, detail: null, estTokens, userOrdinal: null });
     }
     for (const [name, estTokens] of tools) {
-      items.push({ key: `tool:${name}`, category: "tools", label: name, detail: null, estTokens, userOrdinal: null });
+      base.push({ key: `tool:${name}`, category: "tools", label: name, detail: null, estTokens, userOrdinal: null });
     }
-    for (const entry of entries) items.push(...entry.items);
-    return { items, model, compactedBeforeOrdinal, compactions: [...compactions] };
+    const { items, fallbackSteps } = measuredContext(base, entries, epoch);
+    return { items, model, compactedBeforeOrdinal, compactions: [...compactions], fallbackSteps };
   }
 
   return { push, context };

@@ -1,7 +1,9 @@
 import type { CategoryId } from "./contract";
 import { contentText, estimateContent, estimateTokens, oneLine } from "./estimate";
+import type { CallUsage } from "./measure";
 import {
   firstOrdinal,
+  measuredContext,
   parseJsonLine,
   toolSubject,
   type ContextEntry,
@@ -18,6 +20,16 @@ const COMMAND_PREFIXES = ["<command-name>", "<local-command-", "<command-message
 
 const asRecord = (value: unknown): Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+const asCount = (value: unknown) => (typeof value === "number" && Number.isFinite(value) && value > 0 ? value : 0);
+
+/** One API response is written as one line per content block, each repeating the response's usage. */
+function callUsage(message: Record<string, unknown>): CallUsage | undefined {
+  if (typeof message.id !== "string" || message.usage == null) return undefined;
+  const usage = asRecord(message.usage);
+  const input = asCount(usage.input_tokens) + asCount(usage.cache_creation_input_tokens) + asCount(usage.cache_read_input_tokens);
+  if (input === 0) return undefined;
+  return { id: message.id, input, output: asCount(usage.output_tokens), reasoning: 0 };
+}
 
 function renderedTokens(rendered: unknown): number {
   if (!Array.isArray(rendered)) return estimateContent(rendered);
@@ -44,6 +56,7 @@ export function createClaudeTranscriptParser(): SessionParser {
   let compactedBeforeOrdinal: number | null = null;
   const compactions: SessionCompaction[] = [];
   let anonymous = 0;
+  let epoch = 0;
 
   const ordinal = () => (users === 0 ? null : users - 1);
 
@@ -124,12 +137,13 @@ export function createClaudeTranscriptParser(): SessionParser {
     switch (entry.type) {
       case "user": {
         const items = userItems(id, entry, message.content);
-        if (items.length > 0) entries.push({ id, summary: entry.isCompactSummary === true, items });
+        if (items.length > 0) entries.push({ id, summary: entry.isCompactSummary === true, items, epoch });
         return;
       }
       case "assistant": {
         const items = assistantItems(id, message);
-        if (items.length > 0) entries.push({ id, summary: false, items });
+        const call = callUsage(message);
+        if (items.length > 0 || call !== undefined) entries.push({ id, summary: false, items, epoch, ...(call !== undefined ? { call } : {}) });
         return;
       }
       case "attachment": {
@@ -138,7 +152,7 @@ export function createClaudeTranscriptParser(): SessionParser {
         if (kind === "prompt_snapshot") return promptSnapshot(attachment);
         if (entry.rendered == null) return;
         const category = ATTACHMENT_CATEGORY[kind] ?? "other";
-        entries.push({ id, summary: false, items: [{ key: `${id}:0`, category, label: kind, detail: null, estTokens: renderedTokens(entry.rendered), userOrdinal: category === "other" ? ordinal() : null }] });
+        entries.push({ id, summary: false, epoch, items: [{ key: `${id}:0`, category, label: kind, detail: null, estTokens: renderedTokens(entry.rendered), userOrdinal: category === "other" ? ordinal() : null }] });
         return;
       }
       case "system": {
@@ -151,6 +165,7 @@ export function createClaudeTranscriptParser(): SessionParser {
         });
         const keep = new Set(Array.isArray(preserved) ? preserved.filter((uuid): uuid is string => typeof uuid === "string") : []);
         entries = entries.filter((candidate) => keep.has(candidate.id));
+        epoch += 1;
         compactedBeforeOrdinal = firstOrdinal(entries, users);
         return;
       }
@@ -158,9 +173,8 @@ export function createClaudeTranscriptParser(): SessionParser {
   }
 
   function context(): SessionContext {
-    const items = [...systemItems];
-    for (const entry of entries) items.push(...entry.items);
-    return { items, model, compactedBeforeOrdinal, compactions: [...compactions] };
+    const { items, fallbackSteps } = measuredContext(systemItems, entries, epoch);
+    return { items, model, compactedBeforeOrdinal, compactions: [...compactions], fallbackSteps };
   }
 
   return { push, context };

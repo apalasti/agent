@@ -85,9 +85,13 @@ describe("cli", () => {
     expect(text.split("\n")[0]).toBe(`${PI} · pi · claude-opus-5-5 · idle`);
     expect(text).toContain("Context 17k / 1m · 1.7% (measured)");
     expect(text).toMatch(/Tool definitions\s+\d/);
-    expect(text).toContain("Largest items:");
+    expect(text).toMatch(/Tool results\s+629\s+3\.7%/);
+    expect(text).toMatch(/Free space\s+983k\s+98% of window/);
+    const largest = text.split("Largest items:\n")[1]?.split("\n\n")[0]?.split("\n") ?? [];
+    expect(largest.length).toBeGreaterThan(0);
+    for (const row of largest) expect(row).toMatch(/\((user|assistant|thinking|toolCalls|toolResults|summary|other), turn \d+\)$/);
     expect(text).toContain("#2 seq 55");
-    expect(text).toContain("-- Edited here");
+    expect(text).toContain("-- Edited: earlier turns discarded");
     expect(text).toContain("-- Compaction skipped");
   });
 

@@ -101,7 +101,8 @@ function percent(value: number, total: number | null): string {
 function changeLine(change: CourseChange): string {
   switch (change.kind) {
     case "edited":
-      return `  -- Edited here${change.discardedTurns !== null ? `: ${change.discardedTurns} turn${change.discardedTurns === 1 ? "" : "s"}${change.tokensBefore !== null ? ` (${formatTokens(change.tokensBefore)})` : ""} discarded` : ""}`;
+      if (change.discardedTurns === null) return "  -- Edited: earlier turns discarded";
+      return `  -- Edited: ${change.discardedTurns} turn${change.discardedTurns === 1 ? "" : "s"} discarded${change.tokensBefore !== null ? ` (${formatTokens(change.tokensBefore)} tokens)` : ""}`;
     case "compacted":
       return `  -- Compacted ${formatTokens(change.tokensBefore)} → ${formatTokens(change.tokensAfter)}`;
     case "compactionSkipped":
@@ -130,10 +131,12 @@ export function showText(report: ContextReport, turnLimit: number): string {
   } else {
     const flags = [window.basis, window.recomputing ? "recomputing" : null, window.autoCompactAt !== null ? `autocompact at ${formatTokens(window.autoCompactAt)}` : null].filter(Boolean);
     lines.push(`Context ${approx}${formatTokens(used)} / ${formatTokens(window.contextWindow)}${window.contextWindow ? ` · ${percent(used, window.contextWindow)}` : ""} (${flags.join(", ")})`);
-    lines.push("", "Categories:");
+    const usedSum = report.categories.filter((category) => category.kind === "used").reduce((sum, category) => sum + category.tokens, 0);
+    lines.push("", "Categories (% of used):");
     for (const category of report.categories) {
       if (category.kind === "deferred") continue;
-      lines.push(`  ${category.label.padEnd(28)} ${formatTokens(category.tokens).padStart(6)}  ${percent(category.tokens, window.contextWindow ?? used).padStart(5)}`);
+      const share = category.kind === "free" ? `${percent(category.tokens, window.contextWindow)} of window` : percent(category.tokens, usedSum);
+      lines.push(`  ${category.label.padEnd(28)} ${formatTokens(category.tokens).padStart(6)}  ${share.padStart(5)}`);
     }
   }
   if (report.largest.length > 0) {

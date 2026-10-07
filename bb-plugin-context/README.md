@@ -10,7 +10,9 @@ file outline.
 - `src/events.ts`: the active timeline from bb events (turns, edits, compactions, forks).
 - `src/piSession.ts`, `src/claudeTranscript.ts`: what is in context, from the pi session
   file or the Claude Code transcript.
-- `src/compose.ts`: estimates calibrated to bb's measured total.
+- `src/measure.ts`: per-item tokens from the provider's per-call usage (first-call input,
+  input growth per step, output per reply).
+- `src/compose.ts`: the report; whatever was not measured is calibrated to bb's total.
 - `src/collect.ts`: per-thread cache; session files are re-read only from the appended bytes.
 - `app.tsx`, `src/ui/`: the composer meter and the Context panel.
 - `skills/context/SKILL.md`: tells agents when to run `bb context show --self`.
@@ -28,7 +30,8 @@ bb context show --thread <id>
 
 ## Limits
 
-Per-item numbers are chars/4 estimates scaled to bb's total. Breakdowns exist for pi and
+Per-item numbers come from the provider's per-call usage where it fits, and from chars/4
+estimates scaled to bb's total elsewhere. Breakdowns exist for pi and
 Claude Code threads on the server's machine; other threads get bb's total only. bb deletes
 the events an edit discards, so the "N turns discarded" count is known only when the plugin
 saw the thread before the edit (it is kept in plugin storage after that).

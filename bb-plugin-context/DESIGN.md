@@ -103,9 +103,14 @@ display name "Context".
   - **Items appended between calls** (tool results, user messages, custom messages,
     attachments): those between call `k-1` and call `k` take `delta_k = input_k -
     input_{k-1} - output_{k-1}`, split by estimate.
-  - **Fallbacks**: a step whose delta is negative, or more than 3× or less than ⅓ of its
-    estimate (cache resets, compaction), falls back to estimates. Items after the last
-    call use estimates.
+  - **Fallbacks**: a step whose delta is negative, or more than 3× (plus 40 tokens of
+    framing per item) or less than ⅓ of its estimate (cache resets, `context_edit`
+    removals), falls back to estimates. Items after the last call use estimates. A
+    baseline that falls back (a Claude Code transcript without `prompt_snapshot`) is not
+    counted in the "N steps fell back" note. (Revised: the framing allowance was added
+    because results of a few characters measure about 32 tokens, over 3× their estimate.)
+  - pi assistant messages with `stopReason` `error` or `aborted` carry zero usage and are
+    never replayed (pi-ai `transformMessages` skips them), so they are not in context.
   - The first call after a compaction starts a new baseline: the summary plus the kept
     items.
   - Measured on the lead's 1.6 MB session, chars/4 undercounted assistant messages by half
@@ -115,6 +120,9 @@ display name "Context".
     (Revised: this replaced uniform scaling by `T / sum(estimates)`. That scaling inflated
     the system prompt and tool definitions by the same 1.67× even though their first-call
     size is exact.)
+- bb's `usedTokens` is the last call's `totalTokens` for pi (input + output), but only the
+  last call's input for Claude Code. A fully measured Claude Code breakdown therefore sums
+  to `T` plus the last reply's output, which is in context for the next call.
 - Whatever is not measured is then calibrated against the authoritative total `T` (bb
   `usedTokens`):
   - **pi**: measured items stay as they are. Scale only the estimated remainder so that
@@ -132,6 +140,12 @@ display name "Context".
     estimates, with `window.basis = "estimated"`.
 - `window.basis` is `measured` when `T` came from bb for the current session, `estimated`
   when the total is the plugin's own, and `none` when there is nothing to show.
+- `window.contextWindow` comes from bb, else the latest usage event, else the snapshot, else
+  the window last seen for the thread (kept in `bb.storage.kv` as `window:<threadId>`), else
+  for a fork its source thread's. It is null only when none of these is known.
+- `notes` hold caveats only, at most 2: no `/context` snapshot, edit counts unknown from
+  before the plugin was installed, remote host, steps that fell back to estimates. The basis
+  line already says where the breakdown comes from.
 
 ## Categories (stable ids, fixed order)
 
@@ -217,6 +231,7 @@ bb-plugin-context/
   package.json, server.ts, app.tsx, DESIGN.md, CONTRACT-CHANGES.md
   src/contract.ts      lead-owned: zod RPC contract + shared types (append-only for others)
   src/estimate.ts      estimateTokens(text): number; IMAGE_TOKENS = 1600
+  src/measure.ts       apportion(weights, target); attributeMeasured(base, entries): { items, fallbackSteps }
   src/events.ts        EVENT_TYPES; parseTimeline(rows: EventRow[], options?: { sourceThreadId }): Timeline
   src/piSession.ts     parsePiSession(text: string): SessionContext
   src/claudeTranscript.ts  parseClaudeTranscript(text: string): SessionContext
@@ -248,10 +263,12 @@ interface SessionItem {
   key: string; category: CategoryId; label: string; detail: string | null;
   estTokens: number; userOrdinal: number | null; // index of the user message this item follows (0-based), null for system/tools
   userText?: string;                              // set on user-message items, for matching to bb turns
+  measuredTokens?: number;                        // from per-call usage; absent when only estimated
 }
 interface SessionContext {
   items: SessionItem[]; model: string | null; compactedBeforeOrdinal: number | null;
   compactions: { tokensBefore: number | null; tokensAfter: number | null }[]; // fills "Compacted 161k → …" when bb has no usage around it
+  fallbackSteps: number;
 }
 ```
 
@@ -275,8 +292,10 @@ turn has `tokensAfter` from usage events only, and `largest: []`.
    - `threads.context` gives `T = 23k` (measured);
    - re-reading the session file (it grew, so only the new bytes when appended) gives a
      `toolResult` `SessionItem { category: "toolResults", label: "read", detail:
-     "…/SKILL.md", estTokens: 4100 }`;
-   - `composeReport` scales the items by `T / sum` and returns the report.
+     "…/SKILL.md", estTokens: 4100 }`. Once the next assistant message lands, its usage
+     sets `measuredTokens` to that call's input growth (about 4.1k plus framing);
+   - `composeReport` keeps measured items and scales the rest to `T`, then returns the
+     report. (Revised: this said it scaled all items by `T / sum`.)
 5. The meter returns `{ window: { usedTokens: 23k, contextWindow: 1M, basis: "measured" },
    segments: [...toolResults 4.1k...], top: [...] }`.
 6. `MeterBar` draws the toolResults segment, and the label reads `23k / 1m · 2% · Tools 10k ·
@@ -297,7 +316,9 @@ turn has `tokensAfter` from usage events only, and `largest: []`.
 
 ## Limits
 
-- Per-item numbers are estimates (chars/4) calibrated to bb's measured total. Thinking may
+- Per-item numbers come from per-call usage where a step fits; within a step, and for
+  steps that fall back, they are estimates (chars/4) calibrated to bb's measured total.
+  (Revised: this said all per-item numbers were calibrated estimates.) Thinking may
   be over-attributed if the provider strips earlier thinking blocks, which is why it is its
   own category.
 - Only pi and Claude Code have breakdowns. Other providers get the bb total and a single

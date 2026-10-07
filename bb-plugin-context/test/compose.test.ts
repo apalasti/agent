@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { parseClaudeTranscript } from "../src/claudeTranscript";
-import { apportion, composeReport, toMeter, type ComposeInput, type ContextUsage } from "../src/compose";
+import { composeReport, matchTurns, toMeter, type ComposeInput, type ContextUsage } from "../src/compose";
 import { meterSchema, reportSchema, type ContextReport } from "../src/contract";
 import { parseTimeline } from "../src/events";
+import { apportion } from "../src/measure";
 import { parsePiSession } from "../src/piSession";
 import { fixture, fixtureEvents, fixtureUsage } from "./fakes";
 
@@ -49,14 +50,14 @@ function snapshotUsage(providerSessionId: string): ContextUsage {
 }
 
 describe("composeReport", () => {
-  it("scales pi estimates so the used categories sum exactly to bb's total", () => {
+  it("measures pi items from per-call usage so the used categories sum exactly to bb's total", () => {
     const report = piProbe();
     expect(reportSchema.parse(report)).toEqual(report);
     expect(report.window).toMatchObject({ usedTokens: 17_071, contextWindow: 1_000_000, basis: "measured", recomputing: false });
     expect(used(report)).toBe(17_071);
     expect(report.source.kind).toBe("pi-session");
-    expect(report.source.calibration).toBeGreaterThan(1);
-    expect(report.source.calibration).toBeLessThan(1.1);
+    expect(report.source.calibration).toBeNull();
+    expect(report.notes).toEqual(["Turns before the plugin was installed can't be counted after an edit"]);
     expect(category(report, "tools")?.entries).toHaveLength(15);
     expect(category(report, "free")?.tokens).toBe(1_000_000 - 17_071);
     expect(report.segments.map((segment) => segment.id)[0]).toBe("system");
@@ -66,10 +67,15 @@ describe("composeReport", () => {
       [2, 55, 17_071, true],
     ]);
     expect(report.turns[1]?.tokensBefore).toBe(16_304);
-    expect(report.turns[0]?.tokensBefore).toBe(
-      ["system", "tools", "memory", "skills"].reduce((sum, id) => sum + (category(report, id)?.tokens ?? 0), 0),
-    );
+    const base = ["system", "tools", "memory", "skills"].reduce((sum, id) => sum + (category(report, id)?.tokens ?? 0), 0);
+    expect(report.turns[0]?.tokensBefore).toBe(base);
+    expect(base + (category(report, "user")?.entries.find((entry) => entry.turnIndex === 1)?.tokens ?? 0)).toBe(2 + 15_695 + 603);
     expect(report.turns[1]?.largest[0]).toMatchObject({ label: "bash", detail: "seq 1 300", turnIndex: 2 });
+    expect(report.largest[0]).toMatchObject({ categoryId: "toolResults", detail: "seq 1 300", turnIndex: 2 });
+    for (const item of report.largest) {
+      expect(item.turnIndex).not.toBeNull();
+      expect(["system", "tools", "memory", "skills"]).not.toContain(item.categoryId);
+    }
     expect(report.courseChanges.map((change) => change.kind)).toEqual(["edited", "compactionSkipped"]);
   });
 
@@ -116,11 +122,16 @@ describe("composeReport", () => {
     expect(report.window.basis).toBe("measured");
   });
 
-  it("scales the transcript's own prompt snapshot down to bb's total when it overshoots", () => {
+  it("measures the transcript's own prompt snapshot against the first call instead of trusting its estimate", () => {
     const report = ccProbe(fixtureUsage("cc-context-no-snapshot.json"));
     expect(category(report, "unattributed")).toBeUndefined();
-    expect(report.source.calibration).toBeLessThan(1);
-    expect(used(report)).toBe(26_140);
+    expect(report.source.calibration).toBeNull();
+    const toolEstimates = parseClaudeTranscript(fixture("cc-probe-transcript.jsonl"))
+      .items.filter((item) => item.category === "tools")
+      .reduce((sum, item) => sum + item.estTokens, 0);
+    expect(category(report, "tools")?.tokens).toBeLessThan(toolEstimates * 0.8);
+    // bb's Claude Code total is the last call's input; the 55-token reply to it is listed as well.
+    expect(used(report)).toBe(26_140 + 55);
     expect(category(report, "tools")?.entries.map((entry) => entry.label)).toContain("Bash");
   });
 
@@ -137,24 +148,25 @@ describe("composeReport", () => {
     const report = ccProbe(fixtureUsage("cc-context-no-snapshot.json"), rows);
     expect(report.window).toMatchObject({ basis: "estimated", recomputing: true, measuredAt: null });
     expect(report.window.usedTokens).toBeGreaterThan(0);
-    expect(report.notes[0]).toMatch(/Recomputing/);
+    expect(report.notes.join(" ")).not.toMatch(/recomput|estimated|measured/i);
   });
 
-  it("scales estimates by the thread's last calibration while there is no measurement", () => {
+  it("scales only the estimated items by the thread's last calibration while there is no measurement", () => {
     const rows = fixtureEvents("cc-probe-events.json").filter((row) => row.seq <= 88);
-    const plain = ccProbe(null, rows);
+    const session = parseClaudeTranscript(withoutPromptSnapshot(fixture("cc-probe-transcript.jsonl")));
     const scaled = composeReport({
       threadId: "thr_4p46bmnani",
       providerId: "claude-code",
       threadStatus: "idle",
       timeline: parseTimeline(rows),
-      session: parseClaudeTranscript(fixture("cc-probe-transcript.jsonl")),
+      session,
       source: { kind: "claude-transcript", path: null },
       usage: null,
       priorCalibration: 0.75,
     });
     expect(scaled.window.basis).toBe("estimated");
-    expect(scaled.window.usedTokens).toBeCloseTo((plain.window.usedTokens ?? 0) * 0.75, -2);
+    expect(session.items.some((item) => item.measuredTokens !== undefined)).toBe(true);
+    expect(used(scaled)).toBe(session.items.reduce((sum, item) => sum + (item.measuredTokens ?? Math.round(item.estTokens * 0.75)), 0));
   });
 
   it("estimates a fresh fork from its copied session", () => {
@@ -178,6 +190,16 @@ describe("composeReport", () => {
     const report = piProbe({ remote: true });
     expect(report.source).toEqual({ kind: "bb-only", path: null, calibration: null });
     expect(report.categories.map((entry) => entry.id)).toEqual(["unattributed", "free"]);
+    expect(report.notes[0]).toBe("Remote host: breakdown unavailable");
+  });
+
+  it("keeps notes to real caveats, at most two", () => {
+    const session = parsePiSession(fixture("pi-probe-session.jsonl"));
+    const report = piProbe({ session: { ...session, fallbackSteps: 3 } });
+    expect(report.notes).toEqual(["Turns before the plugin was installed can't be counted after an edit", "3 steps fell back to estimates"]);
+    const cc = ccProbe(fixtureUsage("cc-context-no-snapshot.json"), undefined, withoutPromptSnapshot(fixture("cc-probe-transcript.jsonl")));
+    expect(cc.notes[0]).toBe("No /context snapshot for this session");
+    expect(cc.notes.length).toBeLessThanOrEqual(2);
   });
 
   it("renders nothing without any total", () => {
@@ -206,6 +228,16 @@ it("does not offer to edit messages another thread sent, which bb refuses", () =
   expect(piProbe().turns.map((turn) => [turn.editable, turn.notEditableReason])).toEqual([
     [false, "Sent by another thread or an agent"],
     [false, "Sent by another thread or an agent"],
+  ]);
+});
+
+it("matches turns sent by another thread past bb's sender header", () => {
+  const header = "[bb message from thread:thr_qkmzavbt8q]\n\n";
+  const turn = (text: string) => ({ requestSeq: 1, lastSeq: 1, at: "", text: header + text, providerThreadId: null, userSent: false });
+  const user = (ordinal: number, text: string) => ({ key: `u${ordinal}`, category: "user" as const, label: "Message", detail: null, estTokens: 1, userOrdinal: ordinal, userText: header + text });
+  expect([...matchTurns([turn("first"), turn("third")], [user(0, "first"), user(1, "second"), user(2, "third")])]).toEqual([
+    [1, 2],
+    [0, 0],
   ]);
 });
 

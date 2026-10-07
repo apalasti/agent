@@ -13,6 +13,6 @@ See how full a thread's context window is and what fills it.
 ## How it works
 
 bb measures the total on every LLM call. The plugin reads the thread's pi session file or
-Claude Code transcript on the bb server's machine, estimates each item, and scales the
-estimates to bb's total. Edited-away branches, compactions and forks are accounted for.
+Claude Code transcript on the bb server's machine and splits each LLM call's reported usage
+across the items it added; anything left unmeasured is estimated and scaled to bb's total. Edited-away branches, compactions and forks are accounted for.
 Nothing leaves the machine.

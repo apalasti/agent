@@ -42,7 +42,9 @@ export function oneLine(text: string, max: number): string {
   return clip(text.replace(/\s+/g, " ").trim(), max);
 }
 
-/** Matching key for a user message: whitespace-collapsed prefix. */
+const SENDER_HEADER = /^\[bb message from [^\]]*\]/;
+
+/** Matching key for a user message: whitespace-collapsed prefix after bb's sender header, which is the same for every message from one thread. */
 export function messageKey(text: string): string {
-  return text.replace(/\s+/g, " ").trim().slice(0, 80);
+  return text.replace(/\s+/g, " ").trim().replace(SENDER_HEADER, "").trim().slice(0, 80);
 }

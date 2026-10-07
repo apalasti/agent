@@ -115,8 +115,8 @@ describe("parsePiSession", () => {
     const keys = new Set(withEdits.items.map((item) => item.key.split(":")[0]));
     expect(keys.has("af21c821")).toBe(true);
     for (const target of ["de5f7a51", "0f9a1267", "3171a688"]) expect(keys.has(target)).toBe(false);
-    const withoutEdits = parsePiSession(beforeSecondCompaction.split("\n").filter((line) => !line.includes('"context_edit"')).join("\n"));
-    expect(new Set(withoutEdits.items.map((item) => item.key.split(":")[0])).has("de5f7a51")).toBe(true);
+    const edited = parsePiSession(`${beforeSecondCompaction}\n${JSON.stringify({ type: "context_edit", id: "e1", targetId: "af21c821", replacement: null })}`);
+    expect(new Set(edited.items.map((item) => item.key.split(":")[0])).has("af21c821")).toBe(false);
   });
 
   it("ignores a partial last line and unknown entry types", () => {

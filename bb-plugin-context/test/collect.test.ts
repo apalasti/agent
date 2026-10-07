@@ -134,6 +134,22 @@ describe("collector", () => {
     expect(before.categories.find((category) => category.id === "toolResults")).toBeDefined();
   });
 
+  it("leaves out the discarded branch while the old session file is still current after an edit", async () => {
+    fs.write(PI_SESSION, fixture("pi-probe-session.jsonl"));
+    const rows = fixtureEvents("pi-probe-events.json").filter((row) => row.seq <= 67);
+    const at = "2026-10-07T17:00:00.000Z";
+    sdk.events.set(PI, [
+      ...rows,
+      { seq: 68, type: "system/operation", createdAt: at, data: { operation: "edit_message", status: "completed", metadata: { cutoffSequence: 55, oldMaxSequence: 67 } } },
+      { seq: 69, type: "client/turn/requested", createdAt: at, data: { request: { method: "turn/start" }, input: [{ type: "text", text: "Print seq 1 5 instead." }] } },
+    ]);
+    const report = await collector().report(PI);
+    expect(report.window).toMatchObject({ basis: "estimated", recomputing: true });
+    expect(report.categories.find((category) => category.id === "toolResults")).toBeUndefined();
+    expect(report.window.usedTokens).toBeLessThan(16_304 + 100);
+    expect(report.window.usedTokens).toBeGreaterThanOrEqual(16_304);
+  });
+
   it("finds Claude Code transcripts by file name across project dirs", async () => {
     fs.write(`${CLAUDE_ROOT}/-other/unrelated.jsonl`, "{}\n");
     fs.write(CC_SESSION, fixture("cc-probe-transcript.jsonl"));
@@ -169,5 +185,37 @@ describe("collector", () => {
 
     const cold = await collector(memo).report(PI);
     expect(cold.courseChanges[0]).toMatchObject({ kind: "edited", discardedTurns: 2, tokensBefore: 30_000 });
+  });
+
+  it("keeps the thread's last known window while nothing reports one", async () => {
+    const store = new Map<string, unknown>();
+    const memo: CollectMemo = { get: async (key) => store.get(key), set: async (key, value) => void store.set(key, value) };
+    fs.write(PI_SESSION, fixture("pi-probe-session.jsonl"));
+    await collector(memo).report(PI);
+    expect(store.get(`window:${PI}`)).toBe(1_000_000);
+
+    const at = "2026-10-07T17:00:00.000Z";
+    sdk.usage.set(PI, null);
+    sdk.events.set(PI, [
+      { seq: 68, type: "system/operation", createdAt: at, data: { operation: "edit_message", status: "completed", metadata: { cutoffSequence: 1, oldMaxSequence: 67 } } },
+      { seq: 69, type: "client/turn/requested", createdAt: at, data: { request: { method: "turn/start" }, input: [{ type: "text", text: "Start over." }] } },
+      { seq: 70, type: "thread/identity", createdAt: at, data: { providerThreadId: "pi_new" } },
+      { seq: 71, type: "thread/contextWindowUsage/updated", createdAt: at, data: { providerThreadId: "pi_new", contextWindowUsage: { usedTokens: null } } },
+    ]);
+    const report = await collector(memo).report(PI);
+    expect(report.window).toMatchObject({ recomputing: true, contextWindow: 1_000_000 });
+  });
+
+  it("gives a fresh fork its source thread's window", async () => {
+    const FORK = "thr_hvxb2yncdz";
+    sdk.threads.set(FORK, thread(FORK, "pi", { sourceThreadId: PI }));
+    sdk.events.set(FORK, fixtureEvents("pi-fork-events.json"));
+    sdk.usage.set(FORK, null);
+    fs.write(`${PI_ROOT}/${FORK}.jsonl`, fixture("pi-fork-session.jsonl"));
+    const report = await collector().report(FORK);
+    expect(report.window).toMatchObject({ basis: "estimated", contextWindow: 1_000_000 });
+
+    sdk.threads.set("thr_orphan", thread("thr_orphan", "pi"));
+    expect((await collector().report("thr_orphan")).window.contextWindow).toBeNull();
   });
 });

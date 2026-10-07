@@ -88,6 +88,7 @@ interface ThreadCache {
   /** System, tools, memory and skills of the last session read; they carry over to a new session. */
   base: { kind: SessionSourceKind; session: SessionContext } | null;
   calibration: number | null;
+  window: number | null;
 }
 
 interface EditMemo {
@@ -208,8 +209,31 @@ export function createCollector(deps: CollectorDeps): Collector {
     );
   }
 
+  async function storedWindow(threadId: string): Promise<number | null> {
+    const stored = await deps.memo?.get(`window:${threadId}`);
+    return typeof stored === "number" && stored > 0 ? stored : null;
+  }
+
+  /** The window bb or the events report now, else the last one seen for this thread, else its fork source's. */
+  async function knownWindow(threadId: string, cache: ThreadCache, info: ThreadInfo, usage: ContextUsage | null, timeline: Timeline): Promise<number | null> {
+    const seen = usage?.modelContextWindow ?? [...timeline.usage].reverse().find((point) => point.window !== null)?.window ?? usage?.snapshot?.contextWindowTokens ?? null;
+    if (seen === null) {
+      cache.window ??= await storedWindow(threadId);
+      if (cache.window !== null || info.sourceThreadId === null) return cache.window;
+      const source = info.sourceThreadId;
+      cache.window = (await storedWindow(source)) ?? (await sdk.context(source).catch(() => null))?.modelContextWindow ?? null;
+      if (cache.window === null) return null;
+    } else if (seen === cache.window) {
+      return seen;
+    } else {
+      cache.window = seen;
+    }
+    await deps.memo?.set(`window:${threadId}`, cache.window);
+    return cache.window;
+  }
+
   async function build(threadId: string): Promise<ContextReport> {
-    const cache = threads.get(threadId) ?? { rows: [], lastSeq: 0, timeline: null, report: null, fetchedAt: 0, dirty: true, base: null, calibration: null };
+    const cache = threads.get(threadId) ?? { rows: [], lastSeq: 0, timeline: null, report: null, fetchedAt: 0, dirty: true, base: null, calibration: null, window: null };
     threads.set(threadId, cache);
     if (cache.report !== null && !cache.dirty && now() - cache.fetchedAt < FRESH_MS) return cache.report;
     cache.dirty = false;
@@ -233,7 +257,7 @@ export function createCollector(deps: CollectorDeps): Collector {
     let source = remote ? { kind: "bb-only" as const, path: null, session: null } : await sessionSource(info.providerId, timeline.currentProviderThreadId);
     if (source.session !== null) {
       const items = source.session.items.filter((item) => item.userOrdinal === null && BASE_CATEGORIES.has(item.category));
-      cache.base = { kind: source.kind, session: { items, model: source.session.model, compactedBeforeOrdinal: null, compactions: [] } };
+      cache.base = { kind: source.kind, session: { items, model: source.session.model, compactedBeforeOrdinal: null, compactions: [], fallbackSteps: 0 } };
     } else if (!remote && cache.base !== null) {
       source = { kind: cache.base.kind, path: null, session: cache.base.session };
     }
@@ -247,6 +271,7 @@ export function createCollector(deps: CollectorDeps): Collector {
       usage,
       remote,
       priorCalibration: cache.calibration,
+      knownWindow: await knownWindow(threadId, cache, info, usage, timeline),
     });
     const { source: reported, window } = cache.report;
     if (window.basis === "measured" && reported.kind !== "claude-snapshot" && reported.calibration !== null) cache.calibration = reported.calibration;

@@ -25,11 +25,14 @@ bb context show --self --json       # the full report
   no measurement for the current session yet, for example right after an edit, a fork, or a
   compaction; `recomputing` says the same.
 - Categories (system prompt, tool definitions, memory files, skills, your messages,
-  assistant text, thinking, tool calls, tool results, compaction summary) are estimates from
-  the session file (about 4 characters per token), scaled to the measured total. Only the
-  total is exact.
-- `Largest items` names the biggest single things in context, such as a tool result with
-  the file path or command that produced it.
+  assistant text, thinking, tool calls, tool results, compaction summary) and their `%` (of
+  the used total) come from the provider's per-call usage: each reply's output tokens, and
+  each call's input growth split across the items added before it. Within one step the split
+  is by size (about 4 characters per token). Steps that don't fit, such as a cache reset, are
+  estimated, and a note counts them.
+- `Largest items` names the biggest single conversation items (never the system prompt or
+  tool definitions), such as a tool result with the file path or command that produced it,
+  and the turn that added it.
 - `Turns` lists each user message with `+added → total after`. A `≈` total is estimated.
   `[summarized]` or `[cleared]` turns are no longer in context in full. `--` lines mark an
   edit, a compaction, a skipped compaction, a clear, or a fork.

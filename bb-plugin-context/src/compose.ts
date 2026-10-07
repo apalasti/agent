@@ -12,6 +12,7 @@ import {
 } from "./contract";
 import { estimateTokens, messageKey, oneLine } from "./estimate";
 import { lastChangeSeq, type Timeline, type TurnFact, type UsagePoint } from "./events";
+import { apportion } from "./measure";
 import type { SessionCompaction, SessionContext, SessionItem } from "./piSession";
 
 export interface SnapshotCategory {
@@ -53,6 +54,8 @@ export interface ComposeInput {
   remote?: boolean;
   /** Calibration factor of this thread's last measured report; scales estimates while `T` is unknown. */
   priorCalibration?: number | null;
+  /** Window last seen for this thread or its fork source, for when neither bb nor the events report one. */
+  knownWindow?: number | null;
 }
 
 export const CATEGORY_LABELS: Record<CategoryId, string> = {
@@ -86,28 +89,13 @@ const MAX_TURN_LARGEST = 3;
 const MAX_TEXT = 8000;
 const MAX_PREVIEW = 140;
 const MATCH_LOOKBACK = 5;
+const MAX_NOTES = 2;
 
 export const isRunning = (status: string) => RUNNING_STATUSES.has(status);
 
 interface Calibrated {
   item: SessionItem;
   tokens: number;
-}
-
-/** Integers proportional to `weights` that sum exactly to `target` (largest remainder). */
-export function apportion(weights: readonly number[], target: number): number[] {
-  const total = weights.reduce((sum, weight) => sum + weight, 0);
-  if (total <= 0 || target <= 0) return weights.map(() => 0);
-  const exact = weights.map((weight) => (weight * target) / total);
-  const result = exact.map(Math.floor);
-  let remaining = target - result.reduce((sum, value) => sum + value, 0);
-  const order = exact.map((value, index) => ({ index, rest: value - Math.floor(value) })).sort((a, b) => b.rest - a.rest);
-  for (const { index } of order) {
-    if (remaining <= 0) break;
-    result[index] = (result[index] ?? 0) + 1;
-    remaining -= 1;
-  }
-  return result;
 }
 
 function snapshotCategory(category: SnapshotCategory): CategoryId | "messages" {
@@ -192,6 +180,18 @@ function lastMeasured(points: readonly UsagePoint[]): UsagePoint | undefined {
   return undefined;
 }
 
+/** Until the edited session reports, its file may still hold the discarded branch: items after the turn before the edit that match no active turn. */
+function withoutDiscarded(items: readonly SessionItem[], timeline: Timeline): readonly SessionItem[] {
+  const last = timeline.courseChanges.filter((change) => change.kind !== "compactionSkipped").at(-1);
+  if (last?.kind !== "edited") return items;
+  const matches = matchTurns(timeline.turns, items);
+  const previousTurn = last.beforeTurnIndex - 2;
+  const floor = previousTurn < 0 ? -1 : matches.get(previousTurn);
+  if (floor === undefined) return items;
+  const active = new Set(matches.values());
+  return items.filter((item) => item.userOrdinal === null || item.userOrdinal <= floor || active.has(item.userOrdinal));
+}
+
 export function composeReport(input: ComposeInput): ContextReport {
   const { timeline, usage } = input;
   const isClaude = input.source.kind === "claude-transcript";
@@ -203,20 +203,34 @@ export function composeReport(input: ComposeInput): ContextReport {
   const recomputing = courseSeq !== null && (measuredPoint === undefined || measuredPoint.seq < courseSeq);
   const T = usage !== null && !recomputing ? usage.usedTokens : null;
   const contextWindow =
-    usage?.modelContextWindow ?? [...timeline.usage].reverse().find((point) => point.window !== null)?.window ?? snapshot?.contextWindowTokens ?? null;
+    usage?.modelContextWindow ??
+    [...timeline.usage].reverse().find((point) => point.window !== null)?.window ??
+    snapshot?.contextWindowTokens ??
+    input.knownWindow ??
+    null;
 
-  const allItems = input.remote ? [] : (input.session?.items ?? []);
+  const sessionItems = input.remote ? [] : (input.session?.items ?? []);
+  const allItems = recomputing ? withoutDiscarded(sessionItems, timeline) : sessionItems;
   const items = snapshot !== null ? allItems.filter((item) => !SNAPSHOT_COVERED.has(item.category)) : allItems;
-  const estimates = items.map((item) => item.estTokens);
-  const estimateSum = estimates.reduce((sum, value) => sum + value, 0);
+  const estimated = items.flatMap((item, index) => (item.measuredTokens === undefined ? [index] : []));
+  const estimateSum = estimated.reduce((sum, index) => sum + (items[index] as SessionItem).estTokens, 0);
+  const measuredSum = items.reduce((sum, item) => sum + (item.measuredTokens ?? 0), 0);
+  const tokens = items.map((item) => item.measuredTokens ?? item.estTokens);
+  const scaleEstimates = (target: number) => {
+    const shares = apportion(
+      estimated.map((index) => (items[index] as SessionItem).estTokens),
+      target,
+    );
+    estimated.forEach((index, position) => {
+      tokens[index] = shares[position] ?? 0;
+    });
+  };
 
   const fixed = new Map<CategoryId, Category["entries"]>();
   const fixedTokens = new Map<CategoryId, number>();
-  let tokens = estimates;
   let calibration: number | null = null;
   let unattributed = 0;
   let unattributedLabel = CATEGORY_LABELS.unattributed;
-  const notes: string[] = [];
   const kind = input.remote ? "bb-only" : input.source.kind;
 
   if (snapshot !== null) {
@@ -232,40 +246,38 @@ export function composeReport(input: ComposeInput): ContextReport {
       fixed.set(id, entries);
     }
     if (T !== null) {
-      const remainder = Math.max(0, T - nonMessages);
+      const remainder = Math.max(0, T - nonMessages - measuredSum);
       if (estimateSum > 0) {
-        tokens = apportion(estimates, remainder);
+        scaleEstimates(remainder);
         calibration = remainder / estimateSum;
       } else {
         unattributed = remainder;
       }
     }
-    notes.push("Fixed parts from Claude's /context; messages estimated from the transcript");
-  } else if (kind === "pi-session" && T !== null && estimateSum > 0) {
-    const factor = T / estimateSum;
+  } else if (kind === "pi-session" && T !== null) {
+    const remainder = T - measuredSum;
+    const factor = estimateSum > 0 ? remainder / estimateSum : 0;
     if (factor >= CALIBRATION_RANGE[0] && factor <= CALIBRATION_RANGE[1]) {
-      tokens = apportion(estimates, T);
+      scaleEstimates(remainder);
       calibration = factor;
     } else {
-      unattributed = Math.max(0, T - estimateSum);
+      unattributed = Math.max(0, remainder - estimateSum);
     }
-    notes.push("Breakdown estimated from the pi session, scaled to bb's total");
   } else if (kind === "claude-transcript" && T !== null) {
-    const factor = estimateSum > 0 ? T / estimateSum : 0;
+    const remainder = T - measuredSum;
+    const factor = estimateSum > 0 ? remainder / estimateSum : 0;
     if (factor < 1 && factor >= CALIBRATION_RANGE[0]) {
-      tokens = apportion(estimates, T);
+      scaleEstimates(remainder);
       calibration = factor;
     } else {
-      unattributed = Math.max(0, T - estimateSum);
-      unattributedLabel = NOT_IN_TRANSCRIPT_LABEL;
+      unattributed = Math.max(0, remainder - estimateSum);
+      if (!items.some((item) => item.category === "system" || item.category === "tools")) unattributedLabel = NOT_IN_TRANSCRIPT_LABEL;
     }
-    notes.push("No /context snapshot for this session; breakdown estimated from the transcript");
   } else if (kind === "bb-only" && T !== null) {
     unattributed = T;
-    notes.push(input.remote ? "Breakdown unavailable: the thread runs on another host" : "Breakdown unavailable for this provider");
   } else if (T === null && input.priorCalibration != null && snapshot === null) {
     const factor = input.priorCalibration;
-    tokens = estimates.map((value) => Math.round(value * factor));
+    for (const index of estimated) tokens[index] = Math.round((items[index] as SessionItem).estTokens * factor);
   }
 
   const calibrated: Calibrated[] = items.map((item, index) => ({ item, tokens: tokens[index] ?? 0 }));
@@ -362,8 +374,6 @@ export function composeReport(input: ComposeInput): ContextReport {
     if (free > 0) categories.push({ id: "free", label: CATEGORY_LABELS.free, kind: "free", tokens: free, entries: [] });
     categories.sort((a, b) => CATEGORY_ORDER.indexOf(a.id) - CATEGORY_ORDER.indexOf(b.id));
   }
-  if (recomputing) notes.unshift("Recomputing: no measurement since the last change");
-  else if (T === null && basis === "estimated") notes.unshift("Not measured yet; total estimated");
 
   const segments: Segment[] = categories
     .filter((category) => (category.kind === "used" || category.kind === "reserved") && category.tokens > 0)
@@ -374,10 +384,11 @@ export function composeReport(input: ComposeInput): ContextReport {
     .slice(0, 3);
 
   const largest = calibrated
-    .filter((entry) => entry.tokens > 0)
+    .filter((entry) => entry.tokens > 0 && !BASE_CATEGORIES.includes(entry.item.category))
+    .map((entry) => ({ ...toEntry(entry, turnOf), categoryId: entry.item.category }))
+    .filter((entry) => entry.turnIndex !== null)
     .sort(byTokens)
-    .slice(0, MAX_LARGEST)
-    .map((entry) => ({ ...toEntry(entry, turnOf), categoryId: entry.item.category }));
+    .slice(0, MAX_LARGEST);
 
   return {
     threadId: input.threadId,
@@ -403,8 +414,21 @@ export function composeReport(input: ComposeInput): ContextReport {
       path: input.remote ? null : input.source.path,
       calibration,
     },
-    notes: notes.slice(0, 3),
+    notes: caveats(input, timeline, snapshot === null && isClaude),
   };
+}
+
+function caveats(input: ComposeInput, timeline: Timeline, claudeWithoutSnapshot: boolean): string[] {
+  const notes: string[] = [];
+  if (input.remote) notes.push("Remote host: breakdown unavailable");
+  else if (input.source.kind === "bb-only" && input.usage !== null) notes.push("Breakdown unavailable for this provider");
+  if (claudeWithoutSnapshot && !input.remote) notes.push("No /context snapshot for this session");
+  if (timeline.courseChanges.some((change) => change.kind === "edited" && change.discardedTurns === null)) {
+    notes.push("Turns before the plugin was installed can't be counted after an edit");
+  }
+  const fallbackSteps = input.remote ? 0 : (input.session?.fallbackSteps ?? 0);
+  if (fallbackSteps > 0) notes.push(`${fallbackSteps} step${fallbackSteps === 1 ? "" : "s"} fell back to estimates`);
+  return notes.slice(0, MAX_NOTES);
 }
 
 /** Fills compaction sizes bb did not measure from the provider's own record, matched from the end. */
