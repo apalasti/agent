@@ -190,9 +190,12 @@ display name "Context".
      results, showing only the detail (`…/SKILL.md · 4.1k`). (Revised: % was of the window,
      which read "<1%" for nearly every row.)
   3. **Largest items**: the top 10 *conversation* items (messages, thinking, tool calls and
-     results, summaries; never system, tools, memory or skills), each with its turn number.
+     results, summaries; never system, tools, memory, skills, or `other` harness context such
+     as Claude Code's injected reminders), each with its turn number.
      A click scrolls to that turn. (Revised: tool definitions crowded the list. They are
-     fixed cost and already listed in the breakdown.)
+     fixed cost and already listed in the breakdown. Claude Code's per-turn attachments
+     (`sandbox_instructions`, `*_delta`) crowded it the same way, so `other` is left out too.
+     They show in the breakdown under readable labels such as "MCP instructions (update)".)
   4. **Turns**: one row per user message in the active timeline, oldest first:
      - `#n`, a one-line preview, `+12.3k` added, the context after, and a small bar;
      - state: `inContext`, or `summarized` / `cleared` (greyed) for turns before the last

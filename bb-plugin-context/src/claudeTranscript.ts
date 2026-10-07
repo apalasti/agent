@@ -1,5 +1,5 @@
 import type { CategoryId } from "./contract";
-import { contentText, estimateContent, estimateTokens, oneLine } from "./estimate";
+import { contentText, estimateContent, estimateTokens, oneLine, withoutSenderHeader } from "./estimate";
 import type { CallUsage } from "./measure";
 import {
   firstOrdinal,
@@ -84,7 +84,7 @@ export function createClaudeTranscriptParser(): SessionParser {
       key: `${id}:text`,
       category: prompt ? "user" : "other",
       label: prompt ? "Message" : "Command",
-      detail: oneLine(text, DETAIL_MAX) || null,
+      detail: oneLine(withoutSenderHeader(text), DETAIL_MAX) || null,
       estTokens: estimateContent(promptBlocks),
       userOrdinal: ordinal(),
       ...(prompt ? { userText: text } : {}),
@@ -152,7 +152,7 @@ export function createClaudeTranscriptParser(): SessionParser {
         if (kind === "prompt_snapshot") return promptSnapshot(attachment);
         if (entry.rendered == null) return;
         const category = ATTACHMENT_CATEGORY[kind] ?? "other";
-        entries.push({ id, summary: false, epoch, items: [{ key: `${id}:0`, category, label: kind, detail: null, estTokens: renderedTokens(entry.rendered), userOrdinal: category === "other" ? ordinal() : null }] });
+        entries.push({ id, summary: false, epoch, items: [{ key: `${id}:0`, category, label: attachmentLabel(kind), detail: null, estTokens: renderedTokens(entry.rendered), userOrdinal: category === "other" ? ordinal() : null }] });
         return;
       }
       case "system": {
@@ -178,6 +178,14 @@ export function createClaudeTranscriptParser(): SessionParser {
   }
 
   return { push, context };
+}
+
+/** `mcp_instructions_delta` → "MCP instructions (update)". */
+export function attachmentLabel(kind: string): string {
+  const update = kind.endsWith("_delta");
+  const words = kind.replace(/_delta$/, "").split("_").filter(Boolean).map((word) => (word === "mcp" ? "MCP" : word));
+  const label = words.join(" ");
+  return `${label.charAt(0).toUpperCase()}${label.slice(1)}${update ? " (update)" : ""}`;
 }
 
 export function parseClaudeTranscript(text: string): SessionContext {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseClaudeTranscript } from "../src/claudeTranscript";
+import { attachmentLabel, parseClaudeTranscript } from "../src/claudeTranscript";
 import { parseTimeline, type EventRow } from "../src/events";
 import { parsePiSession, toolSubject } from "../src/piSession";
 import { fixture, fixtureEvents } from "./fakes";
@@ -161,6 +161,14 @@ describe("parseClaudeTranscript", () => {
       ["Read", "/repo/README.md"],
       ["Bash", "npm test -- --reporter=verbose --run all the things please …"],
     ]);
+  });
+});
+
+describe("attachmentLabel", () => {
+  it("turns Claude Code attachment kinds into readable labels", () => {
+    expect(attachmentLabel("sandbox_instructions")).toBe("Sandbox instructions");
+    expect(attachmentLabel("mcp_instructions_delta")).toBe("MCP instructions (update)");
+    expect(attachmentLabel("environment")).toBe("Environment");
   });
 });
 

@@ -79,6 +79,21 @@ describe("composeReport", () => {
     expect(report.courseChanges.map((change) => change.kind)).toEqual(["edited", "compactionSkipped"]);
   });
 
+  it("reports an edit's tokensAfter as the point it rewound to, matching the editor's frees figure", () => {
+    const report = piProbe();
+    const edit = report.courseChanges.find((change) => change.kind === "edited");
+    const rewoundTurn = report.turns.find((turn) => turn.index === edit?.beforeTurnIndex);
+    expect(rewoundTurn?.tokensBefore).not.toBeNull();
+    expect(edit?.tokensAfter).toBe(rewoundTurn?.tokensBefore);
+  });
+
+  it("keeps harness context out of Largest items and the sender header out of previews", () => {
+    const report = ccProbe(snapshotUsage(CC_SESSION));
+    expect(report.largest.some((item) => item.categoryId === "other")).toBe(false);
+    expect(category(report, "other")?.entries.map((entry) => entry.label)).toContain("Sandbox instructions");
+    expect(report.turns.every((turn) => !turn.preview.startsWith("[bb message from"))).toBe(true);
+  });
+
   it("groups tool results per tool with the largest single results as children", () => {
     const report = composeReport({
       threadId: "thr_x",

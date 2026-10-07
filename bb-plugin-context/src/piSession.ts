@@ -1,5 +1,5 @@
 import type { CategoryId } from "./contract";
-import { contentText, estimateContent, estimateTokens, oneLine } from "./estimate";
+import { contentText, estimateContent, estimateTokens, oneLine, withoutSenderHeader } from "./estimate";
 import { attributeMeasured, type CallUsage } from "./measure";
 
 export interface SessionItem {
@@ -139,7 +139,7 @@ export function createPiSessionParser(): SessionParser {
           key: `${id}:0`,
           category: "user",
           label: "Message",
-          detail: oneLine(text, DETAIL_MAX),
+          detail: oneLine(withoutSenderHeader(text), DETAIL_MAX),
           estTokens: estimateContent(content),
           userOrdinal: replacedOrdinal === undefined ? ordinal() : replacedOrdinal,
           userText: text,

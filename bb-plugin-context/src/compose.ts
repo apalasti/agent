@@ -10,7 +10,7 @@ import {
   type Segment,
   type Turn,
 } from "./contract";
-import { estimateTokens, messageKey, oneLine } from "./estimate";
+import { estimateTokens, messageKey, oneLine, withoutSenderHeader } from "./estimate";
 import { lastChangeSeq, type Timeline, type TurnFact, type UsagePoint } from "./events";
 import { apportion } from "./measure";
 import type { SessionCompaction, SessionContext, SessionItem } from "./piSession";
@@ -345,7 +345,7 @@ export function composeReport(input: ComposeInput): ContextReport {
       requestSeq: fact.requestSeq,
       lastSeq: fact.lastSeq,
       at: fact.at,
-      preview: oneLine(fact.text, MAX_PREVIEW),
+      preview: oneLine(withoutSenderHeader(fact.text), MAX_PREVIEW),
       text: fact.text.slice(0, MAX_TEXT),
       textTruncated: fact.text.length > MAX_TEXT,
       state,
@@ -384,7 +384,7 @@ export function composeReport(input: ComposeInput): ContextReport {
     .slice(0, 3);
 
   const largest = calibrated
-    .filter((entry) => entry.tokens > 0 && !BASE_CATEGORIES.includes(entry.item.category))
+    .filter((entry) => entry.tokens > 0 && !BASE_CATEGORIES.includes(entry.item.category) && entry.item.category !== "other")
     .map((entry) => ({ ...toEntry(entry, turnOf), categoryId: entry.item.category }))
     .filter((entry) => entry.turnIndex !== null)
     .sort(byTokens)
@@ -408,7 +408,7 @@ export function composeReport(input: ComposeInput): ContextReport {
     categories: basis === "none" ? [] : categories,
     largest,
     turns,
-    courseChanges: withSessionCompactions(timeline.courseChanges, input.session?.compactions ?? []),
+    courseChanges: withRewindPoints(withSessionCompactions(timeline.courseChanges, input.session?.compactions ?? []), turns),
     source: {
       kind: snapshot !== null ? "claude-snapshot" : kind,
       path: input.remote ? null : input.source.path,
@@ -442,6 +442,15 @@ function withSessionCompactions(changes: readonly CourseChange[], compactions: r
     result[index] = { ...change, tokensBefore: change.tokensBefore ?? recorded.tokensBefore, tokensAfter: change.tokensAfter ?? recorded.tokensAfter };
   }
   return result;
+}
+
+/** An edit's `tokensAfter` is where it rewound to, the same figure the editor promised as "frees". */
+function withRewindPoints(changes: readonly CourseChange[], turns: readonly Turn[]): CourseChange[] {
+  return changes.map((change) => {
+    if (change.kind !== "edited") return change;
+    const rewoundTo = turns.find((turn) => turn.index === change.beforeTurnIndex)?.tokensBefore ?? null;
+    return rewoundTo === null ? change : { ...change, tokensAfter: rewoundTo };
+  });
 }
 
 export function toMeter(report: ContextReport): Meter {

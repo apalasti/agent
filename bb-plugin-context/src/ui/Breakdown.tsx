@@ -117,6 +117,11 @@ export function shareOf(category: Category, used: number, contextWindow: number 
   return { used: "", window: share === null ? null : `${share} of window` };
 }
 
+const CATEGORY_HINT: Partial<Record<Category["id"], { short: string; full: string }>> = {
+  unattributed: { short: "not itemized", full: "Counted by the provider but not traceable to any item in the session file" },
+  reserved: { short: "kept free", full: "Reserved so automatic compaction has room to run" },
+};
+
 function CategoryRow({
   category,
   used,
@@ -132,6 +137,8 @@ function CategoryRow({
   const expandable = category.entries.length > 0;
   const muted = category.kind !== "used";
   const share = shareOf(category, used, contextWindow);
+  const hint = CATEGORY_HINT[category.id];
+  const suffix = share.window ?? hint?.short ?? null;
   const content = (
     <>
       {expandable ? <Disclosure open={open} /> : <span className="size-3.5 shrink-0" />}
@@ -144,10 +151,10 @@ function CategoryRow({
       />
       <span
         className={cn("min-w-0 flex-1 truncate", muted ? "text-muted-foreground" : "text-foreground")}
-        title={share.window === null ? category.label : `${category.label} · ${share.window}`}
+        title={[category.label, share.window, hint?.full].filter(Boolean).join(" · ")}
       >
         {category.label}
-        {share.window === null ? null : <span className="text-xs tabular-nums"> · {share.window}</span>}
+        {suffix === null ? null : <span className="text-xs tabular-nums text-muted-foreground"> · {suffix}</span>}
       </span>
       <span className="w-14 shrink-0 text-right tabular-nums text-foreground">{formatTokens(category.tokens)}</span>
       <span className="hidden w-10 shrink-0 text-right tabular-nums text-muted-foreground @[17rem]:inline">{share.used}</span>

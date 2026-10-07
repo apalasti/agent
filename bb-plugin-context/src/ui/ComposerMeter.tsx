@@ -45,7 +45,7 @@ function ThreadMeter({ threadId }: { threadId: string }) {
         segments={meter.segments}
         total={meter.window.contextWindow}
         autoCompactAt={meter.window.autoCompactAt}
-        className="w-20 shrink-0 sm:w-28"
+        className="w-28 min-w-6 shrink"
       />
       <span className={cn("shrink-0 whitespace-nowrap tabular-nums", TONE_TEXT[tone], tone === "muted" ? null : "font-medium")}>
         {usageLabel(meter.window, used)}
