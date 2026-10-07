@@ -36,7 +36,15 @@ export const CATEGORIES: Category[] = [
           { id: "r-read-2", label: "Read", detail: "/tmp/wt-demo/README.md", tokens: 1_000, turnIndex: 1 },
         ],
       },
-      entry("r-bash", "Bash", 1_604),
+      entry("r-bash", "Bash", 1_576),
+      {
+        id: "r-edit",
+        label: "edit",
+        detail: "1×",
+        tokens: 28,
+        turnIndex: null,
+        children: [{ id: "r-edit-1", label: "edit", detail: "/tmp/wt-demo/app.ts", tokens: 28, turnIndex: 2 }],
+      },
     ],
   },
   { id: "reserved", label: "Autocompact buffer", kind: "reserved", tokens: 33_000, entries: [] },
@@ -124,7 +132,7 @@ export function makeReport(overrides: Partial<ContextReport> = {}, window: Parti
     turns: [makeTurn(1), makeTurn(2)],
     courseChanges: [],
     source: { kind: "claude-snapshot", path: null, calibration: null },
-    notes: ["Per-item numbers are estimates calibrated to bb's total"],
+    notes: ["No /context snapshot for this session"],
     ...overrides,
   };
 }

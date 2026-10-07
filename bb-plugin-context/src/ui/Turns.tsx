@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBbNavigate, useSdk } from "@get-bb/plugin-sdk/app";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,18 @@ function message(cause: unknown): string {
   return cause instanceof Error ? cause.message : String(cause);
 }
 
-/** Why a turn's actions are unavailable, or null when they are available. */
-export function actionBlocker(turn: Turn, busy: boolean): string | null {
-  if (busy || turn.running) return "Wait for the current turn to finish";
+const WAIT_FOR_TURN = "Wait for the current turn to finish";
+
+/** Why "Edit from here" is unavailable, or null when it is available. */
+export function editBlocker(turn: Turn, busy: boolean): string | null {
+  if (busy || turn.running) return WAIT_FOR_TURN;
   if (!turn.editable) return turn.notEditableReason ?? "This message can't be edited";
   return null;
+}
+
+/** Why "Fork from here" is unavailable; any completed turn can be forked, whoever sent it. */
+export function forkBlocker(turn: Turn, busy: boolean): string | null {
+  return busy || turn.running ? WAIT_FOR_TURN : null;
 }
 
 /** bb prefixes messages sent by another thread with a sender header that would fill the one-line preview. */
@@ -43,7 +50,7 @@ function added(turn: Turn): string | null {
 function MiniBar({ tokens, contextWindow }: { tokens: number | null; contextWindow: number | null }) {
   const width = tokens === null || contextWindow === null || contextWindow <= 0 ? 0 : Math.min(100, (tokens / contextWindow) * 100);
   return (
-    <span aria-hidden="true" className="relative h-1 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
+    <span aria-hidden="true" className="relative hidden h-1 w-12 shrink-0 overflow-hidden rounded-full bg-muted @[22rem]:block">
       <span className="absolute inset-y-0 left-0 rounded-full bg-foreground/50" style={{ width: `${width}%` }} />
     </span>
   );
@@ -129,30 +136,25 @@ function RewindEditor({
   );
 }
 
-function ActionButton({
+function TurnMenuItem({
   label,
   icon,
   blocker,
-  onClick,
+  onSelect,
 }: {
   label: string;
-  icon: ReactNode;
+  icon: string;
   blocker: string | null;
-  onClick: () => void;
+  onSelect: () => void;
 }) {
   return (
-    <span title={blocker ?? label} className="inline-flex">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 gap-1 px-1.5 text-xs"
-        disabled={blocker !== null}
-        onClick={onClick}
-      >
-        {icon}
-        {label}
-      </Button>
-    </span>
+    <DropdownMenuItem disabled={blocker !== null} onSelect={onSelect} className="items-start">
+      <Icon name={icon} aria-hidden className="mt-px" />
+      <span className="flex min-w-0 flex-col">
+        <span>{label}</span>
+        {blocker === null ? null : <span className="max-w-56 text-[11px] text-muted-foreground">{blocker}</span>}
+      </span>
+    </DropdownMenuItem>
   );
 }
 
@@ -178,7 +180,8 @@ function TurnRow({
   const sdk = useSdk();
   const navigate = useBbNavigate();
   const [editing, setEditing] = useState(false);
-  const blocker = actionBlocker(turn, busy);
+  const editBlocked = editBlocker(turn, busy);
+  const forkBlocked = forkBlocker(turn, busy);
   const greyed = turn.state !== "inContext";
   const fork = async () => {
     try {
@@ -194,7 +197,7 @@ function TurnRow({
     <li data-turn={turn.index} aria-label={`Turn ${turn.index}`}>
       <div
         className={cn(
-          "group relative flex min-w-0 items-center gap-2 px-4 py-1.5 text-sm transition-colors duration-700",
+          "group flex min-w-0 items-center gap-2 px-4 py-1.5 text-sm transition-colors duration-700",
           flashing ? "bg-accent" : "hover:bg-muted/40",
           greyed && "text-muted-foreground",
         )}
@@ -210,21 +213,7 @@ function TurnRow({
             </span>
           ) : null}
         </span>
-        <span className="pointer-events-none absolute right-11 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5 rounded-md bg-background opacity-0 shadow-sm transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 [@media(pointer:coarse)]:hidden">
-          <ActionButton
-            label="Edit from here…"
-            icon={<Icon name="Edit" className="size-3.5" aria-hidden />}
-            blocker={blocker}
-            onClick={() => setEditing(true)}
-          />
-          <ActionButton
-            label="Fork from here"
-            icon={<Icon name={FORK_ICON} className="size-3.5" aria-hidden />}
-            blocker={blocker}
-            onClick={fork}
-          />
-        </span>
-        <span className="w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground" title="Added by this turn">
+        <span className="hidden w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground @[18rem]:inline" title="Added by this turn">
           {delta ?? ""}
         </span>
         <span className="w-10 shrink-0 text-right text-xs tabular-nums" title="Context after this turn">
@@ -233,19 +222,18 @@ function TurnRow({
         <MiniBar tokens={turn.tokensAfter} contextWindow={contextWindow} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-6 shrink-0" aria-label={`Actions for turn ${turn.index}`}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6 shrink-0 text-muted-foreground/60 group-hover:text-foreground group-focus-within:text-foreground"
+              aria-label={`Actions for turn ${turn.index}`}
+            >
               <Icon name="MoreHorizontal" className="size-3.5" aria-hidden />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" mobileTitle={`Turn ${turn.index}`}>
-            <DropdownMenuItem disabled={blocker !== null} onSelect={() => setEditing(true)} title={blocker ?? undefined}>
-              <Icon name="Edit" aria-hidden />
-              Edit from here…
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={blocker !== null} onSelect={fork} title={blocker ?? undefined}>
-              <Icon name={FORK_ICON} aria-hidden />
-              Fork from here
-            </DropdownMenuItem>
+            <TurnMenuItem label="Edit from here…" icon="Edit" blocker={editBlocked} onSelect={() => setEditing(true)} />
+            <TurnMenuItem label="Fork from here" icon={FORK_ICON} blocker={forkBlocked} onSelect={fork} />
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -255,7 +243,7 @@ function TurnRow({
           turn={turn}
           lastIndex={lastIndex}
           current={current}
-          blocker={blocker}
+          blocker={editBlocked}
           onClose={() => setEditing(false)}
           onChanged={onChanged}
         />

@@ -31,8 +31,24 @@ async function renderPanel(report: ContextReport) {
   return rendered;
 }
 
-function turnRow(rendered: Awaited<ReturnType<typeof renderPanel>>, index: number) {
+type Rendered = Awaited<ReturnType<typeof renderPanel>>;
+
+function turnRow(rendered: Rendered, index: number) {
   return rendered.getByRole("listitem", { name: `Turn ${index}` });
+}
+
+async function openTurnMenu(rendered: Rendered, index: number) {
+  const trigger = within(turnRow(rendered, index)).getByRole("button", { name: `Actions for turn ${index}` });
+  fireEvent.keyDown(trigger, { key: "Enter" });
+  return rendered.findByRole("menu");
+}
+
+function menuItem(menu: HTMLElement, label: string) {
+  return within(menu).getAllByRole("menuitem").find((item) => item.textContent!.startsWith(label))!;
+}
+
+function isDisabled(item: HTMLElement) {
+  return item.hasAttribute("data-disabled");
 }
 
 describe("Context panel", () => {
@@ -42,8 +58,21 @@ describe("Context panel", () => {
     expect(header.textContent).toContain("26k");
     expect(header.textContent).toContain("/ 200k tokens");
     expect(header.textContent).toContain("autocompact at 167k");
-    expect(header.textContent).toContain("Measured by bb");
-    expect(header.textContent).toContain("Per-item numbers are estimates");
+    expect(header.querySelector("[data-basis]")!.textContent).toBe(
+      "Measured by bb · breakdown from Claude Code's /context and the transcript · claude-haiku-4-5-20251001",
+    );
+    expect(header.textContent).toContain("No /context snapshot for this session");
+    expect(header.textContent).toContain("13% used");
+  });
+
+  it("shows category shares of the used context, and free space as a share of the window", async () => {
+    const rendered = await renderPanel(makeReport());
+    const categories = rendered.getByRole("list", { name: "Context categories" });
+    const row = (label: RegExp) =>
+      Array.from(categories.children).find((li) => label.test(li.textContent!))!.textContent!;
+    expect(row(/Tool results/)).toMatch(/6\.7k26%$/);
+    expect(row(/System prompt/)).toMatch(/3\.6k14%$/);
+    expect(row(/Free space/)).toBe("Free space · 70% of window141k");
   });
 
   it("expands categories into entries and tool results into their largest items", async () => {
@@ -56,7 +85,11 @@ describe("Context panel", () => {
     fireEvent.click(within(categories).getByRole("button", { name: /Tool results/ }));
     const results = within(categories).getByRole("group", { name: "Tool results entries" });
     fireEvent.click(within(results).getByRole("button", { name: /Read/ }));
-    expect(within(results).getByRole("group", { name: "Read items" }).textContent).toContain("/tmp/wt-demo/skills/show-me/SKILL.md");
+    const children = within(results).getByRole("group", { name: "Read items" });
+    const lines = Array.from(children.querySelectorAll("[data-entry]"));
+    expect(lines.map((line) => line.textContent)).toEqual(["/tmp/wt-demo/skills/show-me/SKILL.md#24.1k", "/tmp/wt-demo/README.md#11k"]);
+    expect(lines[0]!.getAttribute("title")).toBe("Read /tmp/wt-demo/skills/show-me/SKILL.md");
+    expect(within(results).getByTitle("edit /tmp/wt-demo/app.ts").textContent).toBe("edit/tmp/wt-demo/app.ts#228");
 
     const onDemand = rendered.getByRole("list", { name: "Available on demand" });
     expect(onDemand.textContent).toContain("18k");
@@ -70,21 +103,23 @@ describe("Context panel", () => {
         makeCourseChange("edited", 2, { discardedTurns: 2, tokensBefore: 52_000, tokensAfter: 21_000 }),
         makeCourseChange("compacted", 3, { tokensBefore: 161_000, tokensAfter: 24_000 }),
         makeCourseChange("compactionSkipped", 4),
+        makeCourseChange("edited", 4, { discardedTurns: null }),
       ],
     });
     const rendered = await renderPanel(report);
     const items = Array.from(rendered.getByRole("list", { name: "Turns" }).children).map((li) =>
       li.getAttribute("data-course-change") ?? `turn ${li.getAttribute("data-turn")}`,
     );
-    expect(items).toEqual(["turn 1", "edited", "turn 2", "compacted", "turn 3", "compactionSkipped"]);
-    expect(rendered.getByText("Edited: 2 turns (31k) discarded")).toBeTruthy();
+    expect(items).toEqual(["turn 1", "edited", "turn 2", "compacted", "turn 3", "compactionSkipped", "edited"]);
+    expect(rendered.getByText("Edited: earlier turns discarded")).toBeTruthy();
+    expect(rendered.getByText("Edited: 2 turns discarded (31k tokens)")).toBeTruthy();
     expect(rendered.getByText("Compacted 161k → 24k")).toBeTruthy();
     expect(rendered.getByText("Compaction skipped (session too small)")).toBeTruthy();
   });
 
   it("edits from a turn: shows the rewind numbers, then reruns with that turn's request seq", async () => {
     const rendered = await renderPanel(makeReport({ turns: [makeTurn(1), makeTurn(2), makeTurn(3)] }));
-    fireEvent.click(within(turnRow(rendered, 2)).getByRole("button", { name: "Edit from here…" }));
+    fireEvent.click(menuItem(await openTurnMenu(rendered, 2), "Edit from here…"));
     const editor = rendered.getByRole("group", { name: "Edit turn 2" });
     expect(editor.textContent).toContain("Rewinds to ≈21k (frees 5.1k) · discards turns 2–3");
     const textarea = within(editor).getByRole("textbox") as HTMLTextAreaElement;
@@ -104,7 +139,7 @@ describe("Context panel", () => {
 
   it("forks from a turn's last seq and opens the fork", async () => {
     const rendered = await renderPanel(makeReport());
-    fireEvent.click(within(turnRow(rendered, 1)).getByRole("button", { name: "Fork from here" }));
+    fireEvent.click(menuItem(await openTurnMenu(rendered, 1), "Fork from here"));
     await waitFor(() => expect(rendered.inspection.navigateCalls).toEqual([{ method: "toThread", threadId: "thr_forked" }]));
     expect(rendered.inspection.sdkCalls[0]).toMatchObject({
       method: "threads.fork",
@@ -112,27 +147,38 @@ describe("Context panel", () => {
     });
   });
 
-  it("disables every action while the thread runs, and explains why", async () => {
+  it("has no hover action buttons over the row, only the menu", async () => {
+    const rendered = await renderPanel(makeReport());
+    const row = turnRow(rendered, 1);
+    expect(within(row).getAllByRole("button").map((button) => button.getAttribute("aria-label"))).toEqual(["Actions for turn 1"]);
+  });
+
+  it("disables every action while the thread runs, and says why in the menu", async () => {
     const rendered = await renderPanel(makeReport({ threadStatus: "active", turns: [makeTurn(1), makeTurn(2, { running: true })] }));
     for (const index of [1, 2]) {
-      const edit = within(turnRow(rendered, index)).getByRole("button", { name: "Edit from here…" }) as HTMLButtonElement;
-      const fork = within(turnRow(rendered, index)).getByRole("button", { name: "Fork from here" }) as HTMLButtonElement;
-      expect(edit.disabled).toBe(true);
-      expect(fork.disabled).toBe(true);
-      expect(edit.parentElement!.getAttribute("title")).toBe("Wait for the current turn to finish");
+      const menu = await openTurnMenu(rendered, index);
+      for (const label of ["Edit from here…", "Fork from here"]) {
+        const item = menuItem(menu, label);
+        expect(isDisabled(item)).toBe(true);
+        expect(item.textContent).toBe(`${label}Wait for the current turn to finish`);
+      }
+      fireEvent.keyDown(menu, { key: "Escape" });
+      await waitFor(() => expect(rendered.queryByRole("menu")).toBeNull());
     }
     expect((rendered.getByRole("button", { name: "Compact" }) as HTMLButtonElement).disabled).toBe(true);
     expect((rendered.getByRole("button", { name: "Clear context" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("disables actions on a turn that is not editable", async () => {
+  it("blocks Edit on a message bb can't edit, but still allows Fork", async () => {
     const rendered = await renderPanel(
       makeReport({ turns: [makeTurn(1, { editable: false, notEditableReason: "Sent by another thread or an agent" }), makeTurn(2)] }),
     );
-    const edit = within(turnRow(rendered, 1)).getByRole("button", { name: "Edit from here…" }) as HTMLButtonElement;
-    expect(edit.disabled).toBe(true);
-    expect(edit.parentElement!.getAttribute("title")).toBe("Sent by another thread or an agent");
-    expect((within(turnRow(rendered, 2)).getByRole("button", { name: "Edit from here…" }) as HTMLButtonElement).disabled).toBe(false);
+    const menu = await openTurnMenu(rendered, 1);
+    expect(isDisabled(menuItem(menu, "Edit from here…"))).toBe(true);
+    expect(menuItem(menu, "Edit from here…").textContent).toContain("Sent by another thread or an agent");
+    expect(isDisabled(menuItem(menu, "Fork from here"))).toBe(false);
+    fireEvent.click(menuItem(menu, "Fork from here"));
+    await waitFor(() => expect(rendered.inspection.sdkCalls[0]).toMatchObject({ method: "threads.fork", args: [{ sourceSeqEnd: 35 }] }));
   });
 
   it("compacts only after confirming, stating the current size", async () => {

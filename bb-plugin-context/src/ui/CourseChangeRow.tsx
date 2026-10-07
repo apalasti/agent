@@ -33,9 +33,9 @@ export function courseChangeText(change: CourseChange): string {
       const discarded = change.discardedTurns === null ? "earlier turns" : plural(change.discardedTurns, "turn");
       const freed =
         change.tokensBefore !== null && change.tokensAfter !== null && change.tokensBefore > change.tokensAfter
-          ? ` (${formatTokens(change.tokensBefore - change.tokensAfter)})`
+          ? ` (${formatTokens(change.tokensBefore - change.tokensAfter)} tokens)`
           : "";
-      return `Edited: ${discarded}${freed} discarded`;
+      return `Edited: ${discarded} discarded${freed}`;
     }
     case "compacted":
       return change.tokensBefore !== null && change.tokensAfter !== null

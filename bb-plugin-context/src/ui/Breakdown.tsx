@@ -40,19 +40,34 @@ function TurnRef({ entry, onSelectTurn }: { entry: Entry; onSelectTurn: (turnInd
   );
 }
 
+function fullName(entry: Entry): string {
+  return entry.detail ? `${entry.label} ${entry.detail}` : entry.label;
+}
+
 function EntryLine({
   entry,
+  label,
   depth,
   onSelectTurn,
 }: {
   entry: Entry;
+  label: string | null;
   depth: number;
   onSelectTurn: (turnIndex: number) => void;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-2 py-1 text-xs" style={{ paddingLeft: `${2.25 + depth}rem` }}>
-      <span className="shrink-0 text-foreground">{entry.label}</span>
-      <Detail detail={entry.detail} />
+    <div
+      className="flex min-w-0 items-center gap-2 py-1 text-xs"
+      style={{ paddingLeft: `${2.25 + depth}rem` }}
+      title={fullName(entry)}
+      data-entry
+    >
+      {label === null ? null : <span className="min-w-0 max-w-[50%] shrink-0 truncate text-foreground">{label}</span>}
+      {label === null && !entry.detail ? (
+        <span className="shrink-0 text-muted-foreground">{entry.label}</span>
+      ) : (
+        <Detail detail={entry.detail} />
+      )}
       <span className="ml-auto flex shrink-0 items-center gap-1 pr-4">
         <TurnRef entry={entry} onSelectTurn={onSelectTurn} />
         <span className="w-12 text-right tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
@@ -63,7 +78,11 @@ function EntryLine({
 
 function EntryRow({ entry, onSelectTurn }: { entry: CategoryEntry; onSelectTurn: (turnIndex: number) => void }) {
   const [open, setOpen] = useState(false);
-  if (entry.children.length === 0) return <EntryLine entry={entry} depth={0} onSelectTurn={onSelectTurn} />;
+  if (entry.children.length === 0) return <EntryLine entry={entry} label={entry.label} depth={0} onSelectTurn={onSelectTurn} />;
+  if (entry.children.length === 1) {
+    const only = entry.children[0]!;
+    return <EntryLine entry={{ ...only, tokens: entry.tokens }} label={entry.label} depth={0} onSelectTurn={onSelectTurn} />;
+  }
   return (
     <div>
       <button
@@ -73,15 +92,17 @@ function EntryRow({ entry, onSelectTurn }: { entry: CategoryEntry; onSelectTurn:
         className="flex w-full min-w-0 items-center gap-2 py-1 pl-6 pr-4 text-left text-xs hover:bg-muted/50"
       >
         <Disclosure open={open} />
-        <span className="shrink-0 text-foreground">{entry.label}</span>
+        <span className="min-w-0 max-w-[50%] shrink-0 truncate text-foreground">{entry.label}</span>
         <Detail detail={entry.detail} />
-        <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">{entry.children.length} largest</span>
-        <span className="w-12 shrink-0 text-right tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
+        <span className="ml-auto hidden shrink-0 text-[11px] text-muted-foreground @[20rem]:inline">
+          {entry.children.length} largest
+        </span>
+        <span className="ml-auto w-12 shrink-0 @[20rem]:ml-0 text-right tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
       </button>
       {open ? (
         <div role="group" aria-label={`${entry.label} items`}>
           {entry.children.map((child) => (
-            <EntryLine key={child.id} entry={child} depth={1} onSelectTurn={onSelectTurn} />
+            <EntryLine key={child.id} entry={child} label={null} depth={1} onSelectTurn={onSelectTurn} />
           ))}
         </div>
       ) : null}
@@ -89,18 +110,28 @@ function EntryRow({ entry, onSelectTurn }: { entry: CategoryEntry; onSelectTurn:
   );
 }
 
+/** Used rows are shares of the used context; free and reserved space are shares of the window, said so in the label. */
+export function shareOf(category: Category, used: number, contextWindow: number | null): { used: string; window: string | null } {
+  if (category.kind === "used") return { used: percent(category.tokens, used) ?? "", window: null };
+  const share = category.kind === "deferred" ? null : percent(category.tokens, contextWindow);
+  return { used: "", window: share === null ? null : `${share} of window` };
+}
+
 function CategoryRow({
   category,
+  used,
   contextWindow,
   onSelectTurn,
 }: {
   category: Category;
+  used: number;
   contextWindow: number | null;
   onSelectTurn: (turnIndex: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const expandable = category.entries.length > 0;
   const muted = category.kind !== "used";
+  const share = shareOf(category, used, contextWindow);
   const content = (
     <>
       {expandable ? <Disclosure open={open} /> : <span className="size-3.5 shrink-0" />}
@@ -111,13 +142,15 @@ function CategoryRow({
           category.id === "free" && "border border-border",
         )}
       />
-      <span className={cn("min-w-0 flex-1 truncate", muted ? "text-muted-foreground" : "text-foreground")}>
+      <span
+        className={cn("min-w-0 flex-1 truncate", muted ? "text-muted-foreground" : "text-foreground")}
+        title={share.window === null ? category.label : `${category.label} · ${share.window}`}
+      >
         {category.label}
+        {share.window === null ? null : <span className="text-xs tabular-nums"> · {share.window}</span>}
       </span>
       <span className="w-14 shrink-0 text-right tabular-nums text-foreground">{formatTokens(category.tokens)}</span>
-      <span className="w-10 shrink-0 text-right tabular-nums text-muted-foreground">
-        {category.kind === "deferred" ? "" : (percent(category.tokens, contextWindow) ?? "")}
-      </span>
+      <span className="hidden w-10 shrink-0 text-right tabular-nums text-muted-foreground @[17rem]:inline">{share.used}</span>
     </>
   );
   const rowClass = "flex w-full min-w-0 items-center gap-2 px-4 py-1.5 text-left text-sm";
@@ -148,10 +181,12 @@ function CategoryRow({
 
 export function Breakdown({
   categories,
+  used,
   contextWindow,
   onSelectTurn,
 }: {
   categories: readonly Category[];
+  used: number;
   contextWindow: number | null;
   onSelectTurn: (turnIndex: number) => void;
 }) {
@@ -161,7 +196,13 @@ export function Breakdown({
     <div>
       <ul aria-label="Context categories">
         {counted.map((category) => (
-          <CategoryRow key={category.id} category={category} contextWindow={contextWindow} onSelectTurn={onSelectTurn} />
+          <CategoryRow
+            key={category.id}
+            category={category}
+            used={used}
+            contextWindow={contextWindow}
+            onSelectTurn={onSelectTurn}
+          />
         ))}
       </ul>
       {deferred.length === 0 ? null : (
@@ -171,7 +212,7 @@ export function Breakdown({
           </p>
           <ul aria-label="Available on demand">
             {deferred.map((category) => (
-              <CategoryRow key={category.id} category={category} contextWindow={null} onSelectTurn={onSelectTurn} />
+              <CategoryRow key={category.id} category={category} used={used} contextWindow={null} onSelectTurn={onSelectTurn} />
             ))}
           </ul>
         </div>

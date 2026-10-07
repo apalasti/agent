@@ -62,15 +62,19 @@ function Section({ title, children, aside }: { title: string; children: ReactNod
 }
 
 const SOURCE_NOTE: Record<ContextReport["source"]["kind"], string> = {
-  "pi-session": "breakdown estimated from the pi session",
-  "claude-transcript": "breakdown estimated from the Claude Code transcript",
-  "claude-snapshot": "breakdown from Claude Code's /context plus the transcript",
+  "pi-session": "breakdown from the pi session",
+  "claude-transcript": "breakdown from the Claude Code transcript",
+  "claude-snapshot": "breakdown from Claude Code's /context and the transcript",
   "bb-only": "no breakdown available",
 };
 
-function basisNote(report: ContextReport): string {
-  const total = report.window.basis === "measured" ? "Measured by bb" : "Total estimated by this plugin";
-  return `${total} · ${SOURCE_NOTE[report.source.kind]}`;
+export function basisLine(report: ContextReport): string {
+  const parts = [
+    report.window.basis === "measured" ? "Measured by bb" : "Estimated by this plugin",
+    SOURCE_NOTE[report.source.kind],
+  ];
+  if (report.window.model !== null) parts.push(report.window.model);
+  return parts.join(" · ");
 }
 
 function Header({ report, used }: { report: ContextReport; used: number }) {
@@ -107,9 +111,8 @@ function Header({ report, used }: { report: ContextReport; used: number }) {
           )}
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">
-        {basisNote(report)}
-        {window.model === null ? null : <> · {window.model}</>}
+      <p className="text-xs text-muted-foreground" data-basis>
+        {basisLine(report)}
         {window.recomputing ? <span className="italic"> · recomputing after a course change</span> : null}
       </p>
       {report.notes.length === 0 ? null : (
@@ -134,7 +137,9 @@ function LargestItems({ report, onSelectTurn }: { report: ContextReport; onSelec
         const content = (
           <>
             <span className={cn("size-2 shrink-0 rounded-full", CATEGORY_STYLE[item.categoryId].dot)} />
-            <span className="shrink-0 text-foreground">{item.label}</span>
+            <span className="min-w-0 max-w-[50%] shrink-0 truncate text-foreground" title={item.label}>
+              {item.label}
+            </span>
             {item.detail === null ? null : (
               <span title={item.detail} className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
                 {item.detail}
@@ -275,7 +280,12 @@ function ReportView({ threadId, report, refetch }: { threadId: string; report: C
       <Header report={report} used={used} />
       {report.categories.length === 0 ? null : (
         <Section title="What's in it">
-          <Breakdown categories={report.categories} contextWindow={report.window.contextWindow} onSelectTurn={selectTurn} />
+          <Breakdown
+            categories={report.categories}
+            used={used}
+            contextWindow={report.window.contextWindow}
+            onSelectTurn={selectTurn}
+          />
         </Section>
       )}
       {report.largest.length === 0 ? null : (
@@ -338,5 +348,5 @@ export function ContextPanel({ threadId }: PluginThreadPanelProps) {
       </>
     );
   }
-  return <div className="h-full min-h-0 overflow-y-auto">{body}</div>;
+  return <div className="@container h-full min-h-0 overflow-y-auto">{body}</div>;
 }
