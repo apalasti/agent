@@ -87,6 +87,8 @@ export const branchesResultSchema = z.object({
   local: z.array(z.string()),
   remote: z.array(z.string()),
   truncated: z.boolean(),
+  /** Set when the branches could not be listed; the lists are then empty. */
+  message: z.string().optional(),
 });
 export type BranchesResult = z.infer<typeof branchesResultSchema>;
 
