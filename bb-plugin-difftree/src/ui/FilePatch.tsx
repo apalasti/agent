@@ -74,7 +74,7 @@ function PatchBody({ threadId, scope, file }: { threadId: string; scope: Scope; 
 export function FilePatch({ threadId, scope, file }: { threadId: string; scope: Scope; file: ChangedFile }) {
   const reason = noPatchReason(file);
   return (
-    <div role="group" aria-label={`Patch for ${file.path}`} className="border-y border-border bg-background">
+    <div role="group" aria-label={`Patch for ${file.path}`} className="border-b border-border bg-background">
       {reason === null ? <PatchBody threadId={threadId} scope={scope} file={file} /> : <Note>{reason}</Note>}
     </div>
   );

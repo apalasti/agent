@@ -161,29 +161,37 @@ export function TreeView({
       {rows.map(({ node, depth }, index) => {
         const open = node.kind === "dir" ? expansion.expanded.has(node.path) : openPatches.has(node.path);
         const canOpen = node.kind === "file" && node.file.changeKind !== "deleted";
-        return (
-          <Fragment key={`${node.kind}:${node.path}`}>
-            <TreeRow
-              node={node}
-              depth={depth}
-              open={open}
-              focusable={index === focusedIndex}
-              widths={widths}
-              rowRef={(element) => {
-                if (element) rowElements.current.set(node.path, element);
-                else rowElements.current.delete(node.path);
-              }}
-              onToggle={() => {
-                setFocusedPath(node.path);
-                toggle(node);
-              }}
-              onFocus={() => setFocusedPath(node.path)}
-              onKeyDown={onKeyDown(index)}
-              onOpenFile={canOpen ? () => openFile(node) : null}
-            />
-            {node.kind === "file" && open ? <FilePatch threadId={threadId} scope={scope} file={node.file} /> : null}
-          </Fragment>
+        const row = (
+          <TreeRow
+            node={node}
+            depth={depth}
+            open={open}
+            focusable={index === focusedIndex}
+            widths={widths}
+            rowRef={(element) => {
+              if (element) rowElements.current.set(node.path, element);
+              else rowElements.current.delete(node.path);
+            }}
+            onToggle={() => {
+              setFocusedPath(node.path);
+              toggle(node);
+            }}
+            onFocus={() => setFocusedPath(node.path)}
+            onKeyDown={onKeyDown(index)}
+            onOpenFile={canOpen ? () => openFile(node) : null}
+          />
         );
+        // The wrapper scopes the open row's sticky pinning to its own patch: the path stays
+        // readable while a long patch scrolls under it, and unsticks once the patch passes.
+        if (node.kind === "file" && open) {
+          return (
+            <div key={`${node.kind}:${node.path}`}>
+              {row}
+              <FilePatch threadId={threadId} scope={scope} file={node.file} />
+            </div>
+          );
+        }
+        return <Fragment key={`${node.kind}:${node.path}`}>{row}</Fragment>;
       })}
     </div>
   );

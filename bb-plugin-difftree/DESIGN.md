@@ -162,6 +162,27 @@ remembered/default scope (passing a scope flag does not change the remembered
 one). Text output is the tree with folders and files, `+a -r` right-aligned,
 capped at 200 lines with a "… N more rows" line. `--json` prints `TreeResult`.
 
+## Deviations from this design (added while building)
+
+- Sticky open file row: the open file's row pins to the top of the tree while
+  its patch scrolls beneath it, so a long patch never loses the path header
+  (added in UI round 2; the design said only "clicking a file toggles its patch
+  inline under the row").
+- Indent guides (1px, `bg-border/60`) per depth and a 16px per-level indent,
+  for hierarchy scanability the design's "indentation by depth" did not
+  specify.
+- Zero stat halves render dim instead of added/removed-colored: `+114 −0` no
+  longer shows a red `−0` (UI round 2).
+- The truncation banner uses `role="status"`.
+- The CLI shows `?` for untracked files (git's letter), where the panel shows
+  `A` with an "untracked" title.
+- `branchesResultSchema.message` (optional) — backend addition, logged in
+  CONTRACT-CHANGES.md: a failed branch listing returns empty lists plus a
+  message instead of an RPC error.
+- Unknown-base guard: bb's `diffFiles` returns `available` with 0 files and
+  `mergeBaseRef: null` for a base that does not exist; the service reports
+  `unavailable` naming the base instead of a misleading "No changes".
+
 ## Trace: one file's `+88 −18` from git to the screen
 
 1. The user opens **Diff tree** from the right panel's new-tab Actions on

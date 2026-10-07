@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import type { TreeNode } from "../tree";
 import { ChangeKindLetter, Stats, type StatsWidths } from "./Stats";
 
-const INDENT_PX = 12;
+const INDENT_PX = 16;
 
 export interface TreeRowProps {
   node: TreeNode;
@@ -37,12 +37,15 @@ export function TreeRow({ node, depth, open, focusable, widths, rowRef, onToggle
       onFocus={onFocus}
       onKeyDown={onKeyDown}
       className={cn(
-        "group flex h-7 min-w-0 cursor-pointer select-none items-center gap-1 pr-2 text-[13px] outline-none",
+        "group relative flex h-7 min-w-0 cursor-pointer select-none items-center gap-1 pr-2 text-[13px] outline-none",
         "hover:bg-state-hover focus-visible:bg-state-hover focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring",
-        !isDir && open && "bg-state-active",
+        !isDir && open && "sticky top-0 z-10 border-b border-border bg-background",
       )}
       style={{ paddingLeft: 8 + depth * INDENT_PX }}
     >
+      {Array.from({ length: depth }, (_, i) => (
+        <span key={i} aria-hidden className="absolute top-0 bottom-0 w-px bg-border/60" style={{ left: 8 + i * INDENT_PX + INDENT_PX / 2 }} />
+      ))}
       {isDir ? (
         <Icon name={open ? "ChevronDown" : "ChevronRight"} aria-hidden className="size-4 shrink-0 text-muted-foreground" />
       ) : (

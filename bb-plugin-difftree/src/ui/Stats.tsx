@@ -29,10 +29,16 @@ export function Stats({
   }
   return (
     <span className={cn("inline-flex shrink-0 gap-1.5 whitespace-nowrap tabular-nums", className)}>
-      <span className="text-right text-diff-added" style={widths && { minWidth: `${widths.additions}ch` }}>
+      <span
+        className={cn("text-right", additions === 0 ? "text-muted-foreground" : "text-diff-added")}
+        style={widths && { minWidth: `${widths.additions}ch` }}
+      >
         +{additions}
       </span>
-      <span className="text-right text-diff-removed" style={widths && { minWidth: `${widths.deletions}ch` }}>
+      <span
+        className={cn("text-right", deletions === 0 ? "text-muted-foreground" : "text-diff-removed")}
+        style={widths && { minWidth: `${widths.deletions}ch` }}
+      >
         −{deletions}
       </span>
     </span>

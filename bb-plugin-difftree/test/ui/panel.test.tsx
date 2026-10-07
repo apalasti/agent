@@ -217,7 +217,7 @@ describe("Diff tree panel", () => {
   it("warns when bb capped the file list", async () => {
     const rendered = await renderPanel(TRUNCATED_TREE);
     await treeOf(rendered);
-    expect(rendered.getByRole("note").textContent).toBe(
+    expect(rendered.getByRole("status").textContent).toBe(
       "bb lists at most 500 changed files, so some are missing here, and the totals cover only these 500.",
     );
     expect(rendered.getByRole("button", { name: "Base branch: main" })).toBeTruthy();

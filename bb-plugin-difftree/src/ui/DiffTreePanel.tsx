@@ -63,7 +63,7 @@ function Summary({ result, refreshing }: { result: Available; refreshing: boolea
 
 function TruncationBanner({ count }: { count: number }) {
   return (
-    <p role="note" className="mx-3 mb-1.5 flex gap-1.5 rounded-md bg-warning/10 px-2 py-1.5 text-xs text-warning-text">
+    <p role="status" className="mx-3 mb-1.5 flex gap-1.5 rounded-md bg-warning/10 px-2 py-1.5 text-xs text-warning-text">
       <Icon name="AlertTriangle" aria-hidden className="mt-px size-3.5 shrink-0" />
       <span>bb lists at most {count} changed files, so some are missing here, and the totals cover only these {count}.</span>
     </p>
