@@ -1,0 +1,759 @@
+{
+  "outcome": "available",
+  "files": [
+    {
+      "path": "Deployment/package-twine/versions.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 14,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/data-flow.md",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/data-storage.md",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/frontend-patterns.md",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/recommendation-service.md",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/api-clients/recom-client/index.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/api-clients/recom-client/types.gen.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 29,
+      "deletions": 50,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useParentRecommendationStats.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 17,
+      "deletions": 130,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/recommendation.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 19,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/EmptyDutyBlocksIndicator.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 124,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/CompactSolutionsStrip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 79,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/DecksPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 85,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/OriginalSolution.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 6,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/RecommendedSolution.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/SolutionComparisonLayout.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 11,
+      "deletions": 6,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/SolutionDecks.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 342,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/SolutionsPanelHeader.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 41,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/TopSolutionsPanel.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 175,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/useShownTableRows.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/useWhatIfComparison.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 88,
+      "deletions": 18,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solutions-list/ExpandedSolutionsListRow.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 10,
+      "deletions": 4,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/ScenarioSummaryTable.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 44,
+      "deletions": 55,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/ShortlistTable.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 216,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/scenarioTableRows.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 23,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/whatif-comparison/useSuggestedRecommendationVerdicts.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 5,
+      "deletions": 5,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/contexts/RunContext.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 10,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/contexts/RunProvider.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 12,
+      "deletions": 31,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/contexts/SolutionTreeContext.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 43,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/contexts/SolutionTreeProvider.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 92,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/hooks/useUnseenScenarios.ts",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 105,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/hooks/useViewedSolutions.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 32,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/lib/solutionDecks.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 81,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/lib/solutionRows.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 103,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/mocks/data/parentStats.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 44,
+      "deletions": 5,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/mocks/world/crewAssignment.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 17,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/pages/SolutionPage.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 88,
+      "deletions": 202,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/pages/SolutionSummaryPage.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 55,
+      "deletions": 67,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/pages/WhatIfResultPage.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 19,
+      "deletions": 23,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/test/aircraft-restrictions/run-snapshot.test.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 17,
+      "deletions": 17,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/test/crew-cookbook/EmptyDutyBlocksIndicator.test.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 86,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/test/daa-gantt/tail-status.test.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 12,
+      "deletions": 12,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/test/pages/SolutionPage.test.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 252,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/test/pages/SolutionSummaryPage.test.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 324,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/test/viewedSolutions.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 24,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/test/whatif-comparison/useWhatIfComparison.test.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "irrops/solution_decks.py",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 110,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "irrops/solution_shortlist.py",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 312,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "migrations/versions/46c81a4657f2_history_day_indexes.py",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 114,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "recommendation_openapi.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 46,
+      "deletions": 82,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "recommendation_service/models/merged_recommendation.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 6,
+      "deletions": 11,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "recommendation_service/models/recommendation_analysis.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 6,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "recommendation_service/models/shortlist_rows.py",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 102,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "recommendation_service/models/solution_pool.py",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 70,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "recommendation_service/repositories/recommendation_repository.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 4,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "recommendation_service/routes/v1/recommendation_results_public_models.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 6,
+      "deletions": 40,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "recommendation_service/versions.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 9,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "service/repositories/history_repository.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 32,
+      "deletions": 8,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "service/routes/v1/history_tick.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "service/services/history_service.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "services_common/asof_views.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 18,
+      "deletions": 13,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "services_common/interfaces/alerts/repository.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 5,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "services_common/orm_models.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 112,
+      "deletions": 8,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "services_common/repositories/alerts_repository.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "services_common/repositories/db_alerts_repository.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 38,
+      "deletions": 11,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/recommendation_results/test_merged_recommendation.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 9,
+      "deletions": 34,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/recommendation_results/test_recommendation_results_routes.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 203,
+      "deletions": 9,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/recommendation_results/test_recommendation_service.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 5,
+      "deletions": 13,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/recommendation_service/test_memory_bounds.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/recommendation_service/test_recommendation_repository_data_access.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 8,
+      "deletions": 209,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/recommendation_service/test_recommendation_run_manual_precache.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 5,
+      "deletions": 6,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/service/alerts/test_db_alerts_gate_days.py",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 42,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/services_common/test_history_indexes.py",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 65,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/test_solution_decks.py",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 157,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "test/test_solution_shortlist.py",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 1986,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "versions.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 23,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    }
+  ],
+  "shortstat": "75 files changed, 3120 insertions(+), 4256 deletions(-)\n",
+  "mergeBaseRef": "9a94438ba2e4a423fcd9c9a3dff690917e0411e2",
+  "initialPatches": [],
+  "truncated": false
+}

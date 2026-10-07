@@ -1,0 +1,30 @@
+{
+  "outcome": "available",
+  "workspace": {
+    "workingTree": {
+      "insertions": 13,
+      "deletions": 0,
+      "lineStatsComplete": true,
+      "files": [
+        {
+          "path": "GLOSSARY.md",
+          "status": "??",
+          "insertions": 13,
+          "deletions": 0
+        }
+      ],
+      "hasUncommittedChanges": true,
+      "state": "untracked"
+    },
+    "checkout": {
+      "kind": "branch",
+      "branchName": "rework/solution-page",
+      "headSha": "7aca73816f45afb08f703ce757295ae53e9a81a8"
+    },
+    "branch": {
+      "currentBranch": "rework/solution-page",
+      "defaultBranch": "main"
+    },
+    "mergeBase": null
+  }
+}

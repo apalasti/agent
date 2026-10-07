@@ -1,0 +1,5009 @@
+{
+  "outcome": "available",
+  "files": [
+    {
+      "path": ".dockerignore",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 3,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": ".gitignore",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 10,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": ".gitleaksignore",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": ".gtrconfig",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 20,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": ".pre-commit-config.yaml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 12,
+      "deletions": 17,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "AGENTS.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 49,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "Deployment/package-twine/versions.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 5751,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "Deployment/release/app-release-ml.yml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "Deployment/release/app-release-recommend.yml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "Makefile",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 170,
+      "deletions": 21,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "README.md",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 114,
+      "deletions": 38,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "appConfig/ml/environment.dev2/ml.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "appConfig/ml/environment.lab/ml.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "appConfig/ml/environment.prod/ml.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "appConfig/ml/environment.test/ml.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "appConfig/recommend/environment.dev2/recommend.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "appConfig/recommend/environment.lab/recommend.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "appConfig/recommend/environment.prod/recommend.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "appConfig/recommend/environment.test/recommend.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "cae_event_handler/async_queue.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 16,
+      "deletions": 5,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "cae_event_handler/queue.py",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 128,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "cost_tuning/.gitignore",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 15,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "cost_tuning/case.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 98,
+      "deletions": 29,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "cost_tuning/config.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 29,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "cost_tuning/measure.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "data/cache/README.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 143,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "data/cache/cache1.json.template",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 4,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "data/cache/cache2.json.template",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 4,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "data/cache/config.yml.template",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 15,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker-compose.local_to_db.yml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 10,
+      "deletions": 4,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/Dockerfile.dev",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 67,
+      "deletions": 28,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/Dockerfile.frontend",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 3,
+      "deletions": 4,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/Dockerfile.mssql",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 13,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/Dockerfile.prod",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 78,
+      "deletions": 33,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.base.yml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 48,
+      "deletions": 19,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.debug.yml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 6,
+      "deletions": 6,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.eventhub-emulator.yml",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 39,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.frontend-test.yml",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.infra.yml",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 23,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.openapi.yml",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 7,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.test-base.yml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.test.yml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 10,
+      "deletions": 5,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.worktree.yml",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 101,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/docker-compose.yml",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 25,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/eventhub-emulator/Config.json",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 30,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/eventhub-emulator/README.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 80,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/render_dockerfiles.py",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 4,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/templates/Dockerfile.base.j2",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 63,
+      "deletions": 27,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/templates/Dockerfile.dev.j2",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/templates/Dockerfile.frontend.j2",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docker/templates/Dockerfile.prod.j2",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 11,
+      "deletions": 3,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/airops-connection.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 135,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/backend-guidelines.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 189,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/coding-guidelines.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 50,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/data-flow.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 206,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/data-storage.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 183,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/frontend-architecture.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 158,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/frontend-patterns.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 115,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/irropsml-service.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 265,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/recommendation-service.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 184,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "docs/system-overview.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 161,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "env_files/irropsml/default.env",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 23,
+      "deletions": 5,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "env_files/recommend/default.env",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 12,
+      "deletions": 8,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "env_files/time_machine.env",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 1,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/.gitignore",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 6,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/README.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 366,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/eslint.config.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 47,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 3542,
+      "deletions": 2551,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/package.json",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 38,
+      "deletions": 15,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/public/mockServiceWorker.js",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 361,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/App.test.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 65,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/App.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 63,
+      "deletions": 13,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/_lof-transformer.ts",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 158,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/airgantt.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 17,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/badge-hit.d.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 42,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/badge-hit.js",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 86,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/constants.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 8,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/css/airgantt.css",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 13,
+      "deletions": 8,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/draw.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 319,
+      "deletions": 151,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/events.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 186,
+      "deletions": 86,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/index.d.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 3,
+      "deletions": 5,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/init.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 133,
+      "deletions": 117,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/public.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 108,
+      "deletions": 14,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/tooltip.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/airgantt/update.js",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 179,
+      "deletions": 91,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/base-alert.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 89,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/ac-type.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 128,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/aircraft-restriction.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 117,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/boarding-not-started.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 69,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/cancellation.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 223,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/crew.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 81,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/curfew.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 50,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/denied.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 51,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/downgrade.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 45,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/flight-level-cost.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 66,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/important-slot.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 49,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/missconnect.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 86,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/slot.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 63,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/turnaround-overlap.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 56,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/kinds/weather.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 50,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/legend.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 42,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/manager.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 219,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/restriction-enforcement.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 40,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/restriction-reason.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 47,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/restriction-target.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 30,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/alerts/types.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 51,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/api-clients/irropsml-api.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/api-clients/irropsml-client/index.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/api-clients/irropsml-client/sdk.gen.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 720,
+      "deletions": 31,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/api-clients/irropsml-client/types.gen.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 9525,
+      "deletions": 3405,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/api-clients/recom-client/index.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/api-clients/recom-client/sdk.gen.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 871,
+      "deletions": 54,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/api-clients/recom-client/types.gen.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 11499,
+      "deletions": 4681,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/apis/aimsUpdateStatus.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 28,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/aircraftCertificates.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 48,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/aircraftRestrictions.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 196,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/airportTimezones.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 12,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/alerts.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 84,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/allRuns.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 11,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/cancelRun.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 11,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/cancellationCandidates.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 54,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/chainlit.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 35,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/closebase.ts",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 157,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/costEstimatePerDelay.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 3,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/crew.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/crewAssignment.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 3,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/crewAvailability.ts",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 77,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/delay.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 13,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/feedback.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 37,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/filterComments.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 42,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/flightLegs.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 8,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/forecastDetails.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 8,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/history.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 178,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAddAirportMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 24,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAddFilterCommentMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 64,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAddRouteMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 24,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAimsUpdateStatusQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 72,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAircraftRestrictionsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 41,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAlertsQuery.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 14,
+      "deletions": 14,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAllAirportsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 17,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAllRunsQuery.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 9,
+      "deletions": 3,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAllTailNumbersQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAocsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 12,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useAsOfEconomicsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 16,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useBaseTimezone.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 46,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useCancelRunMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 25,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useCancellationCandidatesQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 32,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useCreateTailRestrictionsMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 24,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useCrewQuery.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 10,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useDelayed.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 37,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useDeleteFilterCommentMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 44,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useDeleteNotiRuleMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 19,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useDeleteRestrictionMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 16,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useDeleteVisMajorMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 15,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useFilterRowsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 27,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useFlightLegsQuery.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 48,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useFlightStandbyQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 40,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useHistoryCheckpointSetsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 17,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useHistoryTailMovesQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 22,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useImportDisinsectionMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 19,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useLicenceRequirementsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 13,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useLicensingRecordsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 23,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useMaintenanceOverrideMutations.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 68,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useMaintenanceOverridesQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 29,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useMarkImportantSlotMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 72,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useMelSourceDetailsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 12,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useNotiActionMutations.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 56,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useNotiCombinedQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 86,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useNotiRuleFilters.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 85,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useNotiRuleMutations.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 50,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useNotiRulesQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 25,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useNotiTemplateMutations.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 36,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useNotiTemplatesQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 19,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useParentRecommendationStats.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 158,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useParentStats.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 35,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useParentsQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 43,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/usePredictionsQuery.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 32,
+      "deletions": 8,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRecommendationBasesQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 15,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRecommendationState.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 7,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRecommendationStats.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 13,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRecommendationStatus.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 4,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRefetchAtDisableExpiry.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 33,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRemoveAirportMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 21,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRemoveRouteMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 21,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRemoveSourceDetailMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 23,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRenameMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 17,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRestrictionStateMutations.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 92,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRevokeCertificateMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 29,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRunFromCommentsMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useRunStatuses.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 56,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useScenarioAnalysis.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 26,
+      "deletions": 60,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useScenarioNetworks.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 297,
+      "deletions": 51,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useSchedulesQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 29,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useSolveMutation.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 96,
+      "deletions": 27,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useSpareBlocksQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 39,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useTailStatusQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 274,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useVisMajorFromFlightsMutation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/hooks/useVisMajorQuery.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 37,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/importantSlot.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 31,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/licensing.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 38,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/maintenanceOverride.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 73,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/noti.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 91,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/notiPage.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 146,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/predictions.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 49,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/recommendation.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 151,
+      "deletions": 19,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/recommendationBases.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 8,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/recommendationStatus.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 74,
+      "deletions": 6,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/renameRecommendation.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 17,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/schedules.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 21,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/solve.ts",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 122,
+      "deletions": 31,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/spareBlocks.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 36,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/spareCapacity.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 15,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/specs.ts",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 42,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/standby.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 70,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/apis/visMajor.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 37,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/crew-alert.png",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/assets/crew.ts",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 5,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/curfew-alert.png",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/assets/icons/ac-type-change.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 6,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/ac-type-downgrade.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 5,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/ac-type-upgrade.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 5,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/aircraft-restriction.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 6,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/boarding.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 7,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/crew.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 6,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/ctot-early.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 6,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/ctot-late.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 6,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/ctot.ts",
+      "previousPath": "frontend/src/assets/ctot.ts",
+      "changeKind": "renamed",
+      "additions": 2,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/curfew.ts",
+      "previousPath": "frontend/src/assets/curfew.tsx",
+      "changeKind": "renamed",
+      "additions": 0,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/duty-time.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 15,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/early-check-in.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 14,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/index.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 125,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/maintenance.ts",
+      "previousPath": "frontend/src/assets/maintenance.ts",
+      "changeKind": "renamed",
+      "additions": 0,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/no-disinsection.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 17,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/overlap.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 8,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/pax.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 7,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/slot-important.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 28,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/slot.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 8,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/warning.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 7,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/icons/weather.ts",
+      "previousPath": "frontend/src/assets/weather-alerts.ts",
+      "changeKind": "renamed",
+      "additions": 0,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/slot-alert.png",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 0,
+      "binary": true,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/assets/slot.ts",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 5,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/assets/weather-alerts.svg",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 10,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/AimsStaleIndicator.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 81,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/AlertBadge.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/AlertsTab.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 165,
+      "deletions": 111,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/CancelRunIconButton.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 94,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/CancellationViewStatus.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 49,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ConnectionStatusChip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 108,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ConnectionsTab.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 263,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/CopilotHost.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 121,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/CopilotPane.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 149,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/CopilotRecomTabOpener.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 41,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/CrewAvailability.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 164,
+      "deletions": 165,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/CrewTab.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 189,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/CursorMenu.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 45,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/DelayImpactTab.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 8,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/DynamicFavicon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 39,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/EmbedPage.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 33,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/FeedbackTooltip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 189,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/FilterChipRow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 218,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/FilterPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 149,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/FlightInfoDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 171,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/FlightTab.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 158,
+      "deletions": 92,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ForecastDetailsTab.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 13,
+      "deletions": 9,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/GanttAlignedTable.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 171,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/GanttFlightSearch.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 145,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/GanttLegend.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 430,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/HistoryForecastTab.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 117,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/LiveGanttContextMenu.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 231,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/LiveHeader.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 143,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/MainLayout.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 19,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/MaintenanceFlipItem.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 61,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/MarkImportantSlotItem.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 47,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/Navbar.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 233,
+      "deletions": 64,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/NetworkFilter.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 169,
+      "deletions": 52,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/OperateTomorrowDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 79,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/RecommendationStatusGate.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 60,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/RunButton.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 19,
+      "deletions": 13,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ScenarioSettingsWidget.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 98,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ShowCancellationsSwitch.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 26,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/SlotAlertsTable.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 304,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/SolutionStatusIcon.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 11,
+      "deletions": 1,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/SolutionsDropdown.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 31,
+      "deletions": 28,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/SpareCapacity.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 694,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/components/StandbyRosterPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 325,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/TabBar.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 60,
+      "deletions": 43,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/TabsTooltip.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 99,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/TimeMachineSwitcher.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 201,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ZoomPresetControls.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 46,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/AddTailDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 304,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/AirportAdditionChip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 114,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/AirportChips.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 169,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/CertificateChips.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 52,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/ChipExpiryField.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 96,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/ImportDisinsectionDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 218,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/LicensingChips.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 96,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/MelAdditionChip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 112,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/MelChips.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 266,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/RouteAdditionChip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 179,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/RouteChips.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 171,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/TailRestrictionRow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 171,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/aircraft-restrictions/chips-shared.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 245,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/certificate-link/CertificateLinkControls.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 47,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/control-panel/ControlPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 90,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/control-panel/ControlPanelGrid.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 248,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/control-panel/NewInfoCell.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 184,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/control-panel/OpportunityCell.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 97,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/control-panel/OpportunityRunRow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 85,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/edit-mode/EditHeader.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 14,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/edit-mode/WhatIfRecommendSwitch.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 32,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/form-fields/BasesMultiSelectField.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 47,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/form-fields/MultiSelectField.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 25,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/AcTypeCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 96,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/AircraftRestrictionCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 144,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/BoardingCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 88,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/CancellationCostCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 118,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/CrewCommentsCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 110,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/CrewDutyCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 233,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/CrewEarlyCheckInCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 270,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/CtotSlotCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 132,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/FlightLevelCostCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 152,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/FlightTimesTooltip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 174,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/GanttHoverTooltip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 41,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/HoverCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 116,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/ImportantSlotCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 54,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/TurnaroundOverlapCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 178,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/gantt-tooltips/WeatherCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 162,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryBoardCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 198,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryLoadCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 31,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryNoSetCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 64,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryPeriodForm.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 132,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryRail.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 359,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryRangeBoard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 145,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistorySaveDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 125,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistorySavedList.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 250,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryTimeBar.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 303,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryToolbar.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 132,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryTrackPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 104,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/HistoryWindow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 260,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/useHistoryAddress.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 122,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/useHistoryTracking.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 55,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/history/useHistoryWindowData.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 283,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/licensing/LicensingFeedStamp.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 56,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/licensing/LicensingSheet.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 148,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/licensing/LicensingTooltip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 34,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/maintenance-overrides/AddOverrideDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 226,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/maintenance-overrides/EditOverrideDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 165,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/CrewViolations.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 77,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/DelayThresholdEditor.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 117,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/EC261Costs.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 86,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/KPICompactBase.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 140,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/NetworkKPIBase.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 73,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/NetworkKPISettings.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 139,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/NetworkSummary.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 164,
+      "deletions": 87,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/OTP.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 21,
+      "deletions": 66,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/network-stats/Overlaps.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 76,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/CreateNotificationDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 111,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/DeleteConfirmDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 71,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/FeedCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 144,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/FeedCompactView.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 113,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/FeedFlightLine.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 36,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/FeedTab.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 236,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/FeedTimelineView.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 157,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/NotiBackgroundWatcher.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 37,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/NotificationDeliveryPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 380,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/NotificationDetailDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 168,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/RuleActionsCell.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 134,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/RuleActiveFilterSwitch.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 35,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/RuleDefinitionCell.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 103,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/RuleNotificationsSubtable.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 168,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/RulesCardsView.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 161,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/RulesListView.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 140,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/RulesTab.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 200,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/RulesTable.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 253,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/SaveTemplateDialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 121,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/SnoozeMenu.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 122,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/TemplatesTab.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 192,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/ViewOnGanttTail.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 49,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/feedView.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 40,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/notifications/rulesView.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 68,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/ACTypeChangeSettings.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 121,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/AdditionalBaseSettings.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 61,
+      "deletions": 94,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/AdditionalFlightSettings.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 182,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/AirportClosurePopover.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 186,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/AirportClosures.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 76,
+      "deletions": 31,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/AogSettings.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 78,
+      "deletions": 62,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/CurfewSettings.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 52,
+      "deletions": 40,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/DisableHorizonNote.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 57,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/ETDSettings.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 76,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/EarliestFerrySettings.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 18,
+      "deletions": 8,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/EditEventTooltip.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 95,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/Filter.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 125,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/FlightSettings.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 140,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/FlightSpecificSettings.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 44,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/FlightWhatIfSettings.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 190,
+      "deletions": 196,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/Gantt.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 383,
+      "deletions": 293,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/GanttContextMenu.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 551,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/MaintenanceSettings.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 67,
+      "deletions": 43,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/RecommendationModeInputFields.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 114,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/RestrictionOverrideSettings.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 123,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/ScenarioStrategySettings.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 43,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/Settings.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 48,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/YesterdayFlightSettings.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 64,
+      "deletions": 47,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/recommendation-mode/aog-utils.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 69,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/CompactSolutionsStrip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 79,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/ComparisonSourceStrip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 81,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/Cookbook.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 107,
+      "deletions": 118,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/CookbookCopyButton.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 41,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/CrewCookbook.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 469,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/CrewCookbookCopyButton.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 74,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/CrewCookbookPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 54,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/DecksPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 85,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/FlightCookbookPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 28,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/OriginalSolution.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 76,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/RecommendedSolution.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 96,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/SoftAlertTable.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 143,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/SolutionComparisonLayout.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 111,
+      "deletions": 159,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/SolutionDecks.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 342,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/SolutionsPanelHeader.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 41,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/useShownTableRows.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/useWhatIfComparison.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 208,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solution-page/whatIfComparison.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 55,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solutions-list/ExpandedSolutionsListRow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 80,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/solutions-list/SolutionsListRow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 143,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/standby/AssumptionMark.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 29,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/standby/PositionSummaryTable.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 91,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/standby/ReachabilityPanel.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 86,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/standby/ReachabilityResult.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 178,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/standby/StandbyNotes.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 85,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/standby/StandbyTab.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 196,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/CertificateRow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 101,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/RestrictionGroupRow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 97,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/RestrictionTargets.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 130,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/TailCardShell.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 79,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/TailOverrideCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 117,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/TailRestrictionCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 114,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/TailStatusCard.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 144,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/card/DisableUntilForm.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 69,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/card/ReadOnlyGroups.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 103,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/card/RestrictionCardGroup.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 105,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/card/RestrictionCardRow.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 83,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/card/StateEditor.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 96,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/card/groups.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 96,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/model.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 186,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/tail-restrictions/useTailOverrides.ts",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 150,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/BasesMultiSelect.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 77,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/CollapsibleTable.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 308,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/ContextMenu.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 61,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/CountBadge.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 27,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/DateTimePicker.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 4,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/DebouncedSearchInput.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 62,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/DelayText.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 64,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/DismissOnOutside.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 72,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/ErrorScreen.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 27,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/FloatingTooltip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 72,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/InlineEditableText.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 76,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/LogoBig.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 172,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/MultiSelect.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 58,
+      "deletions": 15,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/RecomWhatIfIndicator.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 25,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/ScenarioSummaryTable.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 376,
+      "deletions": 143,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/components/ui/ScrollBox.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 47,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/SearchInput.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 37,
+      "deletions": 67,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/SettingsContainer.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 39,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/SlideIn.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/SortIndicator.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 9,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/SwitchButton.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 153,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/Table.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 33,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/TablePagination.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 78,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/ThemeToggle.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 49,
+      "deletions": 26,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/WorldMap.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 699,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "on_demand"
+    },
+    {
+      "path": "frontend/src/components/ui/badge.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 55,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/button.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 12,
+      "deletions": 4,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/calendar.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 218,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/chip.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 38,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/context-menu.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 250,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/detail-card.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 44,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/dialog.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 165,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/hover-card.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 77,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/AircraftRestrictionIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 24,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/AnalyticsIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 27,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/ArrowIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 22,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/ArrowRightIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 23,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/BoardingIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 34,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/CalendarIcon.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/CheckCircleIcon.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 28,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/ClockIcon.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 14,
+      "deletions": 7,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/ColumnsIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 39,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/CrewCookbookIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 59,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/CrewDutyTimeBadge.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 11,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/CrewEarlyCheckInBadge.tsx",
+      "previousPath": null,
+      "changeKind": "deleted",
+      "additions": 0,
+      "deletions": 11,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/CrewIcon.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 11,
+      "deletions": 18,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/CtotIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 22,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/ExpandIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 22,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/ExperimentIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/FeedbackIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 49,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/FlightCookbookIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 59,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/FlightDetailsIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 34,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/LightbulbIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 18,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/MoonIcon.tsx",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 42,
+      "deletions": 0,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    },
+    {
+      "path": "frontend/src/components/ui/icons/OtpIcon.tsx",
+      "previousPath": null,
+      "changeKind": "modified",
+      "additions": 1,
+      "deletions": 8,
+      "binary": false,
+      "origin": "tracked",
+      "loadMode": "auto"
+    }
+  ],
+  "shortstat": "500 files changed, 72788 insertions(+), 15552 deletions(-)\n",
+  "mergeBaseRef": "b24f0c0324b82cb6ddc2cfd76bd3a713bfb39c60",
+  "initialPatches": [],
+  "truncated": true
+}

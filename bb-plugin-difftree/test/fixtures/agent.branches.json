@@ -1,0 +1,16 @@
+{
+  "branches": [
+    "main",
+    "bb/reply-with-just-ready-thr_a2s2t7wxba",
+    "bb/reply-with-just-ready-thr_bustnvzb7n",
+    "bb/reply-with-just-ready-thr_yzb36a7cmc",
+    "issue-management-redesign",
+    "vscode-extension"
+  ],
+  "branchesTruncated": false,
+  "remoteBranches": [
+    "origin/main"
+  ],
+  "remoteBranchesTruncated": false,
+  "selectedBranch": null
+}

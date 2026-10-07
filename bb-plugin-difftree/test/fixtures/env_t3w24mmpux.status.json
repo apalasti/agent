@@ -1,0 +1,36 @@
+{
+  "outcome": "available",
+  "workspace": {
+    "workingTree": {
+      "insertions": 149,
+      "deletions": 0,
+      "lineStatsComplete": true,
+      "files": [
+        {
+          "path": "skills/show-me/LICENSE",
+          "status": "??",
+          "insertions": 21,
+          "deletions": 0
+        },
+        {
+          "path": "skills/show-me/SKILL.md",
+          "status": "??",
+          "insertions": 128,
+          "deletions": 0
+        }
+      ],
+      "hasUncommittedChanges": true,
+      "state": "untracked"
+    },
+    "checkout": {
+      "kind": "branch",
+      "branchName": "main",
+      "headSha": "de89d8c91a113aef48fb678be4637d885c30093f"
+    },
+    "branch": {
+      "currentBranch": "main",
+      "defaultBranch": "main"
+    },
+    "mergeBase": null
+  }
+}

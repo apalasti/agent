@@ -1,0 +1,25 @@
+{
+  "outcome": "available",
+  "files": [
+    {
+      "path": "GLOSSARY.md",
+      "previousPath": null,
+      "changeKind": "added",
+      "additions": 13,
+      "deletions": 0,
+      "binary": false,
+      "origin": "untracked",
+      "loadMode": "auto"
+    }
+  ],
+  "shortstat": "1 file changed, 13 insertions(+)\n",
+  "mergeBaseRef": null,
+  "initialPatches": [
+    {
+      "path": "GLOSSARY.md",
+      "patch": "diff --git a/GLOSSARY.md b/GLOSSARY.md\nnew file mode 100644\nindex 000000000..fb2ea083a\n--- /dev/null\n+++ b/GLOSSARY.md\n@@ -0,0 +1,13 @@\n+# irrops-ml\n+\n+Disruption recovery: optimisation runs produce candidate solutions, which planners compare and open on the solution pages.\n+\n+## Language\n+\n+**Open solution**:\n+The solution currently shown as a Gantt; the one the tab's URL points at.\n+_Avoid_: selected solution, current solution\n+\n+**Marked solution**:\n+The solution the user has picked on the decks to compare across them, without opening it.\n+_Avoid_: selected solution, highlighted solution\n",
+      "truncated": false
+    }
+  ],
+  "truncated": false
+}
