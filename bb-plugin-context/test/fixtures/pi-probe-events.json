@@ -1,0 +1,433 @@
+[
+ {
+  "id": "evt_zchiyxjw6j",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 41,
+  "createdAt": 1791392257780,
+  "type": "system/operation",
+  "data": {
+   "operation": "edit_message",
+   "status": "completed",
+   "message": "Message edited",
+   "operationId": "20155b3e-56d6-4372-958f-993b0035b73c",
+   "metadata": {
+    "cutoffSequence": 1,
+    "oldMaxSequence": 40,
+    "removedTurnId": "da96437801-t1",
+    "replacementProviderThreadId": null,
+    "fingerprint": "c584ecc532f704789e0ef8385f558075641e98399247dc0d1002338491f7c71b",
+    "requestSequence": 42
+   }
+  }
+ },
+ {
+  "id": "evt_8vgcipfrjk",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 42,
+  "createdAt": 1791392257781,
+  "type": "client/turn/requested",
+  "data": {
+   "direction": "outbound",
+   "requestId": "creq_a5mpcf2x3n",
+   "source": "tell",
+   "initiator": "agent",
+   "senderThreadId": "thr_qkmzavbt8q",
+   "systemMessageKind": "unlabeled",
+   "systemMessageSubject": null,
+   "input": [
+    {
+     "type": "text",
+     "text": "[bb message from thread:thr_qkmzavbt8q]\n\nReply with the single word ok.",
+     "mentions": []
+    }
+   ],
+   "target": {
+    "kind": "thread-start"
+   },
+   "request": {
+    "method": "turn/start",
+    "params": {}
+   },
+   "execution": {
+    "model": "claude-bridge/claude-opus-5-5",
+    "serviceTier": "default",
+    "reasoningLevel": "medium",
+    "permissionMode": "full",
+    "source": "client/turn/requested"
+   }
+  }
+ },
+ {
+  "id": "evt_bqzfbeqapt",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 43,
+  "createdAt": 1791392260382,
+  "type": "thread/identity",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235"
+  }
+ },
+ {
+  "id": "evt_ddqb22hpb2",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t1"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 45,
+  "createdAt": 1791392260383,
+  "type": "turn/started",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235"
+  }
+ },
+ {
+  "id": "evt_4kb2gyritn",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t1"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 49,
+  "createdAt": 1791392262229,
+  "type": "item/started",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "item": {
+    "type": "agentMessage",
+    "id": "dada9c4713-i1",
+    "text": ""
+   }
+  }
+ },
+ {
+  "id": "evt_xh6md4d797",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t1"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 51,
+  "createdAt": 1791392262229,
+  "type": "thread/contextWindowUsage/updated",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "contextWindowUsage": {
+    "usedTokens": 16304,
+    "modelContextWindow": 1000000,
+    "estimated": true
+   }
+  }
+ },
+ {
+  "id": "evt_jymhsfhjr4",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t1"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 54,
+  "createdAt": 1791392262229,
+  "type": "turn/completed",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "status": "completed",
+   "providerCheckpointId": "f6790891"
+  }
+ },
+ {
+  "id": "evt_6me2eg665h",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 55,
+  "createdAt": 1791392312259,
+  "type": "client/turn/requested",
+  "data": {
+   "direction": "outbound",
+   "requestId": "creq_9x57f7x7rk",
+   "source": "tell",
+   "initiator": "agent",
+   "senderThreadId": "thr_qkmzavbt8q",
+   "systemMessageKind": "unlabeled",
+   "systemMessageSubject": null,
+   "input": [
+    {
+     "type": "text",
+     "text": "[bb message from thread:thr_qkmzavbt8q]\n\nPrint the output of 'seq 1 300' with bash, then reply with one word.",
+     "mentions": []
+    }
+   ],
+   "target": {
+    "kind": "new-turn"
+   },
+   "request": {
+    "method": "turn/start",
+    "params": {}
+   },
+   "execution": {
+    "model": "claude-bridge/claude-opus-5-5",
+    "serviceTier": "default",
+    "reasoningLevel": "medium",
+    "permissionMode": "full",
+    "source": "client/turn/requested"
+   }
+  }
+ },
+ {
+  "id": "evt_gvn78ua7ju",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t2"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 56,
+  "createdAt": 1791392312291,
+  "type": "turn/started",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235"
+  }
+ },
+ {
+  "id": "evt_ceguvduaej",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t2"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 58,
+  "createdAt": 1791392314011,
+  "type": "item/started",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "item": {
+    "type": "commandExecution",
+    "id": "dada9c4713-i2",
+    "command": "seq 1 300",
+    "cwd": "/tmp/wt-demo",
+    "status": "pending",
+    "approvalStatus": null
+   }
+  }
+ },
+ {
+  "id": "evt_x3z5gudhxf",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t2"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 61,
+  "createdAt": 1791392314128,
+  "type": "thread/contextWindowUsage/updated",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "contextWindowUsage": {
+    "usedTokens": 16711,
+    "modelContextWindow": 1000000,
+    "estimated": true
+   }
+  }
+ },
+ {
+  "id": "evt_nuxj9brqu9",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t2"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 62,
+  "createdAt": 1791392315376,
+  "type": "item/started",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "item": {
+    "type": "agentMessage",
+    "id": "dada9c4713-i3",
+    "text": ""
+   }
+  }
+ },
+ {
+  "id": "evt_zryub72848",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t2"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 64,
+  "createdAt": 1791392315376,
+  "type": "thread/contextWindowUsage/updated",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "contextWindowUsage": {
+    "usedTokens": 17071,
+    "modelContextWindow": 1000000,
+    "estimated": true
+   }
+  }
+ },
+ {
+  "id": "evt_m8hp3niuan",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t2"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 67,
+  "createdAt": 1791392315376,
+  "type": "turn/completed",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "status": "completed",
+   "providerCheckpointId": "d5bf8600"
+  }
+ },
+ {
+  "id": "evt_jbtvpc4g5x",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 68,
+  "createdAt": 1791392315820,
+  "type": "client/turn/requested",
+  "data": {
+   "direction": "outbound",
+   "requestId": "creq_6ejzxv5vm7",
+   "source": "tell",
+   "initiator": "user",
+   "senderThreadId": null,
+   "systemMessageKind": "unlabeled",
+   "systemMessageSubject": null,
+   "input": [
+    {
+     "type": "text",
+     "text": "/compact",
+     "mentions": [
+      {
+       "start": 0,
+       "end": 8,
+       "resource": {
+        "kind": "command",
+        "trigger": "/",
+        "name": "compact",
+        "source": "command",
+        "origin": "builtin",
+        "label": "compact",
+        "argumentHint": null
+       }
+      }
+     ]
+    }
+   ],
+   "target": {
+    "kind": "new-turn"
+   },
+   "request": {
+    "method": "turn/start",
+    "params": {}
+   },
+   "execution": {
+    "model": "claude-bridge/claude-opus-5-5",
+    "serviceTier": "default",
+    "reasoningLevel": "medium",
+    "permissionMode": "full",
+    "source": "client/turn/requested"
+   }
+  }
+ },
+ {
+  "id": "evt_j3q6tfjm25",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t3"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 69,
+  "createdAt": 1791392315865,
+  "type": "turn/started",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235"
+  }
+ },
+ {
+  "id": "evt_3y69ccajyg",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t3"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 71,
+  "createdAt": 1791392315865,
+  "type": "item/started",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "item": {
+    "type": "contextCompaction",
+    "id": "dada9c4713-i4"
+   }
+  }
+ },
+ {
+  "id": "evt_yzrgprpdf7",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t3"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 72,
+  "createdAt": 1791392315865,
+  "type": "provider/warning",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "category": "compaction-skipped",
+   "summary": "Context compaction skipped",
+   "details": "Compaction failed: Nothing to compact (session too small)"
+  }
+ },
+ {
+  "id": "evt_vgkgkw8psv",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t3"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 73,
+  "createdAt": 1791392315865,
+  "type": "turn/completed",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "status": "completed"
+  }
+ },
+ {
+  "id": "evt_er7sg8swcv",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t3"
+  },
+  "threadId": "thr_9znzytnw6r",
+  "seq": 74,
+  "createdAt": 1791392315865,
+  "type": "thread/contextWindowUsage/updated",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "contextWindowUsage": {
+    "usedTokens": 17071,
+    "modelContextWindow": 1000000,
+    "estimated": true
+   }
+  }
+ }
+]

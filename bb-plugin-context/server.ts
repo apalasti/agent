@@ -1,225 +1,226 @@
-// bb-plugin-context — a BB plugin backend entry.
-//
-// The default export is a factory that receives the plugin API. BB supplies
-// the tiny defineRpcContract runtime helper; the API type remains type-only.
-//
-// The example is a todo list. One store in bb.storage.kv serves three
-// surfaces: the Example todos page (app.tsx, over RPC), the `bb context` CLI
-// command (below), and the skill in skills/example-todos/SKILL.md that tells
-// agents how to use that command. A write from any surface publishes a realtime signal so
-// every open page refetches.
-import { randomUUID } from "node:crypto";
-import { defineRpcContract, type BbPluginApi } from "@get-bb/plugin-sdk";
-import { z } from "zod";
+import { open, readdir, stat } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { PluginCliError, cliCommand, defineCli, type BbPluginApi } from "@get-bb/plugin-sdk";
+import { CONTEXT_CHANGED, rpcContract, type ContextReport, type CourseChange } from "./src/contract";
+import { createCollector, type CollectFs, type CollectRoots, type CollectSdk } from "./src/collect";
+import type { ContextUsage } from "./src/compose";
+import { EVENT_TYPES, type EventRow } from "./src/events";
 
-const todoSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  done: z.boolean(),
-  createdAt: z.string(),
-});
-export type Todo = z.infer<typeof todoSchema>;
+export type { rpcContract } from "./src/contract";
 
-// Both schemas run at the wire boundary. Handler input/output are inferred
-// from the shared contract; app.tsx imports only its type.
-export const rpcContract = defineRpcContract({
-  todos_list: {
-    input: z.null(),
-    output: z.object({ todos: z.array(todoSchema) }),
+const EVENT_PAGE = 100;
+const DEFAULT_TURNS = 10;
+const TOP_ITEMS = 5;
+
+export const nodeFs: CollectFs = {
+  async stat(path) {
+    try {
+      const info = await stat(path);
+      return info.isFile() ? { size: info.size, mtimeMs: info.mtimeMs } : null;
+    } catch {
+      return null;
+    }
   },
-  todos_add: {
-    input: z.object({ title: z.string().trim().min(1).max(200) }),
-    output: todoSchema,
+  async read(path, start, end) {
+    const handle = await open(path, "r");
+    try {
+      const buffer = Buffer.alloc(Math.max(0, end - start));
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, start);
+      return buffer.subarray(0, bytesRead);
+    } finally {
+      await handle.close();
+    }
   },
-  todos_set_done: {
-    input: z.object({ id: z.string(), done: z.boolean() }),
-    output: todoSchema,
-  },
-  todos_remove: {
-    input: z.object({ id: z.string() }),
-    output: z.object({ removed: z.boolean() }),
-  },
-});
+  readdir: (dir) => readdir(dir),
+};
 
-/** Realtime channel app.tsx listens on; the payload is the todo count. */
-const TODOS_CHANGED = "todos-changed";
-
-export default async function plugin(bb: BbPluginApi) {
-  bb.log.info("loaded");
-
-  // Declarative settings — rendered in BB's settings UI and editable with
-  // `bb plugin config context`. Add `secret: true` for values like API keys.
-  // Settings are read once per load: reload the plugin after changing one.
-  const settings = bb.settings.define({
-    showDone: {
-      type: "boolean",
-      label: "Show completed todos",
-      default: true,
-    },
-  });
-  const { showDone } = await settings.get();
-
-  // Namespaced key-value storage in bb.db (JSON values, up to 256KB each).
-  // For bigger or relational data use bb.storage.database().
-  async function readTodos(): Promise<Todo[]> {
-    return (await bb.storage.kv.get<Todo[]>("todos")) ?? [];
-  }
-  async function writeTodos(todos: Todo[]): Promise<void> {
-    await bb.storage.kv.set("todos", todos);
-    // Ephemeral broadcast to every connected client; nothing is persisted.
-    bb.realtime.publish(TODOS_CHANGED, { count: todos.length });
-  }
-
-  async function listTodos(): Promise<Todo[]> {
-    const todos = await readTodos();
-    return showDone ? todos : todos.filter((todo) => !todo.done);
-  }
-  async function addTodo(title: string): Promise<Todo> {
-    const todo: Todo = {
-      id: randomUUID().slice(0, 8),
-      title,
-      done: false,
-      createdAt: new Date().toISOString(),
-    };
-    await writeTodos([...(await readTodos()), todo]);
-    return todo;
-  }
-  async function setTodoDone(id: string, done: boolean): Promise<Todo | null> {
-    const todos = await readTodos();
-    const todo = todos.find((candidate) => candidate.id === id);
-    if (todo === undefined) return null;
-    todo.done = done;
-    await writeTodos(todos);
-    return todo;
-  }
-  async function removeTodo(id: string): Promise<boolean> {
-    const todos = await readTodos();
-    const remaining = todos.filter((todo) => todo.id !== id);
-    if (remaining.length === todos.length) return false;
-    await writeTodos(remaining);
-    return true;
-  }
-
-  bb.rpc.register(rpcContract, {
-    todos_list: async () => ({ todos: await listTodos() }),
-    todos_add: ({ title }) => addTodo(title),
-    todos_set_done: async ({ id, done }) => {
-      const todo = await setTodoDone(id, done);
-      if (todo === null) throw new Error(`No todo with id ${id}`);
-      return todo;
-    },
-    todos_remove: async ({ id }) => ({ removed: await removeTodo(id) }),
-  });
-
-  // The `bb context` command: what agents (and you) use from a shell. Parsing
-  // argv is plugin-owned; `commands` is metadata BB renders into help and
-  // the generated plugin-commands skill without running plugin code.
-  const usage = [
-    "Usage:",
-    "  bb context list [--json]",
-    "  bb context add <title> [--json]",
-    "  bb context done <todo-id> [--json]",
-    "  bb context undo <todo-id> [--json]",
-    "  bb context remove <todo-id> [--json]",
-  ].join("\n");
-  function formatTodo(todo: Todo): string {
-    return `[${todo.done ? "x" : " "}] ${todo.id}  ${todo.title}`;
-  }
-  bb.cli.register({
-    name: "context",
-    summary: "Manage the Context plugin's example todo list",
-    commands: [
-      { name: "list", summary: "List todos", usage: "bb context list [--json]" },
-      {
-        name: "add",
-        summary: "Add a todo",
-        usage: "bb context add <title> [--json]",
-      },
-      {
-        name: "done",
-        summary: "Mark a todo done",
-        usage: "bb context done <todo-id> [--json]",
-      },
-      {
-        name: "undo",
-        summary: "Mark a todo not done",
-        usage: "bb context undo <todo-id> [--json]",
-      },
-      {
-        name: "remove",
-        summary: "Remove a todo",
-        usage: "bb context remove <todo-id> [--json]",
-      },
-    ],
-    async run(argv) {
-      const json = argv.includes("--json");
-      const [command, ...args] = argv.filter((arg) => arg !== "--json");
-      const reply = (value: unknown, text: string) => ({
-        exitCode: 0,
-        stdout: json ? JSON.stringify(value) : text,
-      });
-      const notFound = (missingId: string) => ({
-        exitCode: 1,
-        stderr: `No todo with id ${missingId}. Run "bb context list" to see ids.`,
-      });
-      const todoId = args[0];
-      switch (command) {
-        case undefined:
-        case "help":
-        case "--help":
-          return { exitCode: 0, stdout: usage };
-        case "list": {
-          const todos = await listTodos();
-          return reply(
-            todos,
-            todos.length === 0 ? "No todos." : todos.map(formatTodo).join("\n"),
-          );
-        }
-        case "add": {
-          const title = args.join(" ").trim();
-          if (title === "") break;
-          const todo = await addTodo(title);
-          return reply(todo, `Added ${formatTodo(todo)}`);
-        }
-        case "done":
-        case "undo": {
-          if (todoId === undefined || args.length !== 1) break;
-          const todo = await setTodoDone(todoId, command === "done");
-          if (todo === null) return notFound(todoId);
-          return reply(todo, formatTodo(todo));
-        }
-        case "remove": {
-          if (todoId === undefined || args.length !== 1) break;
-          if (!(await removeTodo(todoId))) return notFound(todoId);
-          return reply({ removed: true, id: todoId }, `Removed ${todoId}`);
-        }
-      }
-      return { exitCode: 1, stderr: usage };
-    },
-  });
-
-  // Cleanup on reload/disable/shutdown; hooks run LIFO. The sanctioned place
-  // to clear timers and close connections.
-  bb.onDispose(() => {
-    bb.log.info("disposed");
-  });
-
-  // Long-lived background work: starts after load, gets an AbortSignal on
-  // reload/disable/shutdown, and restarts with backoff if it crashes. Sleeps
-  // must wake on abort — a plain setTimeout sleeps through the stop window
-  // and the plugin reports "degraded (service did not stop)" on reload.
-  // bb.background.service("worker", {
-  //   async start(signal) {
-  //     while (!signal.aborted) {
-  //       await new Promise((resolve) => {
-  //         const timer = setTimeout(resolve, 60_000);
-  //         signal.addEventListener(
-  //           "abort",
-  //           () => { clearTimeout(timer); resolve(undefined); },
-  //           { once: true },
-  //         );
-  //       });
-  //     }
-  //   },
-  // });
+export interface PluginOptions {
+  fs?: CollectFs;
+  roots?: CollectRoots;
+  now?: () => number;
 }
+
+const errorMessage = (cause: unknown) => (cause instanceof Error ? cause.message : String(cause));
+const iso = (value: unknown) => (typeof value === "number" ? new Date(value).toISOString() : String(value));
+
+function bbSdkAdapter(bb: BbPluginApi): CollectSdk {
+  return {
+    async listEvents(threadId, afterSeq) {
+      const rows: EventRow[] = [];
+      let cursor = afterSeq;
+      for (;;) {
+        const page = await bb.sdk.threads.events.list({
+          threadId,
+          afterSeq: String(cursor),
+          limit: String(EVENT_PAGE),
+          order: "asc",
+          types: EVENT_TYPES,
+        });
+        for (const row of page) rows.push({ seq: row.seq, type: row.type, createdAt: iso(row.createdAt), data: row.data });
+        if (page.length < EVENT_PAGE) return rows;
+        cursor = page[page.length - 1]?.seq ?? cursor;
+      }
+    },
+    async thread(threadId) {
+      const result = (await bb.sdk.threads.get({ threadId, include: "environment" })) as Record<string, unknown>;
+      const thread = ("thread" in result ? result.thread : result) as { id: string; providerId?: string | null; status: string; sourceThreadId?: string | null };
+      const environment = ("environment" in result ? result.environment : null) as { hostId?: string | null } | null;
+      return {
+        id: thread.id,
+        providerId: thread.providerId ?? null,
+        status: thread.status,
+        sourceThreadId: thread.sourceThreadId ?? null,
+        hostId: environment?.hostId ?? null,
+      };
+    },
+    async context(threadId) {
+      const result = await bb.sdk.threads.context({ threadId });
+      return (result.usage ?? null) as ContextUsage | null;
+    },
+    async primaryHostId() {
+      return (await bb.sdk.system.config()).primaryHostId ?? null;
+    },
+  };
+}
+
+export function formatTokens(value: number | null): string {
+  if (value === null) return "?";
+  if (value >= 1_000_000) return `${+(value / 1_000_000).toFixed(value % 1_000_000 === 0 ? 0 : 1)}m`;
+  if (value >= 10_000) return `${Math.round(value / 1000)}k`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+  return String(value);
+}
+
+function percent(value: number, total: number | null): string {
+  if (!total) return "";
+  const share = (value / total) * 100;
+  return `${share < 10 ? share.toFixed(1) : Math.round(share)}%`;
+}
+
+function changeLine(change: CourseChange): string {
+  switch (change.kind) {
+    case "edited":
+      return `  -- Edited here${change.discardedTurns !== null ? `: ${change.discardedTurns} turn${change.discardedTurns === 1 ? "" : "s"}${change.tokensBefore !== null ? ` (${formatTokens(change.tokensBefore)})` : ""} discarded` : ""}`;
+    case "compacted":
+      return `  -- Compacted ${formatTokens(change.tokensBefore)} → ${formatTokens(change.tokensAfter)}`;
+    case "compactionSkipped":
+      return "  -- Compaction skipped: session too small";
+    case "cleared":
+      return "  -- Context cleared";
+    case "forked":
+      return `  -- Forked from ${change.sourceThreadId ?? "another thread"}`;
+  }
+}
+
+export function showText(report: ContextReport, turnLimit: number): string {
+  const { window } = report;
+  const lines: string[] = [];
+  const approx = window.basis === "estimated" ? "≈" : "";
+  const used = window.usedTokens;
+  const header = [
+    report.threadId,
+    report.providerId ?? "unknown provider",
+    window.model,
+    report.threadStatus,
+  ].filter(Boolean);
+  lines.push(header.join(" · "));
+  if (window.basis === "none" || used === null) {
+    lines.push("Context: no measurement yet");
+  } else {
+    const flags = [window.basis, window.recomputing ? "recomputing" : null, window.autoCompactAt !== null ? `autocompact at ${formatTokens(window.autoCompactAt)}` : null].filter(Boolean);
+    lines.push(`Context ${approx}${formatTokens(used)} / ${formatTokens(window.contextWindow)}${window.contextWindow ? ` · ${percent(used, window.contextWindow)}` : ""} (${flags.join(", ")})`);
+    lines.push("", "Categories:");
+    for (const category of report.categories) {
+      if (category.kind === "deferred") continue;
+      lines.push(`  ${category.label.padEnd(28)} ${formatTokens(category.tokens).padStart(6)}  ${percent(category.tokens, window.contextWindow ?? used).padStart(5)}`);
+    }
+  }
+  if (report.largest.length > 0) {
+    lines.push("", "Largest items:");
+    for (const item of report.largest.slice(0, TOP_ITEMS)) {
+      const where = item.turnIndex !== null ? `, turn ${item.turnIndex}` : "";
+      lines.push(`  ${formatTokens(item.tokens).padStart(6)}  ${item.label}${item.detail ? ` ${item.detail}` : ""} (${item.categoryId}${where})`);
+    }
+  }
+  if (report.turns.length > 0) {
+    const shown = report.turns.slice(-turnLimit);
+    const first = shown[0]?.index ?? 1;
+    lines.push("", `Turns (${shown.length === report.turns.length ? report.turns.length : `last ${shown.length} of ${report.turns.length}`}):`);
+    const changes = report.courseChanges.filter((change) => change.beforeTurnIndex >= first);
+    for (const turn of shown) {
+      for (const change of changes) if (change.beforeTurnIndex === turn.index) lines.push(changeLine(change));
+      const added = turn.tokensAfter !== null && turn.tokensBefore !== null ? `+${formatTokens(Math.max(0, turn.tokensAfter - turn.tokensBefore))}` : "";
+      const after = turn.tokensAfter !== null ? `→ ${turn.measured ? "" : "≈"}${formatTokens(turn.tokensAfter)}` : "";
+      const state = turn.state === "inContext" ? "" : ` [${turn.state}]`;
+      lines.push(`  #${turn.index} seq ${turn.requestSeq}  ${added.padStart(7)} ${after.padEnd(9)}${state}  ${turn.preview.slice(0, 80)}`);
+    }
+    for (const change of changes) if (change.beforeTurnIndex > report.turns.length) lines.push(changeLine(change));
+  }
+  if (report.notes.length > 0) lines.push("", ...report.notes.map((note) => `Note: ${note}`));
+  return lines.join("\n");
+}
+
+export function createPlugin(options: PluginOptions = {}) {
+  return async function plugin(bb: BbPluginApi) {
+    const collector = createCollector({
+      sdk: bbSdkAdapter(bb),
+      fs: options.fs ?? nodeFs,
+      roots: options.roots ?? {
+        piSessions: join(homedir(), ".bb", "pi-bridge-sessions"),
+        claudeProjects: join(homedir(), ".claude", "projects"),
+      },
+      memo: {
+        get: (key) => bb.storage.kv.get(key),
+        set: (key, value) => bb.storage.kv.set(key, value),
+      },
+      ...(options.now ? { now: options.now } : {}),
+    });
+    bb.onDispose(() => collector.dispose());
+
+    bb.rpc.register(rpcContract, {
+      meter: ({ threadId }) => collector.meter(threadId),
+      report: ({ threadId }) => collector.report(threadId),
+    });
+
+    bb.events.on("experimental_thread.events", ({ thread, sequence }) => {
+      collector.invalidate(thread.id);
+      bb.log.debug(`context-changed ${thread.id} seq ${sequence}`);
+      bb.realtime.publish(CONTEXT_CHANGED, { threadId: thread.id });
+    });
+
+    bb.cli.register(
+      defineCli({
+        name: "context",
+        summary: "Show how full a thread's context window is and what fills it",
+        commands: {
+          show: cliCommand({
+            summary: "Context size, categories, largest items and per-turn growth of a thread",
+            options: {
+              thread: { type: "string", description: "Thread id; defaults to the calling thread" },
+              self: { type: "boolean", description: "The calling thread (the default inside a bb thread)" },
+              turns: { type: "integer", min: 1, max: 100, default: DEFAULT_TURNS, description: "Recent turns to list (max 100)" },
+              json: { type: "boolean", description: "Emit the full report as JSON" },
+            },
+            constraints: [{ kind: "at-most-one", options: ["thread", "self"] }],
+            async run({ options }, ctx) {
+              const threadId = options.thread ?? ctx.threadId;
+              if (threadId === undefined) {
+                throw new PluginCliError(options.self ? "--self needs to run inside a bb thread" : "No thread given", {
+                  code: "missing_required",
+                  hint: "Pass --thread <id>.",
+                });
+              }
+              const report = await collector.report(threadId).catch((cause: unknown) => {
+                throw new PluginCliError(errorMessage(cause), { code: "failed" });
+              });
+              return { exitCode: 0, stdout: options.json ? JSON.stringify(report) : showText(report, options.turns) };
+            },
+          }),
+        },
+      }),
+    );
+  };
+}
+
+export default createPlugin();

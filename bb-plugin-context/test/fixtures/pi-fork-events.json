@@ -1,0 +1,132 @@
+[
+ {
+  "id": "evt_iqkuz2pzae",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_hvxb2yncdz",
+  "seq": 1,
+  "createdAt": 1791392257781,
+  "type": "client/turn/requested",
+  "data": {
+   "direction": "outbound",
+   "requestId": "creq_a5mpcf2x3n",
+   "source": "tell",
+   "initiator": "agent",
+   "senderThreadId": "thr_qkmzavbt8q",
+   "systemMessageKind": "unlabeled",
+   "systemMessageSubject": null,
+   "input": [
+    {
+     "type": "text",
+     "text": "[bb message from thread:thr_qkmzavbt8q]\n\nReply with the single word ok.",
+     "mentions": []
+    }
+   ],
+   "target": {
+    "kind": "thread-start"
+   },
+   "request": {
+    "method": "turn/start",
+    "params": {}
+   },
+   "execution": {
+    "model": "claude-bridge/claude-opus-5-5",
+    "serviceTier": "default",
+    "reasoningLevel": "medium",
+    "permissionMode": "full",
+    "source": "client/turn/requested"
+   }
+  }
+ },
+ {
+  "id": "evt_rut9fntid2",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t1"
+  },
+  "threadId": "thr_hvxb2yncdz",
+  "seq": 2,
+  "createdAt": 1791392260383,
+  "type": "turn/started",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235"
+  }
+ },
+ {
+  "id": "evt_ynm6rhypda",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dada9c4713-t1"
+  },
+  "threadId": "thr_hvxb2yncdz",
+  "seq": 5,
+  "createdAt": 1791392262229,
+  "type": "turn/completed",
+  "data": {
+   "providerThreadId": "pi_ae5da616-e0a4-4359-98a7-0c995bb2a235",
+   "status": "completed",
+   "providerCheckpointId": "f6790891"
+  }
+ },
+ {
+  "id": "evt_3praubvrzu",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_hvxb2yncdz",
+  "seq": 6,
+  "createdAt": 1791392315632,
+  "type": "client/turn/requested",
+  "data": {
+   "direction": "outbound",
+   "requestId": "creq_zanw5sntsk",
+   "source": "spawn",
+   "initiator": "user",
+   "senderThreadId": null,
+   "systemMessageKind": "unlabeled",
+   "systemMessageSubject": null,
+   "input": [],
+   "target": {
+    "kind": "thread-start"
+   },
+   "request": {
+    "method": "thread/start",
+    "params": {}
+   },
+   "execution": {
+    "model": "claude-bridge/claude-opus-5-5",
+    "serviceTier": "default",
+    "reasoningLevel": "medium",
+    "permissionMode": "full",
+    "source": "client/turn/requested"
+   }
+  }
+ },
+ {
+  "id": "evt_6jemq96xuc",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_hvxb2yncdz",
+  "seq": 8,
+  "createdAt": 1791392318186,
+  "type": "thread/identity",
+  "data": {
+   "providerThreadId": "thr_hvxb2yncdz"
+  }
+ },
+ {
+  "id": "evt_cspp5w9mgn",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_hvxb2yncdz",
+  "seq": 10,
+  "createdAt": 1791392318187,
+  "type": "thread/identity",
+  "data": {
+   "providerThreadId": "thr_hvxb2yncdz"
+  }
+ }
+]

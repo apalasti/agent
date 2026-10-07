@@ -103,6 +103,8 @@ export const turnSchema = z.object({
   /** Largest items this turn added, at most 3. */
   largest: z.array(entrySchema),
   editable: z.boolean(),
+  /** Why `editable` is false, for the tooltip; null or absent when editable. */
+  notEditableReason: z.string().nullable().optional(),
   running: z.boolean(),
 });
 export type Turn = z.infer<typeof turnSchema>;

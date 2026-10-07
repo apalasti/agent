@@ -21,10 +21,12 @@ display name "Context".
 - **No history**: you can't see how the context grew turn by turn, or what rewinding to an
   earlier message would free.
 - **Changing course leaves traps**:
-  - `edit-message` keeps the abandoned events in the log. It appends
-    `system/operation { operation: "edit_message", status: "completed",
-    metadata: { cutoffSequence, oldMaxSequence, replacementProviderThreadId } }`. Events with
-    `cutoffSequence <= seq <= oldMaxSequence` are dead.
+  - `edit-message` deletes the abandoned events (`cutoffSequence <= seq <= oldMaxSequence`)
+    from the log and appends `system/operation { operation: "edit_message", status:
+    "completed", metadata: { cutoffSequence, oldMaxSequence, replacementProviderThreadId } }`.
+    The discarded turns can be counted only from events fetched before the edit; the
+    collector keeps those rows and stores the count in `bb.storage.kv`. (Revised: this said
+    the dead events stay in the log; bb's `deleteThreadEventSuffixInTransaction` removes them.)
   - The edit then starts a new provider session, signalled by `thread/identity` with a new id
     (pi `pi_<uuid>`, Claude Code `<uuid>`). Sometimes the same id is rewritten in place
     (`replacementProviderThreadId: "thr_x:rewind:<uuid>"`).
@@ -50,9 +52,13 @@ display name "Context".
    `thread/identity`, `system/operation`, `thread/compacted`, `thread/context/cleared`,
    `thread/contextWindowUsage/updated`, `item/started`, `provider/warning`. Deltas and
    `provider/unhandled` are never fetched (the latter carries the 64 KB system prompt).
-   - A user message is a `client/turn/requested` whose `data.request.method === "turn/start"`
-     and whose `data.input` has text. Its `seq` is what `threads.editMessage` takes as
-     `expectedRequestSequence`. A `/compact` turn (an input with a single `command` mention)
+   - A user message is a `client/turn/requested` whose `data.request.method` is `"turn/start"`,
+     or `"thread/start"` for a thread's first message, and whose `data.input` has text. A
+     `thread/start` without input (a fork's own start) ends the copied turns. (Revised: this
+     named `turn/start` only.) Its `seq` is what `threads.editMessage` takes as
+     `expectedRequestSequence`, but bb edits only requests with `initiator: "user"`, no
+     `senderThreadId`, and a `new-turn`/`thread-start` target; messages sent by agents or
+     other threads are not editable (`Turn.notEditableReason`). A `/compact` turn (an input with a single `command` mention)
      is a course change, not a message.
    - The current provider session is the `providerThreadId` of the last `thread/identity`.
 3. **pi session**: `~/.bb/pi-bridge-sessions/<providerThreadId>.jsonl`, which holds the
@@ -72,7 +78,10 @@ display name "Context".
    Find it by file name across the project dirs, not by encoding the cwd.
    - Entries: `user` (string, or blocks including `tool_result { tool_use_id, content }`),
      `assistant` (one content block per line: `text | thinking | tool_use { id, name, input }`,
-     plus `message.usage`), `attachment` (`rendered`, which is in context), and `system` with
+     plus `message.usage`), `attachment` (`rendered`, which is in context: `instructions` count
+     as memory, `skill_listing` as skills, others as other; `prompt_snapshot` carries the
+     system prompt and tool schemas, used for `system`/`tools` when bb has no snapshot), and
+     `system` with
      `subtype: "compact_boundary"`. Only entries after the last boundary are in context; the
      next `user` with `isCompactSummary: true` is the summary.
    - Skip `isSidechain: true`, `queue-operation`, `last-prompt`, `ai-title` and `atis-latch`.
@@ -91,7 +100,9 @@ display name "Context".
     `T - sum(non-Messages used categories)` across the transcript items by their estimates.
   - **Claude Code without a snapshot**: transcript items at their estimates. Then
     `unattributed = max(0, T - sum)`, labelled "System prompt, tools & skills (not in
-    transcript)".
+    transcript)". When the transcript's `prompt_snapshot` makes the sum exceed `T` (factor
+    0.5–1), scale down to `T` instead. (Revised: added the scale-down case; the prompt
+    snapshot overestimates by about 30%.)
   - **No bb total** (a fresh fork, or a new session before its first call): the sum of the
     estimates, with `window.basis = "estimated"`.
 - `window.basis` is `measured` when `T` came from bb for the current session, `estimated`
@@ -172,7 +183,7 @@ bb-plugin-context/
   package.json, server.ts, app.tsx, DESIGN.md, CONTRACT-CHANGES.md
   src/contract.ts      lead-owned: zod RPC contract + shared types (append-only for others)
   src/estimate.ts      estimateTokens(text): number; IMAGE_TOKENS = 1600
-  src/events.ts        EVENT_TYPES; parseTimeline(rows: EventRow[]): Timeline
+  src/events.ts        EVENT_TYPES; parseTimeline(rows: EventRow[], options?: { sourceThreadId }): Timeline
   src/piSession.ts     parsePiSession(text: string): SessionContext
   src/claudeTranscript.ts  parseClaudeTranscript(text: string): SessionContext
   src/compose.ts       composeReport(input: ComposeInput): ContextReport; toMeter(report): Meter
@@ -198,13 +209,16 @@ interface Timeline {
   courseChanges: CourseChange[];     // contract type
   deadRanges: [number, number][];
 }
-interface TurnFact { requestSeq: number; lastSeq: number; at: string; text: string; providerThreadId: string | null }
+interface TurnFact { requestSeq: number; lastSeq: number; at: string; text: string; providerThreadId: string | null; userSent: boolean }
 interface SessionItem {
   key: string; category: CategoryId; label: string; detail: string | null;
   estTokens: number; userOrdinal: number | null; // index of the user message this item follows (0-based), null for system/tools
   userText?: string;                              // set on user-message items, for matching to bb turns
 }
-interface SessionContext { items: SessionItem[]; model: string | null; compactedBeforeOrdinal: number | null }
+interface SessionContext {
+  items: SessionItem[]; model: string | null; compactedBeforeOrdinal: number | null;
+  compactions: { tokensBefore: number | null; tokensAfter: number | null }[]; // fills "Compacted 161k → …" when bb has no usage around it
+}
 ```
 
 Turns are matched to session user messages from the end, by order, and checked by a

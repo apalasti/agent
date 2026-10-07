@@ -1,0 +1,223 @@
+[
+ {
+  "id": "evt_gwjuh8mrrj",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 85,
+  "createdAt": 1791392257590,
+  "type": "system/operation",
+  "data": {
+   "operation": "edit_message",
+   "status": "completed",
+   "message": "Message edited",
+   "operationId": "29e5e66a-c1e6-477e-a9c7-11094e710a9a",
+   "metadata": {
+    "cutoffSequence": 1,
+    "oldMaxSequence": 84,
+    "removedTurnId": "dad9ce336f-t1",
+    "replacementProviderThreadId": null,
+    "fingerprint": "c584ecc532f704789e0ef8385f558075641e98399247dc0d1002338491f7c71b",
+    "requestSequence": 86
+   }
+  }
+ },
+ {
+  "id": "evt_s26fawzcu2",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 86,
+  "createdAt": 1791392257590,
+  "type": "client/turn/requested",
+  "data": {
+   "direction": "outbound",
+   "requestId": "creq_h7vqp59bhz",
+   "source": "tell",
+   "initiator": "agent",
+   "senderThreadId": "thr_qkmzavbt8q",
+   "systemMessageKind": "unlabeled",
+   "systemMessageSubject": null,
+   "input": [
+    {
+     "type": "text",
+     "text": "[bb message from thread:thr_qkmzavbt8q]\n\nReply with the single word ok.",
+     "mentions": []
+    }
+   ],
+   "target": {
+    "kind": "thread-start"
+   },
+   "request": {
+    "method": "turn/start",
+    "params": {}
+   },
+   "execution": {
+    "model": "claude-haiku-4-5-20251001",
+    "serviceTier": "default",
+    "reasoningLevel": "medium",
+    "permissionMode": "auto",
+    "source": "client/turn/requested"
+   }
+  }
+ },
+ {
+  "id": "evt_afe7rmink2",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 87,
+  "createdAt": 1791392257636,
+  "type": "thread/identity",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36"
+  }
+ },
+ {
+  "id": "evt_bbewcj7mn5",
+  "scope": {
+   "kind": "thread"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 88,
+  "createdAt": 1791392257636,
+  "type": "thread/contextWindowUsage/updated",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36",
+   "contextWindowUsage": {
+    "usedTokens": null,
+    "modelContextWindow": null,
+    "estimated": true
+   }
+  }
+ },
+ {
+  "id": "evt_eie5y9882j",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dafa98ddfe-t2"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 90,
+  "createdAt": 1791392257636,
+  "type": "turn/started",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36"
+  }
+ },
+ {
+  "id": "evt_t4tdu8ax57",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dafa98ddfe-t2"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 94,
+  "createdAt": 1791392262531,
+  "type": "item/started",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36",
+   "item": {
+    "type": "reasoning",
+    "id": "dafa98ddfe-i5",
+    "summary": [],
+    "content": []
+   }
+  }
+ },
+ {
+  "id": "evt_gqbf6dmv4r",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dafa98ddfe-t2"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 100,
+  "createdAt": 1791392262890,
+  "type": "thread/contextWindowUsage/updated",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36",
+   "contextWindowUsage": {
+    "usedTokens": 26140,
+    "modelContextWindow": null,
+    "estimated": true
+   }
+  }
+ },
+ {
+  "id": "evt_c3aradpxgf",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dafa98ddfe-t2"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 102,
+  "createdAt": 1791392262890,
+  "type": "item/started",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36",
+   "item": {
+    "type": "agentMessage",
+    "id": "dafa98ddfe-i6",
+    "text": ""
+   }
+  }
+ },
+ {
+  "id": "evt_yuhf6jut7t",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dafa98ddfe-t2"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 104,
+  "createdAt": 1791392262902,
+  "type": "thread/contextWindowUsage/updated",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36",
+   "contextWindowUsage": {
+    "usedTokens": 26140,
+    "modelContextWindow": null,
+    "estimated": true
+   }
+  }
+ },
+ {
+  "id": "evt_z6y57bn8rn",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dafa98ddfe-t2"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 106,
+  "createdAt": 1791392262944,
+  "type": "thread/contextWindowUsage/updated",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36",
+   "contextWindowUsage": {
+    "usedTokens": 26140,
+    "modelContextWindow": 200000,
+    "estimated": true
+   }
+  }
+ },
+ {
+  "id": "evt_n9xcw9a68s",
+  "scope": {
+   "kind": "turn",
+   "turnId": "dafa98ddfe-t2"
+  },
+  "threadId": "thr_4p46bmnani",
+  "seq": 108,
+  "createdAt": 1791392262944,
+  "type": "turn/completed",
+  "data": {
+   "providerThreadId": "0157976d-4556-49bc-8888-0cfb87754f36",
+   "status": "completed",
+   "providerCheckpointId": "91f16d3d-3fee-498a-a6d2-8aafa64f3873"
+  }
+ }
+]

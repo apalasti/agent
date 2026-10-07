@@ -1,0 +1,427 @@
+{
+  "usage": {
+    "snapshot": {
+      "capturedAt": "2026-10-06T19:39:00.054Z",
+      "providerSessionId": "7a0b6685-5f1b-481c-be7c-47181be4d5b8",
+      "providerTurnId": null,
+      "model": "claude-sonnet-5-5",
+      "usedTokens": 27183,
+      "contextWindowTokens": 1000000,
+      "autoCompactAtTokens": 967000,
+      "estimated": true,
+      "categories": [
+        {
+          "id": "[\"claude\",\"System prompt\",0]",
+          "label": "System prompt",
+          "kind": "used",
+          "tokens": 2933,
+          "entries": []
+        },
+        {
+          "id": "[\"claude\",\"System tools\",0]",
+          "label": "System tools",
+          "kind": "used",
+          "tokens": 5207,
+          "entries": []
+        },
+        {
+          "id": "[\"claude\",\"MCP server instructions\",0]",
+          "label": "MCP server instructions",
+          "kind": "used",
+          "tokens": 717,
+          "entries": []
+        },
+        {
+          "id": "[\"claude\",\"MCP tools (deferred)\",0]",
+          "label": "MCP tools (deferred)",
+          "kind": "deferred",
+          "tokens": 2390,
+          "entries": [
+            {
+              "id": "[\"bb-bridge: mcp__bb-bridge__update_environment_directory\",0]",
+              "label": "bb-bridge: mcp__bb-bridge__update_environment_directory",
+              "tokens": 377
+            },
+            {
+              "id": "[\"claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__batch\",0]",
+              "label": "claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__batch",
+              "tokens": 158
+            },
+            {
+              "id": "[\"claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__create\",0]",
+              "label": "claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__create",
+              "tokens": 245
+            },
+            {
+              "id": "[\"claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__delete\",0]",
+              "label": "claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__delete",
+              "tokens": 329
+            },
+            {
+              "id": "[\"claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__export\",0]",
+              "label": "claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__export",
+              "tokens": 311
+            },
+            {
+              "id": "[\"claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__guide\",0]",
+              "label": "claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__guide",
+              "tokens": 200
+            },
+            {
+              "id": "[\"claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__query\",0]",
+              "label": "claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__query",
+              "tokens": 174
+            },
+            {
+              "id": "[\"claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__read\",0]",
+              "label": "claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__read",
+              "tokens": 311
+            },
+            {
+              "id": "[\"claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__update\",0]",
+              "label": "claude_ai_Claude_Docs: mcp__claude_ai_Claude_Docs__update",
+              "tokens": 285
+            }
+          ]
+        },
+        {
+          "id": "[\"claude\",\"System tools (deferred)\",0]",
+          "label": "System tools (deferred)",
+          "kind": "deferred",
+          "tokens": 15580,
+          "entries": []
+        },
+        {
+          "id": "[\"claude\",\"Memory files\",0]",
+          "label": "Memory files",
+          "kind": "used",
+          "tokens": 936,
+          "entries": [
+            {
+              "id": "[\"/Users/andraspalasti/.claude/CLAUDE.md\",0]",
+              "label": "/Users/andraspalasti/.claude/CLAUDE.md",
+              "tokens": 916
+            },
+            {
+              "id": "[\"/private/tmp/wt-demo-worktrees/ui-e2e-task/AGENTS.md\",0]",
+              "label": "/private/tmp/wt-demo-worktrees/ui-e2e-task/AGENTS.md",
+              "tokens": 20
+            }
+          ]
+        },
+        {
+          "id": "[\"claude\",\"Skills\",0]",
+          "label": "Skills",
+          "kind": "used",
+          "tokens": 6333,
+          "entries": [
+            {
+              "id": "[\"plannotator-annotate\",0]",
+              "label": "plannotator-annotate",
+              "tokens": 53
+            },
+            {
+              "id": "[\"plannotator-last\",0]",
+              "label": "plannotator-last",
+              "tokens": 49
+            },
+            {
+              "id": "[\"plannotator-review\",0]",
+              "label": "plannotator-review",
+              "tokens": 53
+            },
+            {
+              "id": "[\"bb-global-skills:acp-provider\",0]",
+              "label": "bb-global-skills:acp-provider",
+              "tokens": 41
+            },
+            {
+              "id": "[\"bb-global-skills:automations\",0]",
+              "label": "bb-global-skills:automations",
+              "tokens": 35
+            },
+            {
+              "id": "[\"bb-global-skills:bb-account\",0]",
+              "label": "bb-global-skills:bb-account",
+              "tokens": 54
+            },
+            {
+              "id": "[\"bb-global-skills:bb-cli\",0]",
+              "label": "bb-global-skills:bb-cli",
+              "tokens": 36
+            },
+            {
+              "id": "[\"bb-global-skills:bb-cloud-ai\",0]",
+              "label": "bb-global-skills:bb-cloud-ai",
+              "tokens": 65
+            },
+            {
+              "id": "[\"bb-global-skills:bb-plugin-authoring\",0]",
+              "label": "bb-global-skills:bb-plugin-authoring",
+              "tokens": 53
+            },
+            {
+              "id": "[\"bb-global-skills:claude-code-provider\",0]",
+              "label": "bb-global-skills:claude-code-provider",
+              "tokens": 43
+            },
+            {
+              "id": "[\"bb-global-skills:codex-provider\",0]",
+              "label": "bb-global-skills:codex-provider",
+              "tokens": 39
+            },
+            {
+              "id": "[\"bb-global-skills:concurrency-limit\",0]",
+              "label": "bb-global-skills:concurrency-limit",
+              "tokens": 39
+            },
+            {
+              "id": "[\"bb-global-skills:inline-vis\",0]",
+              "label": "bb-global-skills:inline-vis",
+              "tokens": 71
+            },
+            {
+              "id": "[\"bb-global-skills:pi-provider\",0]",
+              "label": "bb-global-skills:pi-provider",
+              "tokens": 35
+            },
+            {
+              "id": "[\"bb-global-skills:plugin-commands\",0]",
+              "label": "bb-global-skills:plugin-commands",
+              "tokens": 40
+            },
+            {
+              "id": "[\"bb-global-skills:provider-retry\",0]",
+              "label": "bb-global-skills:provider-retry",
+              "tokens": 39
+            },
+            {
+              "id": "[\"bb-global-skills:secrets\",0]",
+              "label": "bb-global-skills:secrets",
+              "tokens": 44
+            },
+            {
+              "id": "[\"bb-global-skills:share-server-links\",0]",
+              "label": "bb-global-skills:share-server-links",
+              "tokens": 44
+            },
+            {
+              "id": "[\"bb-global-skills:skill-creator\",0]",
+              "label": "bb-global-skills:skill-creator",
+              "tokens": 43
+            },
+            {
+              "id": "[\"bb-global-skills:submit-a-plugin\",0]",
+              "label": "bb-global-skills:submit-a-plugin",
+              "tokens": 49
+            },
+            {
+              "id": "[\"bb-global-skills:thread-list\",0]",
+              "label": "bb-global-skills:thread-list",
+              "tokens": 64
+            },
+            {
+              "id": "[\"bb-global-skills:worktrees\",0]",
+              "label": "bb-global-skills:worktrees",
+              "tokens": 188
+            },
+            {
+              "id": "[\"mattpocock-skills:diagnosing-bugs\",0]",
+              "label": "mattpocock-skills:diagnosing-bugs",
+              "tokens": 64
+            },
+            {
+              "id": "[\"mattpocock-skills:tdd\",0]",
+              "label": "mattpocock-skills:tdd",
+              "tokens": 58
+            },
+            {
+              "id": "[\"mattpocock-skills:prototype\",0]",
+              "label": "mattpocock-skills:prototype",
+              "tokens": 70
+            },
+            {
+              "id": "[\"mattpocock-skills:research\",0]",
+              "label": "mattpocock-skills:research",
+              "tokens": 89
+            },
+            {
+              "id": "[\"mattpocock-skills:domain-modeling\",0]",
+              "label": "mattpocock-skills:domain-modeling",
+              "tokens": 62
+            },
+            {
+              "id": "[\"mattpocock-skills:codebase-design\",0]",
+              "label": "mattpocock-skills:codebase-design",
+              "tokens": 101
+            },
+            {
+              "id": "[\"mattpocock-skills:code-review\",0]",
+              "label": "mattpocock-skills:code-review",
+              "tokens": 150
+            },
+            {
+              "id": "[\"mattpocock-skills:resolving-merge-conflicts\",0]",
+              "label": "mattpocock-skills:resolving-merge-conflicts",
+              "tokens": 39
+            },
+            {
+              "id": "[\"mattpocock-skills:wizard\",0]",
+              "label": "mattpocock-skills:wizard",
+              "tokens": 114
+            },
+            {
+              "id": "[\"mattpocock-skills:grilling\",0]",
+              "label": "mattpocock-skills:grilling",
+              "tokens": 61
+            },
+            {
+              "id": "[\"mattpocock-skills:writing-for-agents\",0]",
+              "label": "mattpocock-skills:writing-for-agents",
+              "tokens": 48
+            },
+            {
+              "id": "[\"dataviz\",0]",
+              "label": "dataviz",
+              "tokens": 482
+            },
+            {
+              "id": "[\"update-config\",0]",
+              "label": "update-config",
+              "tokens": 236
+            },
+            {
+              "id": "[\"keybindings-help\",0]",
+              "label": "keybindings-help",
+              "tokens": 83
+            },
+            {
+              "id": "[\"code-review\",0]",
+              "label": "code-review",
+              "tokens": 334
+            },
+            {
+              "id": "[\"simplify\",0]",
+              "label": "simplify",
+              "tokens": 63
+            },
+            {
+              "id": "[\"fewer-permission-prompts\",0]",
+              "label": "fewer-permission-prompts",
+              "tokens": 64
+            },
+            {
+              "id": "[\"loop\",0]",
+              "label": "loop",
+              "tokens": 115
+            },
+            {
+              "id": "[\"schedule\",0]",
+              "label": "schedule",
+              "tokens": 127
+            },
+            {
+              "id": "[\"claude-api\",0]",
+              "label": "claude-api",
+              "tokens": 361
+            },
+            {
+              "id": "[\"workflow-authoring\",0]",
+              "label": "workflow-authoring",
+              "tokens": 84
+            },
+            {
+              "id": "[\"run\",0]",
+              "label": "run",
+              "tokens": 123
+            },
+            {
+              "id": "[\"plugin-authoring\",0]",
+              "label": "plugin-authoring",
+              "tokens": 83
+            },
+            {
+              "id": "[\"init\",0]",
+              "label": "init",
+              "tokens": 22
+            },
+            {
+              "id": "[\"security-review\",0]",
+              "label": "security-review",
+              "tokens": 30
+            },
+            {
+              "id": "[\"docs\",0]",
+              "label": "docs",
+              "tokens": 343
+            },
+            {
+              "id": "[\"docx\",0]",
+              "label": "docx",
+              "tokens": 320
+            },
+            {
+              "id": "[\"google-workspace\",0]",
+              "label": "google-workspace",
+              "tokens": 326
+            },
+            {
+              "id": "[\"import-memory\",0]",
+              "label": "import-memory",
+              "tokens": 58
+            },
+            {
+              "id": "[\"morning\",0]",
+              "label": "morning",
+              "tokens": 122
+            },
+            {
+              "id": "[\"pdf\",0]",
+              "label": "pdf",
+              "tokens": 154
+            },
+            {
+              "id": "[\"pptx\",0]",
+              "label": "pptx",
+              "tokens": 328
+            },
+            {
+              "id": "[\"anthropic-skills:skill-creator\",0]",
+              "label": "anthropic-skills:skill-creator",
+              "tokens": 118
+            },
+            {
+              "id": "[\"xlsx\",0]",
+              "label": "xlsx",
+              "tokens": 324
+            }
+          ]
+        },
+        {
+          "id": "[\"claude\",\"Messages\",0]",
+          "label": "Messages",
+          "kind": "used",
+          "tokens": 11057,
+          "entries": []
+        },
+        {
+          "id": "[\"claude\",\"Autocompact buffer\",0]",
+          "label": "Autocompact buffer",
+          "kind": "reserved",
+          "tokens": 33000,
+          "entries": []
+        },
+        {
+          "id": "[\"claude\",\"Free space\",0]",
+          "label": "Free space",
+          "kind": "free",
+          "tokens": 939817,
+          "entries": []
+        }
+      ]
+    },
+    "estimated": true,
+    "modelContextWindow": 1000000,
+    "usedTokens": 27183
+  }
+}
