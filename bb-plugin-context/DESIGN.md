@@ -1,7 +1,7 @@
 # bb-plugin-context: design
 
-Shows how full a thread's context window is and what fills it. A slim meter sits above the
-prompt, and a "Context" thread panel holds the breakdown, the growth per turn, and the
+Shows how full a thread's context window is and what fills it. The plugin's ring takes the
+place of bb's context ring under the prompt, with a detailed hover card, and a "Context" thread panel holds the breakdown, the growth per turn, and the
 controls for going back (edit from a message, fork, compact, clear). Plugin id `context`,
 display name "Context".
 
@@ -169,18 +169,40 @@ display name "Context".
 
 ## Surfaces
 
-- **Composer meter** (`app.composer.customize({ scopes: ["thread"], banners: [{ chrome:
-  "bare" }] })`). One line, at most 28 px tall, above the prompt:
-  - a segmented bar (one segment per used category, in the order above), with a tick at
-    `autoCompactAt` when known;
-  - `27k / 200k · 14%`, with a leading `≈` when the basis is estimated;
-  - the top three categories (`Tools 11k · System 7k · Messages 6k`).
-  - Tone: muted below 60% of the usable limit (`autoCompactAt ?? window`), amber from 60%,
-    red from 85%.
-  - A click opens the Context panel (`useBbNavigate().openThreadPanel({ actionId:
-    "context" })`), and the hover title lists every category.
-  - Renders nothing while `window.basis === "none"`. After a course change with no new
-    measurement yet, it shows the estimate with `≈` and the label "recomputing".
+- **Context ring** (replaces bb's ring at the bottom-right of the composer footer).
+  (Revised: this was a one-line meter banner above the prompt; the user preferred one richer
+  ring where bb's sits, with the panel unchanged.)
+  - bb has no API for its ring and composer `actions` render inside the prompt box, so the
+    ring is registered as a composer action (`app.composer.customize({ scopes: ["thread"],
+    actions: [{ id: "ring" }] })`) that renders an invisible anchor and `createPortal`s the
+    ring into a `<span data-context-plugin-ring>` it inserts in the composer's own
+    `[data-follow-up-composer-footer]`, just before bb's `button[aria-label^="Context window"]`
+    (or at the end of the footer's right-hand group when bb's ring is absent). A
+    `MutationObserver` on the composer re-inserts the span when bb re-renders the footer.
+  - A content script (`app.contentScripts.register({ id: "hide-native-ring" })`) adds one CSS
+    rule hiding bb's ring only inside a footer that `:has([data-context-plugin-ring]:not(:empty))`.
+    If bb changes its markup, the ring falls back to rendering inline in the action slot (next
+    to the mic) and bb's ring stays visible; nothing breaks.
+    (Revised: the rule matched any slot, so bb's ring vanished while ours rendered nothing,
+    e.g. while loading or with basis `none`; now bb's ring shows until ours has content.)
+  - The ring itself copies bb's: a 32 px round button with a 16 px progress ring of used /
+    window, with the % as text to its left at every width (`11%`, `≈11%` when estimated,
+    tone-coloured, inside the button). (Revised: bb shows the % only on narrow screens; the
+    user asked for it always.) Ring colour follows the tone: muted below 60%
+    of the usable limit (`autoCompactAt ?? window`), amber from 60%, red from 85%. `≈` and a
+    dashed ring while the basis is estimated or recomputing. Renders nothing while
+    `window.basis === "none"`.
+  - **Hover card** (opens on hover and on keyboard focus; Radix hover card, about 320 px):
+    1. `22k / 200k tokens · 11%`, with `≈` when estimated, "recomputing" when recomputing,
+       and "autocompact at 167k" when known.
+    2. The segmented `MeterBar` with the autocompact tick.
+    3. Every used category from `meter.segments` (dot, label, tokens, % of used), largest
+       first.
+    4. From `useReport`, mounted only while the card is open: the 3 largest items (label,
+       detail, `#turn`) and the most recent course change as one line (same wording as the
+       panel's divider).
+    5. "Show details" opens the Context panel. Clicking the ring opens it too
+       (`useBbNavigate().openThreadPanel({ actionId: "context" })`).
 - **Thread panel "Context"** (`threadPanelAction`, id `context`, layout flush):
   1. Header: used / window, a large segmented bar, the autoCompact tick, and a note on the
      basis ("measured by bb · breakdown estimated from the pi session").
@@ -243,7 +265,8 @@ bb-plugin-context/
   src/ui/format.ts     formatTokens(n): string; percent(n, d); toneFor(used, limit); CATEGORY_STYLE
   src/ui/data.ts       useMeter(threadId); useReport(threadId)
   src/ui/MeterBar.tsx  <MeterBar segments total autoCompactAt size />
-  src/ui/ComposerMeter.tsx   banner component
+  src/ui/ContextRing.tsx     composer action: anchor + portal into bb's footer, ring button, hover card
+  src/ui/footerSlot.ts       useFooterSlot(anchor): HTMLElement | null (insert span, observe, re-insert)
   src/ui/ContextPanel.tsx    panel shell: header, Breakdown, LargestItems, Turns, footer
   src/ui/Breakdown.tsx, src/ui/Turns.tsx (+ RewindEditor), src/ui/CourseChangeRow.tsx
   skills/context/SKILL.md
@@ -287,7 +310,7 @@ turn has `tokensAfter` from usage events only, and `largest: []`.
 2. Core fires `experimental_thread.events { thread, sequence: 61 }`. `server.ts` calls
    `collector.invalidate(threadId)` and `bb.realtime.publish("context-changed",
    { threadId })`.
-3. `ComposerMeter` gets `threadId` from `useComposer().scope`. `useMeter` sees the realtime
+3. `ContextRing` gets `threadId` from `useComposer().scope`. `useMeter` sees the realtime
    signal for its thread and calls `rpc.call("meter", { threadId })`.
 4. `collector.meter(threadId)` runs four steps:
    - `events.list` after the cached seq gives `parseTimeline` the current session `pi_<uuid>`
@@ -301,8 +324,8 @@ turn has `tokensAfter` from usage events only, and `largest: []`.
      report. (Revised: this said it scaled all items by `T / sum`.)
 5. The meter returns `{ window: { usedTokens: 23k, contextWindow: 1M, basis: "measured" },
    segments: [...toolResults 4.1k...], top: [...] }`.
-6. `MeterBar` draws the toolResults segment, and the label reads `23k / 1m · 2% · Tools 10k ·
-   System 6k · Tool results 4k`.
+6. The ring fills to 2%; hovering it shows the card, whose `MeterBar` draws the toolResults
+   segment and whose category list includes `Tool results 4.1k`.
 
 ## Trace: "Edit from here" on turn 2
 

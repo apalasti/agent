@@ -2,8 +2,9 @@ See how full a thread's context window is and what fills it.
 
 ## What you get
 
-- A slim meter above the prompt: used / window, a bar split by category, and the three
-  largest categories. It turns amber, then red, as the thread nears its limit.
+- A context ring in place of bb's, under the prompt, with the percentage beside it. It turns
+  amber, then red, as the thread nears its limit. Hover it for used / window, a bar split by
+  category, every category, the largest items and the last edit or compaction.
 - A **Context** panel per thread: every category with its entries (each tool definition,
   each file read, each command's output), the largest items, and how the context grew turn
   by turn.

@@ -8,7 +8,7 @@
   },
   "bb": {
     "name": "Context",
-    "description": "See how full a thread's context window is and what fills it: a meter above the prompt, a per-turn breakdown, and controls to edit, fork, compact or clear from any point.",
+    "description": "See how full a thread's context window is and what fills it: a context ring under the prompt with a detailed hover card, a per-turn breakdown, and controls to edit, fork, compact or clear from any point.",
     "branding": {
       "icon": "context-gauge"
     },

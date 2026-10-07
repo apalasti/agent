@@ -1,8 +1,8 @@
 # bb-plugin-context
 
-Shows how full a thread's context window is and what fills it: a meter above the prompt, a
-**Context** thread panel with the breakdown and per-turn growth, and a `bb context show`
-command for agents. [DESIGN.md](DESIGN.md) has the data sources, calibration rules and
+Shows how full a thread's context window is and what fills it: a ring in place of bb's
+context ring under the prompt with a detailed hover card, a **Context** thread panel with
+the breakdown and per-turn growth, and a `bb context show` command for agents. [DESIGN.md](DESIGN.md) has the data sources, calibration rules and
 file outline.
 
 - `server.ts`: the `meter` and `report` RPC methods, the `context-changed` realtime signal,
@@ -14,7 +14,7 @@ file outline.
   input growth per step, output per reply).
 - `src/compose.ts`: the report; whatever was not measured is calibrated to bb's total.
 - `src/collect.ts`: per-thread cache; session files are re-read only from the appended bytes.
-- `app.tsx`, `src/ui/`: the composer meter and the Context panel.
+- `app.tsx`, `src/ui/`: the context ring with its hover card, and the Context panel.
 - `skills/context/SKILL.md`: tells agents when to run `bb context show --self`.
 
 ## Develop

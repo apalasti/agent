@@ -50,25 +50,33 @@ export function courseChangeText(change: CourseChange): string {
   }
 }
 
-export function CourseChangeRow({ change }: { change: CourseChange }) {
-  let body: ReactNode = courseChangeText(change);
+export function CourseChangeText({ change }: { change: CourseChange }): ReactNode {
   if (change.kind === "forked" && change.sourceThreadId !== null) {
-    body = (
+    return (
       <>
         Forked from <SourceThreadLink threadId={change.sourceThreadId} />
       </>
     );
-  } else if (change.kind === "forked") {
-    body = "Forked from another thread";
   }
+  if (change.kind === "forked") return "Forked from another thread";
+  return courseChangeText(change);
+}
+
+export function CourseChangeIcon({ kind, className }: { kind: CourseChange["kind"]; className?: string }) {
+  return <Icon name={ICON[kind]} className={className} aria-hidden />;
+}
+
+export function CourseChangeRow({ change }: { change: CourseChange }) {
   return (
     <li
       data-course-change={change.kind}
       className="flex items-center gap-2 px-4 py-1.5 text-xs text-muted-foreground"
     >
       <span className="h-px w-3 shrink-0 bg-border" />
-      <Icon name={ICON[change.kind]} className="size-3.5 shrink-0" aria-hidden />
-      <span className="flex min-w-0 items-center gap-1 whitespace-nowrap">{body}</span>
+      <CourseChangeIcon kind={change.kind} className="size-3.5 shrink-0" />
+      <span className="flex min-w-0 items-center gap-1 whitespace-nowrap">
+        <CourseChangeText change={change} />
+      </span>
       <span className="h-px min-w-3 flex-1 bg-border" />
     </li>
   );
