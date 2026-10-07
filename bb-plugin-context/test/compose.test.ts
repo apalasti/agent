@@ -94,6 +94,22 @@ describe("composeReport", () => {
     expect(report.turns.every((turn) => !turn.preview.startsWith("[bb message from"))).toBe(true);
   });
 
+  it("prefers the session's post-compaction size over bb's next usage event, which can arrive turns later", () => {
+    const report = composeReport({
+      threadId: "thr_x",
+      providerId: "pi",
+      threadStatus: "idle",
+      timeline: parseTimeline([
+        { seq: 1, type: "thread/compacted", createdAt: "2026-10-07T00:00:00Z", data: { providerThreadId: "pi_a" } },
+        { seq: 9, type: "thread/contextWindowUsage/updated", createdAt: "2026-10-07T00:09:00Z", data: { providerThreadId: "pi_a", contextWindowUsage: { usedTokens: 99_250, modelContextWindow: 1_000_000 } } },
+      ]),
+      session: parsePiSession(fixture("pi-compacted-session.jsonl")),
+      source: { kind: "pi-session", path: null },
+      usage: null,
+    });
+    expect(report.courseChanges.find((change) => change.kind === "compacted")?.tokensAfter).toBe(45_378);
+  });
+
   it("groups tool results per tool with the largest single results as children", () => {
     const report = composeReport({
       threadId: "thr_x",

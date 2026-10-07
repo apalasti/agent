@@ -209,6 +209,8 @@ export function createPiSessionParser(): SessionParser {
         if (message.role === "assistant" && (message.stopReason === "error" || message.stopReason === "aborted")) return;
         const items = messageItems(id, message);
         const call = callUsage(id, message);
+        const lastCompaction = compactions.at(-1);
+        if (call !== undefined && lastCompaction !== undefined && lastCompaction.tokensAfter === null) lastCompaction.tokensAfter = call.input;
         if (items.length > 0 || call !== undefined) entries.push({ id, summary: false, items, epoch, ...(call !== undefined ? { call } : {}) });
         return;
       }

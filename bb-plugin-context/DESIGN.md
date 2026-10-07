@@ -293,7 +293,7 @@ interface SessionItem {
 }
 interface SessionContext {
   items: SessionItem[]; model: string | null; compactedBeforeOrdinal: number | null;
-  compactions: { tokensBefore: number | null; tokensAfter: number | null }[]; // fills "Compacted 161k → …" when bb has no usage around it
+  compactions: { tokensBefore: number | null; tokensAfter: number | null }[]; // "Compacted 161k → 24k": after = pi's first call input after the compaction, or Claude's postTokens; preferred over bb's next usage event, which can arrive turns later (Revised: was only a fallback when bb had no usage around it)
   fallbackSteps: number;
 }
 ```

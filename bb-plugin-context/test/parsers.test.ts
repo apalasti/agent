@@ -127,6 +127,15 @@ describe("parsePiSession", () => {
   });
 });
 
+describe("pi compactions", () => {
+  it("records the first call's input after each compaction as its measured size", () => {
+    expect(parsePiSession(fixture("pi-compacted-session.jsonl")).compactions).toEqual([
+      { tokensBefore: 161_703, tokensAfter: 40_040 },
+      { tokensBefore: 172_004, tokensAfter: 45_378 },
+    ]);
+  });
+});
+
 describe("parseClaudeTranscript", () => {
   it("reads the probe transcript: prompt snapshot, attachments, the message and reply", () => {
     const session = parseClaudeTranscript(fixture("cc-probe-transcript.jsonl"));

@@ -439,7 +439,7 @@ function withSessionCompactions(changes: readonly CourseChange[], compactions: r
     const change = result[index] as CourseChange;
     if (change.kind !== "compacted") continue;
     const recorded = compactions[cursor--] as SessionCompaction;
-    result[index] = { ...change, tokensBefore: change.tokensBefore ?? recorded.tokensBefore, tokensAfter: change.tokensAfter ?? recorded.tokensAfter };
+    result[index] = { ...change, tokensBefore: change.tokensBefore ?? recorded.tokensBefore, tokensAfter: recorded.tokensAfter ?? change.tokensAfter };
   }
   return result;
 }
