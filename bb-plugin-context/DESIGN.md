@@ -91,10 +91,35 @@ display name "Context".
 - `estimateTokens(text) = ceil(chars / 4)`; an image block counts 1,600. Measured on a fresh
   pi session: system sections plus tool definitions plus the user message estimated 16,141,
   and the real first-call input was 16,300 (1% off).
-- Every in-context item gets an estimate. Then it is calibrated against the authoritative
-  total `T` (bb `usedTokens`):
-  - **pi**: scale every item by `T / sum(estimates)`. If that factor is outside 0.5–2, don't
-    scale; show the residual as the `unattributed` category instead.
+- **Measured attribution comes first.** pi assistant messages and Claude Code assistant
+  lines (deduplicated by `message.id`) carry the provider's per-call `usage`. Every LLM call
+  `k` has `input_k = input + cacheRead + cacheWrite` (Claude Code: `input_tokens +
+  cache_creation_input_tokens + cache_read_input_tokens`) and `output_k`.
+  - **Baseline**: everything before the first call. That is the system, tools, memory and
+    skills items plus the first user message, and together they take `input_1`. The split
+    within them is by estimate.
+  - **Assistant messages**: an assistant message takes `output_k`. pi `usage.reasoning`,
+    when present, goes to its thinking blocks; the rest is split by estimate.
+  - **Items appended between calls** (tool results, user messages, custom messages,
+    attachments): those between call `k-1` and call `k` take `delta_k = input_k -
+    input_{k-1} - output_{k-1}`, split by estimate.
+  - **Fallbacks**: a step whose delta is negative, or more than 3× or less than ⅓ of its
+    estimate (cache resets, compaction), falls back to estimates. Items after the last
+    call use estimates.
+  - The first call after a compaction starts a new baseline: the summary plus the kept
+    items.
+  - Measured on the lead's 1.6 MB session, chars/4 undercounted assistant messages by half
+    (30k estimated vs 60k `usage.output`, mostly hidden reasoning). Tool results were
+    undercounted by 1.69× (78k vs 131k of exact deltas; each result also carries about 35
+    tokens of framing).
+    (Revised: this replaced uniform scaling by `T / sum(estimates)`. That scaling inflated
+    the system prompt and tool definitions by the same 1.67× even though their first-call
+    size is exact.)
+- Whatever is not measured is then calibrated against the authoritative total `T` (bb
+  `usedTokens`):
+  - **pi**: measured items stay as they are. Scale only the estimated remainder so that
+    the sum matches `T`. If that factor is outside 0.5–2, don't scale; show the residual
+    as the `unattributed` category instead.
   - **Claude Code with a current snapshot**: keep the snapshot's non-Messages categories
     (they come from Claude's own `/context`). Split the remaining
     `T - sum(non-Messages used categories)` across the transcript items by their estimates.
@@ -145,25 +170,34 @@ display name "Context".
 - **Thread panel "Context"** (`threadPanelAction`, id `context`, layout flush):
   1. Header: used / window, a large segmented bar, the autoCompact tick, and a note on the
      basis ("measured by bb · breakdown estimated from the pi session").
-  2. **What's in it**: the categories as rows (dot, label, tokens, %). They expand to entries
-     (per tool, per section, per file, per tool name), and toolResults entries expand to the
-     largest single results (`read …/SKILL.md · 4.1k`).
-  3. **Largest items**: the top 10 individual items with their turn number. A click scrolls
-     to that turn.
+  2. **What's in it**: the categories as rows (dot, label, tokens, and % of the *used*
+     context; Free space shows % of the window). They expand to entries (per tool, per
+     section, per file, per tool name), and toolResults entries expand to the largest single
+     results, showing only the detail (`…/SKILL.md · 4.1k`). (Revised: % was of the window,
+     which read "<1%" for nearly every row.)
+  3. **Largest items**: the top 10 *conversation* items (messages, thinking, tool calls and
+     results, summaries; never system, tools, memory or skills), each with its turn number.
+     A click scrolls to that turn. (Revised: tool definitions crowded the list. They are
+     fixed cost and already listed in the breakdown.)
   4. **Turns**: one row per user message in the active timeline, oldest first:
      - `#n`, a one-line preview, `+12.3k` added, the context after, and a small bar;
      - state: `inContext`, or `summarized` / `cleared` (greyed) for turns before the last
        compaction or clear.
      - Course changes show as divider rows where they happened:
-       - "Edited here: 2 turns (31k) discarded";
+       - "Edited here: 2 turns discarded (31k tokens)";
        - "Compacted 161k → 24k" (or "Compaction skipped: session too small");
        - "Context cleared";
        - "Forked from @thread at turn 3".
-     - Row actions (disabled while the thread runs; the reason goes in the tooltip):
+     - Row actions live in one always-visible `…` menu per row, and are disabled while the
+       thread runs, with the reason as the item's description. Edit needs `editable`, which
+       bb grants only to messages a user typed into this thread. Fork works from any
+       completed turn. (Revised: hover actions overlaid the preview and duplicated the menu.
+       Fork was tied to `editable`.)
        - **Edit from here…**: an inline editor prefilled with the message text. It shows
          "Rewinds to ≈18k (frees 40k), discards turns n…m". Confirm calls
-         `sdk.threads.editMessage({ threadId, expectedRequestSequence: requestSeq, message
-         })`.
+         `sdk.threads.editMessage({ threadId, expectedRequestSequence: requestSeq,
+         operationId: crypto.randomUUID(), input: [{ type: "text", text, mentions: [] }] })`.
+         (Revised: this said `message`. The real args need `operationId` and an `input` array.)
        - **Fork from here**: `sdk.threads.fork({ sourceThreadId, sourceSeqEnd: lastSeq })`,
          then navigate to the new thread.
   5. Footer: **Compact** (`sdk.threads.compact`) and **Clear context**
@@ -252,7 +286,7 @@ turn has `tokensAfter` from usage events only, and `largest: []`.
 
 1. In the Turns list, turn 2 shows `requestSeq 19, tokensBefore 16.4k`. The user edits the
    message and confirms.
-2. `sdk.threads.editMessage({ threadId, expectedRequestSequence: 19, message })` makes bb
+2. `sdk.threads.editMessage({ threadId, expectedRequestSequence: 19, operationId, input })` makes bb
    append `system/operation edit_message { cutoffSequence: 19, oldMaxSequence: 40 }`, a new
    `client/turn/requested`, and a `thread/identity` with the new session.
 3. `experimental_thread.events` → `context-changed` → refetch → `parseTimeline` marks 19..40
