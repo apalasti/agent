@@ -52,6 +52,7 @@ function rpcHandlers(overrides: Partial<PluginRpcTestHandlers<typeof rpcContract
     chart: () => ({ threadId: "new" }),
     handoff: () => ({ threadId: "new" }),
     agentDefaults: () => null,
+    threadWorktree: () => null,
     ...overrides,
   } satisfies PluginRpcTestHandlers<typeof rpcContract>;
 }
@@ -149,19 +150,9 @@ describe("Worktrees thread list", () => {
     await again.findByText("idle");
   });
 
-  it("opens the workflow dialog from a worktree's menu", async () => {
+  it("badges a worktree with runnable .scratch work", async () => {
     const slot = await renderList();
-    fireEvent.pointerDown(await slot.findByRole("button", { name: "feat/a actions" }), { button: 0, ctrlKey: false });
-    fireEvent.click(await slot.findByRole("menuitem", { name: "Workflow…" }));
-    await slot.findByText(/feat\/a/, { selector: "h2" });
-  });
-
-  it("badges a worktree with runnable .scratch work and opens the workflow dialog from it", async () => {
-    const slot = await renderList();
-    const badge = await slot.findByRole("button", { name: "3 ready tickets · 2 open issues — open Workflow" });
-    expect(slot.queryAllByRole("button", { name: /open Workflow/ })).toHaveLength(1);
-    fireEvent.click(badge);
-    await slot.findByText(/feat\/a/, { selector: "h2" });
+    await slot.findByRole("img", { name: "3 ready tickets · 2 open issues" });
   });
 
   it("orders worktrees: main first, then by activity, then by name", async () => {

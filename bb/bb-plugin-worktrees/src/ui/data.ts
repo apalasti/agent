@@ -5,11 +5,13 @@ import {
   type AgentDefaults,
   type rpcContract,
   type ScratchSummary,
+  type ScratchView,
   type Worktree,
   type WorktreeStatus,
 } from "../contract";
 
 export const REFRESH_INTERVAL_MS = 30_000;
+export const SCRATCH_POLL_MS = 5_000;
 
 export function useWorktreesRpc() {
   return useRpc<typeof rpcContract>();
@@ -146,6 +148,32 @@ export function useScratchSummary(projectId: string, path: string | null, isVisi
   return usePathValue((stores) => stores.scratch, projectId, path, isVisible);
 }
 
+export function useScratchView(projectId: string, path: string): { view: ScratchView | null; error: string | null; reload: () => void } {
+  const rpc = useWorktreesRpc();
+  const epoch = useRefreshEpoch();
+  const [tick, setTick] = useState(0);
+  const [state, setState] = useState<{ view: ScratchView | null; error: string | null }>({ view: null, error: null });
+  const reload = useCallback(() => setTick((value) => value + 1), []);
+
+  useEffect(() => {
+    const timer = setInterval(reload, SCRATCH_POLL_MS);
+    return () => clearInterval(timer);
+  }, [reload]);
+
+  useEffect(() => {
+    let cancelled = false;
+    rpc.call("scratch", { projectId, path }).then(
+      (view) => !cancelled && setState({ view, error: null }),
+      (cause: unknown) => !cancelled && setState((prev) => ({ ...prev, error: errorMessage(cause) })),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [rpc, projectId, path, epoch, tick]);
+
+  return { ...state, reload };
+}
+
 /** `loaded` turns true once the backend answered, so a composer can mount with its seed already in place. */
 export function useAgentDefaults(projectId: string, prefer?: string): { loaded: boolean; defaults: AgentDefaults | null } {
   const rpc = useWorktreesRpc();
@@ -185,9 +213,11 @@ export function useIsOnScreen<T extends Element>(): [(node: T | null) => void, b
 
 const COLLAPSE_STORAGE_KEY = "bb-plugin-worktrees:collapsed";
 
-function readCollapsed(): Set<string> {
+const TASKS_EXPANDED_STORAGE_KEY = "bb-plugin-worktrees:tasks-expanded";
+
+function readKeySet(storageKey: string): Set<string> {
   try {
-    const raw = globalThis.localStorage?.getItem(COLLAPSE_STORAGE_KEY);
+    const raw = globalThis.localStorage?.getItem(storageKey);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
     return new Set(Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : []);
   } catch {
@@ -195,8 +225,9 @@ function readCollapsed(): Set<string> {
   }
 }
 
-export function useCollapsed() {
-  const [collapsed, setCollapsed] = useState(readCollapsed);
+/** Each instance writes its whole set, so mount one per storage key. */
+function useStoredKeySet(storageKey: string) {
+  const [keys, setKeys] = useState(() => readKeySet(storageKey));
   const first = useRef(true);
   useEffect(() => {
     if (first.current) {
@@ -204,21 +235,31 @@ export function useCollapsed() {
       return;
     }
     try {
-      globalThis.localStorage?.setItem(COLLAPSE_STORAGE_KEY, JSON.stringify([...collapsed]));
+      globalThis.localStorage?.setItem(storageKey, JSON.stringify([...keys]));
     } catch {
-      // Storage full or disabled: collapse state just won't survive a reload.
+      // Storage full or disabled: the state just won't survive a reload.
     }
-  }, [collapsed]);
+  }, [storageKey, keys]);
   const toggle = useCallback((key: string) => {
-    setCollapsed((prev) => {
+    setKeys((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
   }, []);
-  const isCollapsed = useCallback((key: string) => collapsed.has(key), [collapsed]);
-  return { isCollapsed, toggle };
+  const has = useCallback((key: string) => keys.has(key), [keys]);
+  return { has, toggle };
+}
+
+export function useCollapsed() {
+  const { has, toggle } = useStoredKeySet(COLLAPSE_STORAGE_KEY);
+  return { isCollapsed: has, toggle };
+}
+
+export function useTasksExpanded() {
+  const { has, toggle } = useStoredKeySet(TASKS_EXPANDED_STORAGE_KEY);
+  return { isExpanded: has, toggle };
 }
 
 export const collapseKey = {

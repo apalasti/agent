@@ -33,6 +33,7 @@ import {
   worktreeStatus,
   type Runner,
 } from "./src/git";
+import { worktreeLabel } from "./src/group";
 import { applyOverlay } from "./src/overlay";
 import {
   chartPrompt,
@@ -156,6 +157,17 @@ export function createPlugin({
       return { sourceRoot, hostId, worktrees: attachEnvironments(worktrees, environments) };
     }
 
+    async function worktreeOfThread(
+      threadId: string,
+      worktreesOf: (projectId: string) => Promise<readonly Worktree[]>,
+    ): Promise<{ projectId: string; worktree: Worktree } | null> {
+      const thread = await bb.sdk.threads.get({ threadId }).catch(() => null);
+      if (thread?.environmentId == null) return null;
+      const worktrees = await worktreesOf(thread.projectId);
+      const worktree = worktrees.find((candidate) => candidate.environmentIds.includes(thread.environmentId as string));
+      return worktree ? { projectId: thread.projectId, worktree } : null;
+    }
+
     async function findProjectWorktree(projectId: string, path: string) {
       const listing = await projectWorktrees(projectId);
       const target = realpathOr(path);
@@ -237,12 +249,14 @@ export function createPlugin({
       worktreePath: string,
     ) {
       const metadata: WorkflowThreadMetadata = { ...thread.metadata, path: worktreePath };
-      return spawnInWorktree(target.projectId, worktreePath, {
+      const spawned = await spawnInWorktree(target.projectId, worktreePath, {
         ...agentChoice(target.request),
         prompt: thread.prompt,
         title: thread.title,
         pluginMetadata: metadata,
       });
+      publishChanged(target.projectId);
+      return spawned;
     }
 
     async function runTicket(target: WorkflowTarget & { ref: string }) {
@@ -537,6 +551,10 @@ export function createPlugin({
       },
       scratch: ({ projectId, path }) => scratchView(projectId, path),
       scratchSummary: async ({ projectId, path }) => summarizeScratch(await worktreeScratch(projectId, path)),
+      async threadWorktree({ threadId }) {
+        const found = await worktreeOfThread(threadId, async (projectId) => (await projectWorktrees(projectId)).worktrees);
+        return found && { projectId: found.projectId, path: found.worktree.path, label: worktreeLabel(found.worktree) };
+      },
       runTicket: (input) => runTicket(input),
       orchestrate: (input) => orchestrate(input),
       chart: (input) => chart(input),
@@ -626,11 +644,8 @@ export function createPlugin({
       const { worktrees } = await projectWorktrees(projectId).catch(cliFailure);
       if (requested !== undefined) return matchWorktree(worktrees, requested, ctx.cwd).path;
       if (ctx.threadId !== undefined) {
-        const thread = await bb.sdk.threads.get({ threadId: ctx.threadId }).catch(() => null);
-        const caller = worktrees.find(
-          (worktree) => thread?.environmentId != null && worktree.environmentIds.includes(thread.environmentId),
-        );
-        if (caller) return caller.path;
+        const caller = await worktreeOfThread(ctx.threadId, async () => worktrees);
+        if (caller) return caller.worktree.path;
       }
       const main = worktrees.find((worktree) => worktree.isMain) ?? worktrees[0];
       if (main === undefined) throw new PluginCliError("The project has no git worktrees", { code: "failed" });

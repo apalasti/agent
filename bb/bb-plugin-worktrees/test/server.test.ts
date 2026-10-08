@@ -48,7 +48,8 @@ async function load(settings: Record<string, string> = {}, piAgentsDir = join(re
       environments: { list: async () => environments },
       threads: {
         spawn: async () => ({ id: "thr_new" }),
-        get: async () => makeThreadResponse({ id: "thr_caller", environmentId: "env_side" }),
+        get: async ({ threadId }: { threadId: string }) =>
+          makeThreadResponse({ id: threadId, projectId: PROJECT_ID, environmentId: threadId === "thr_outside" ? "env_none" : "env_side" }),
         list: async (args: { originPluginId?: string }) =>
           args.originPluginId === "worktrees"
             ? pluginThreads.map((thread) => ({ ...makeThreadResponse({ id: thread.id }), environmentPath: thread.environmentPath }))
@@ -281,6 +282,7 @@ describe("workflow", () => {
     scratchIn(repo.repo);
     const request = { providerId: "pi", model: "m", prompt: "ignored", environment: { type: "host" } };
     await harness.behavior.callRpc("runTicket", { projectId: PROJECT_ID, path: repo.repo, ref: "demo/1", request });
+    expect(harness.realtimeSignals.some((signal) => signal.channel === WORKTREES_CHANGED)).toBe(true);
     const [call] = spawnCalls(harness);
     expect(call).toMatchObject({
       projectId: PROJECT_ID,
@@ -369,6 +371,21 @@ describe("workflow", () => {
       openIssues: 1,
       handoffs: 0,
     });
+  });
+});
+
+describe("threadWorktree", () => {
+  it("returns the worktree a thread runs in, and null outside any", async () => {
+    const harness = await load();
+    const side = join(repo.root, "side");
+    git(repo.repo, "worktree", "add", "-q", "-b", "side", side);
+    environments = [{ id: "env_side", path: side, status: "ready", lifecycle: { phase: "active" } }];
+    expect(await harness.behavior.callRpc("threadWorktree", { threadId: "thr_caller" })).toEqual({
+      projectId: PROJECT_ID,
+      path: side,
+      label: "side",
+    });
+    expect(await harness.behavior.callRpc("threadWorktree", { threadId: "thr_outside" })).toBeNull();
   });
 });
 

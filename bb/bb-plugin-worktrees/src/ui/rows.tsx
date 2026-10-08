@@ -50,7 +50,6 @@ export type ListContextValue = {
   openNewTask: (projectId: string) => void;
   openNewThreadIn: (projectId: string, group: WorktreeNode) => void;
   openRemove: (projectId: string, group: WorktreeNode) => void;
-  openWorkflow: (projectId: string, group: WorktreeNode) => void;
   openSettings: (projectId: string) => void;
   refresh: () => void;
 };
@@ -308,28 +307,24 @@ export function scratchSummaryText({ readyTickets, openIssues, handoffs }: Scrat
   if (readyTickets > 0) parts.push(plural(readyTickets, "ready ticket"));
   if (openIssues > 0) parts.push(plural(openIssues, "open issue"));
   if (handoffs > 0) parts.push(`${plural(handoffs, "map")} ready to hand off`);
-  return parts.length > 0 ? `${parts.join(" · ")} — open Workflow` : null;
+  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
-function ScratchBadge({ summary, onOpen }: { summary: ScratchSummary; onOpen: () => void }) {
+function ScratchBadge({ summary }: { summary: ScratchSummary }) {
   const text = scratchSummaryText(summary);
   if (text === null) return null;
   const count = summary.readyTickets + summary.openIssues + summary.handoffs;
   return (
     <Tooltip delayDuration={350} disableHoverableContent>
       <TooltipTrigger asChild>
-        <button
-          type="button"
+        <span
+          role="img"
           aria-label={text}
-          onClick={(event) => {
-            event.stopPropagation();
-            onOpen();
-          }}
-          className="pointer-events-auto flex h-5 shrink-0 items-center gap-0.5 rounded px-1 text-[11px] tabular-nums text-subtle-foreground outline-none ring-sidebar-ring hover:bg-state-hover hover:text-muted-foreground focus-visible:ring-2"
+          className="pointer-events-auto flex h-5 shrink-0 items-center gap-0.5 rounded px-1 text-[11px] tabular-nums text-subtle-foreground"
         >
           <Icon name="ListTodo" className="size-3" aria-hidden="true" />
           {count}
-        </button>
+        </span>
       </TooltipTrigger>
       <TooltipContent side="bottom">{text}</TooltipContent>
     </Tooltip>
@@ -378,9 +373,6 @@ export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string
   const entries: MenuEntry[] = [];
   if (canCreate) {
     entries.push({ kind: "item", label: "New thread here", icon: "MessageSquarePlus", onSelect: () => list.openNewThreadIn(projectId, group) });
-  }
-  if (group.kind === "worktree") {
-    entries.push({ kind: "item", label: "Workflow…", icon: "Workflow", onSelect: () => list.openWorkflow(projectId, group) });
   }
   if (group.path !== null) {
     const path = group.path;
@@ -450,7 +442,7 @@ export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string
             <TooltipContent side="bottom">{summary}</TooltipContent>
           </Tooltip>
         ) : null}
-        {scratch ? <ScratchBadge summary={scratch} onOpen={() => list.openWorkflow(projectId, group)} /> : null}
+        {scratch ? <ScratchBadge summary={scratch} /> : null}
         {isEmpty ? null : (
           <span className="pointer-events-auto">
             <Chevron collapsed={collapsed} onToggle={() => list.toggle(key)} label={`${group.label} threads`} revealOnHover={!collapsed} />

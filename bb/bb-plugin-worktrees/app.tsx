@@ -1,5 +1,6 @@
 import { definePluginApp } from "@get-bb/plugin-sdk/app";
 import { TASK_WORKTREE_PROVIDER_ID } from "./src/contract";
+import { TasksPanel } from "./src/ui/tasks/TasksPanel";
 import { SettingsSection } from "./src/ui/ProjectSettings";
 import { TaskWorktreeInputs } from "./src/ui/TaskWorktreeInputs";
 import { WorktreeList } from "./src/ui/WorktreeList";
@@ -16,6 +17,8 @@ export default definePluginApp((app) => {
     environmentProviderId: TASK_WORKTREE_PROVIDER_ID,
     component: TaskWorktreeInputs,
   });
+
+  app.slots.threadPanelAction({ id: "tasks", title: "Tasks", icon: "ListTodo", component: TasksPanel, layout: "flush" });
 
   app.slots.settingsSection({
     id: "projects",

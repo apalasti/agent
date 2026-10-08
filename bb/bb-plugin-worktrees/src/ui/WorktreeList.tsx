@@ -13,13 +13,11 @@ import { NewThreadInWorktreeDialog } from "./NewThreadInWorktreeDialog";
 import { ProjectSettingsDialog } from "./ProjectSettings";
 import { RemoveWorktreeDialog } from "./RemoveWorktreeDialog";
 import { GroupHeader, IdleWorktreesRow, ListContext, ProjectRow, ThreadRow, WorktreeRow, type ListContextValue } from "./rows";
-import { WorkflowDialog } from "./WorkflowDialog";
 
 type OpenDialog =
   | { kind: "new-task"; projectId: string }
   | { kind: "new-thread"; projectId: string; group: WorktreeNode }
   | { kind: "remove"; projectId: string; group: WorktreeNode }
-  | { kind: "workflow"; projectId: string; group: WorktreeNode }
   | { kind: "settings"; projectId: string };
 
 export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListProps) {
@@ -63,7 +61,6 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
       openNewTask: (projectId) => setDialog({ kind: "new-task", projectId }),
       openNewThreadIn,
       openRemove: (projectId, group) => setDialog({ kind: "remove", projectId, group }),
-      openWorkflow: (projectId, group) => setDialog({ kind: "workflow", projectId, group }),
       openSettings: (projectId) => setDialog({ kind: "settings", projectId }),
       refresh: () => setManualEpoch((value) => value + 1),
     }),
@@ -178,15 +175,6 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
             group={dialog.group}
             activeThreadId={activeThreadId}
             onClose={closeDialog}
-          />
-        ) : null}
-        {dialog?.kind === "workflow" ? (
-          <WorkflowDialog
-            projectId={dialog.projectId}
-            worktreePath={dialog.group.path ?? ""}
-            worktreeLabel={dialog.group.label}
-            open
-            onOpenChange={(open) => !open && closeDialog()}
           />
         ) : null}
         {dialog?.kind === "settings" ? (

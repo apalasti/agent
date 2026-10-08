@@ -214,6 +214,10 @@ export const rpcContract = defineRpcContract({
     input: projectRef.extend({ path: z.string().min(1) }),
     output: scratchSummarySchema,
   },
+  threadWorktree: {
+    input: z.object({ threadId: z.string().min(1) }),
+    output: z.object({ projectId: z.string(), path: z.string(), label: z.string() }).nullable(),
+  },
 });
 
 export type WorkflowThreadMetadata = {

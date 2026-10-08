@@ -21,9 +21,9 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
      and ahead/behind count sharing one tooltip ("3 uncommitted files · 2 ahead of origin/x"),
      thread count when collapsed; a muted `ListTodo` badge with the count of frontier tickets +
      open issues + hand-off-ready maps in its `.scratch` (tooltip "3 ready tickets · 2 open
-     issues — open Workflow"; click opens `WorkflowDialog`; there is no `Map` host icon);
+     issues"; not clickable, since no host surface toggles the Tasks panel; there is no `Map` host icon);
      hover `+` → new thread *in this worktree*; `⋯` menu:
-     New thread here, Workflow… (opens `WorkflowDialog`), Copy path, Copy branch name,
+     New thread here, Copy path, Copy branch name,
      Remove worktree… (not for the main checkout).
    - Thread row: bb's own row semantics (status indicator glyph, unread, title, pin/archive
      actions, keyboard DOM contract, split drag). A row status with tone `running` (e.g. the
@@ -40,7 +40,7 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
    environment provider, the dialog closes and the app navigates to the thread
    (`useBbNavigate().toThread`; was `experimental_useSidebarThreadActions().open`, which left
    the app where it was). The composer's `onSubmit` carries no key modifiers, so there is no
-   ⌘-submit-to-stay here, unlike the Workflow dialog. The same applies to the
+   ⌘-submit-to-stay here, unlike the Tasks panel. The same applies to the
    new-thread-in-worktree dialog.
    **Composer seed:** when the project has no remembered execution choice, both composer
    dialogs seed `defaultProviderId/defaultModel/defaultReasoningLevel` from `agentDefaults`
@@ -133,7 +133,7 @@ bb-plugin-worktrees/
                             (a `project-checkout` defaultEnvironment seed still shows the main checkout)
   src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
-  src/ui/WorkflowDialog.tsx  .scratch efforts of one worktree: Run / Orchestrate / Chart / Hand off
+  src/ui/tasks/              Tasks panel (threadPanelAction): model.ts, useLaunch.ts, TasksPanel, EffortSection, TicketRow, BatchCard, HandoffBanner, ChartFooter, tone.ts
   src/scratch.ts            pure .scratch scanner + pi prompt composition (see `.scratch/` workflow)
   src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu
   skills/worktrees/SKILL.md the `bb task` CLI for agents
@@ -178,7 +178,9 @@ same template files and spawns the thread itself, in the worktree the `.scratch/
 (Replaced the deleted standalone `bb-plugin-workflow`, which bundled copies of the templates
 and had its own worktree discovery.)
 
-Surfaces: the worktree `⋯` menu → **Workflow…** (`WorkflowDialog`), and `bb task scratch | run
+Surfaces: the **Tasks** tab of a thread's side panel (`TasksPanel`, a `threadPanelAction`; the
+worktree comes from `threadWorktree(threadId)`, and `useScratchView` refetches `scratch` every 5s
+and on the refresh epoch), and `bb task scratch | run
 | orchestrate | chart | handoff` (documented in `skills/worktrees/SKILL.md`).
 
 Rules carried over from pi unchanged: an effort is `.scratch/<slug>/` with `MAP.md` and/or
@@ -218,8 +220,12 @@ server.ts        settings.templatesDir (string, default ~/fun/agent/extensions, 
                  option piAgentsDir (default ~/.pi/agent/agents; its *.md names are the subagent types)
                  worktreeScratch, spawnWorkflow, runTicket, orchestrate, chart, handoff,
                  agentDefaults; CLI scratch/run/orchestrate/chart/handoff + cliWorktreePath
-src/ui/WorkflowDialog.tsx  WorkflowDialog({projectId, worktreePath, worktreeLabel, open, onOpenChange})
-test/scratch.test.ts, test/workflow.test.tsx, workflow block in test/server.test.ts
+src/ui/tasks/    TasksPanel({threadId}) loads threadWorktree then useScratchView; effortModel/legend
+                 (model.ts) turn ScratchEffort + liveThreads into Running/Ready/Blocked/Done rows;
+                 useLaunch(target, reload) → {agent, setAgent, busy, launch} (⌘/Ctrl-click stays put);
+                 issues are one batch per effort (Orchestrate runs every open issue)
+                 (The Workflow dialog was replaced by the Tasks panel.)
+test/scratch.test.ts, test/tasks-panel.test.tsx, test/tasks-model.test.ts, workflow block in test/server.test.ts
 ```
 
 Template placeholders, filled exactly as the pi extensions do (`__dirname` there is
