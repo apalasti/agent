@@ -61,7 +61,7 @@ sidebar of projects → git worktrees → threads, a New task dialog that starts
 fresh worktree, and a Tasks panel (a tab beside each thread) for the `.scratch` maps and issues above.
 
 [`bb/bb-plugin-thread-namer/`](bb/bb-plugin-thread-namer/README.md) is an AI service that lets
-bb title threads (and write commit messages) with Claude Code's haiku.
+bb title threads (and write commit messages) with a `pi -p` call, haiku via claude-bridge by default.
 
 `./setup.sh` builds every `bb/bb-plugin-*` and installs it, or reloads it if it is already
 installed from that path.

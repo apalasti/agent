@@ -12,7 +12,7 @@
   },
   "bb": {
     "name": "Thread Namer",
-    "description": "An AI service that answers bb's thread-title and commit-message prompts with Claude Code (haiku by default).",
+    "description": "An AI service that answers bb's thread-title and commit-message prompts with the pi CLI (claude-bridge/claude-haiku-5-5 by default).",
     "branding": {
       "icon": "Tag"
     },
