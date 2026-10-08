@@ -3,14 +3,21 @@ import { firstLine } from "../src/text";
 import { clock, duration, kTokens, relPath, shortModel } from "../src/ui/format";
 
 describe("shortModel", () => {
-  it("drops the claude prefix and turns version dashes into a dotted version", () => {
-    expect(shortModel("claude-haiku-5-5")).toBe("haiku 5.5");
-    expect(shortModel("claude-opus-4-1-20250805")).toBe("opus 4.1");
-    expect(shortModel("claude-sonnet-4-20250514")).toBe("sonnet 4");
-    expect(shortModel("claude-opus-4-6[1m]")).toBe("opus 4.6[1m]");
+  it("shows Claude ids as a capitalised family and dotted version, without provider or date", () => {
+    expect(shortModel("claude-bridge/claude-sonnet-5-5")).toBe("Sonnet 5.5");
+    expect(shortModel("claude-bridge/claude-haiku-5-5")).toBe("Haiku 5.5");
+    expect(shortModel("claude-haiku-5-5")).toBe("Haiku 5.5");
+    expect(shortModel("claude-opus-4-1-20250805")).toBe("Opus 4.1");
+    expect(shortModel("claude-sonnet-4-20250514")).toBe("Sonnet 4");
   });
 
-  it("keeps aliases and reports a missing model as inherited", () => {
+  it("keeps a 1m context suffix as 1M", () => {
+    expect(shortModel("claude-opus-4-6[1m]")).toBe("Opus 4.6 1M");
+    expect(shortModel("claude-bridge/claude-sonnet-5-5-1m")).toBe("Sonnet 5.5 1M");
+  });
+
+  it("passes other ids through minus the provider prefix, and reports a missing model as inherited", () => {
+    expect(shortModel("openai/gpt-5.1-codex")).toBe("gpt-5.1-codex");
     expect(shortModel("haiku")).toBe("haiku");
     expect(shortModel(null)).toBe("inherited");
   });
@@ -20,7 +27,7 @@ describe("duration", () => {
   it("formats seconds, minutes and hours", () => {
     expect(duration(0)).toBe("0s");
     expect(duration(59_400)).toBe("59s");
-    expect(duration(80_000)).toBe("1m 20s");
+    expect(duration(511_000)).toBe("8m 31s");
     expect(duration(3_725_000)).toBe("1h 2m");
   });
 
@@ -31,10 +38,13 @@ describe("duration", () => {
 });
 
 describe("kTokens", () => {
-  it("rounds to thousands from 1000 up", () => {
+  it("shows thousands with one decimal and millions likewise", () => {
     expect(kTokens(999)).toBe("999");
     expect(kTokens(1_000)).toBe("1k");
-    expect(kTokens(12_600)).toBe("13k");
+    expect(kTokens(162_345)).toBe("162.3k");
+    expect(kTokens(200_000)).toBe("200k");
+    expect(kTokens(999_960)).toBe("1M");
+    expect(kTokens(1_250_000)).toBe("1.3M");
     expect(kTokens(null)).toBe("–");
   });
 });

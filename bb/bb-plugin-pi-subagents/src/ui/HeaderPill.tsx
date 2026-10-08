@@ -8,7 +8,7 @@ import { duration, shortModel } from "./format";
 import { liveState } from "./live";
 import { useNow, useThreadAgents } from "./useThreadAgents";
 
-export const PANEL_ACTION_ID = "claude-subagents";
+export const PANEL_ACTION_ID = "pi-subagents";
 
 export function HeaderPill({ threadId, isCompactViewport }: PluginThreadHeaderActionProps) {
   const { data } = useThreadAgents(threadId);

@@ -13,8 +13,8 @@ afterEach(() => {
 async function slots() {
   const app = await loadPluginApp(() => import("../app"));
   return {
-    panel: app.threadPanelActions.find((slot) => slot.id === "claude-subagents")!,
-    pill: app.threadHeaderActions.find((slot) => slot.id === "claude-subagents")!,
+    panel: app.threadPanelActions.find((slot) => slot.id === "pi-subagents")!,
+    pill: app.threadHeaderActions.find((slot) => slot.id === "pi-subagents")!,
   };
 }
 
@@ -144,7 +144,7 @@ describe("header pill", () => {
     const button = await rendered.findByRole("button", { name: "Claude subagents: 1 running" });
     expect(button.textContent).toContain("Bash: npm test");
     fireEvent.click(button);
-    expect(rendered.inspection.navigateCalls).toEqual([{ method: "openThreadPanel", options: { actionId: "claude-subagents" } }]);
+    expect(rendered.inspection.navigateCalls).toEqual([{ method: "openThreadPanel", options: { actionId: "pi-subagents" } }]);
   });
 
   it("hides the live label on compact viewports", async () => {

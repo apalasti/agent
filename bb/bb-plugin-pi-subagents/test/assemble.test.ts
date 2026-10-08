@@ -1,140 +1,200 @@
+import { readdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { assembleAgents, deriveStatus, type AgentSource } from "../src/assemble";
-import type { TaskFacts } from "../src/events";
-import { parseTranscript, type Transcript } from "../src/transcript";
-import { fixture } from "./fakes";
+import { assemble, deriveAgentStatus, ownsAgent, type ChildSource, type WorkflowSource } from "../src/assemble";
+import { emptyParentFacts, foldParentLine, type ParentFacts, type RecordFact } from "../src/parent";
+import { parsePiSession, type PiTranscript } from "../src/piSession";
+import { parseJournal, parseMeta } from "../src/workflow";
+import { DEMO_RUN, LIVE_RUN, SUBAGENTS_AGENT, WORKFLOWS_AGENT, fixture, lines } from "./fakes";
 
-const NOW = 1_000_000_000;
+const NOW = Date.parse("2026-10-08T20:14:30Z");
 const QUIET = NOW - 120_000;
+const DEMO_CHILDREN = 7;
 
-function transcript(overrides: Partial<Transcript> = {}): Transcript {
-  return {
-    prompt: "do it",
-    steps: [],
-    toolUseIds: new Set(),
-    report: null,
-    handedBack: false,
-    files: [],
-    model: null,
-    context: 0,
-    peakContext: 0,
-    firstAt: null,
-    lastAt: null,
-    endedTurn: false,
-    ...overrides,
-  };
+const SESSION_NAMES = readdirSync(join(dirname(fileURLToPath(import.meta.url)), "fixtures", "sessions"));
+
+function parentFacts(): ParentFacts {
+  return lines(fixture("parent.jsonl")).reduce((facts, line) => foldParentLine(line, facts), emptyParentFacts());
 }
 
-const source = (overrides: Partial<Transcript> = {}, mtimeMs = QUIET, agentId = "a1", toolUseId?: string): AgentSource => ({
-  agentId,
-  meta: { description: `task ${agentId}`, agentType: "Explore", toolUseId },
-  transcript: transcript(overrides),
-  mtimeMs,
-});
+function children(mtimeOf: (transcript: PiTranscript) => number = () => QUIET): ChildSource[] {
+  return SESSION_NAMES.map((name) => parsePiSession(fixture(`sessions/${name}`)))
+    .filter((transcript) => transcript.parentSession?.endsWith("pi_e6c62b6b-9ba7-4f95-85af-6183a2877e86.jsonl"))
+    .map((transcript) => ({ path: `/s/${transcript.sessionId}.jsonl`, transcript, mtimeMs: mtimeOf(transcript) }));
+}
 
-const task = (status: string, overrides: Partial<TaskFacts> = {}): TaskFacts => ({
-  status,
-  startedAt: NOW - 60_000,
-  endedAt: status === "running" ? null : NOW - 10_000,
-  totalTokens: null,
+function workflowSources(parent: ParentFacts): WorkflowSource[] {
+  return [...parent.workflows.values()].map((launch) => ({
+    launch,
+    meta: parseMeta(fixture(`tasks/${launch.runId}.workflow.js`)),
+    journal: launch.runId === DEMO_RUN ? parseJournal(fixture(`tasks/${DEMO_RUN}.workflow.jsonl`)) : { done: 0, failed: 0 },
+    journalMtimeMs: launch.runId === DEMO_RUN ? QUIET : null,
+  }));
+}
+
+const transcript = (overrides: Partial<PiTranscript> = {}): PiTranscript => ({
+  ...parsePiSession(""),
   ...overrides,
 });
+const record = (status: string, result: string | null = "Report"): RecordFact => ({ status, result, error: null, startedAt: 1, completedAt: 2 });
 
-describe("deriveStatus", () => {
-  it("is done when the task completed with a report", () => {
-    expect(deriveStatus(source({ report: "All good" }), task("completed"), NOW)).toBe("done");
+describe("deriveAgentStatus", () => {
+  it("is done or needs-look when the record says completed or steered", () => {
+    expect(deriveAgentStatus(record("completed"), undefined, null, NOW, NOW)).toBe("done");
+    expect(deriveAgentStatus(record("steered"), undefined, null, NOW, NOW)).toBe("done");
+    expect(deriveAgentStatus(record("completed", " \n"), undefined, transcript(), QUIET, NOW)).toBe("needs-look");
   });
 
-  it("needs a look when the task completed without a report", () => {
-    expect(deriveStatus(source(), task("completed"), NOW)).toBe("needs-look");
-    expect(deriveStatus(source({ report: "  \n" }), task("completed"), NOW)).toBe("needs-look");
+  it("uses the transcript report when the record has none", () => {
+    expect(deriveAgentStatus(record("completed", null), undefined, transcript({ report: "From transcript" }), QUIET, NOW)).toBe("done");
   });
 
-  it("is finished on a handback even while the task still says running", () => {
-    expect(deriveStatus(source({ handedBack: true, report: "Report" }, NOW), task("running"), NOW)).toBe("done");
+  it.each(["error", "stopped", "aborted"])("is failed on %s", (status) => {
+    expect(deriveAgentStatus(record(status), undefined, null, NOW, NOW)).toBe("failed");
+    expect(deriveAgentStatus(undefined, { status, totalTokens: null, durationMs: null, error: "x" }, null, NOW, NOW)).toBe("failed");
   });
 
-  it.each(["failed", "killed"])("is failed when the task %s", (status) => {
-    expect(deriveStatus(source({ report: "partial" }), task(status), NOW)).toBe("failed");
+  it("is running without a final status while written in the last 90s", () => {
+    expect(deriveAgentStatus(undefined, undefined, transcript({ endedTurn: true }), NOW - 89_000, NOW)).toBe("running");
   });
 
-  it("is running while the task runs, even with a quiet transcript", () => {
-    expect(deriveStatus(source(), task("running"), NOW)).toBe("running");
-  });
-
-  it("is running without a task when the transcript changed within 90s", () => {
-    expect(deriveStatus(source({ endedTurn: true }, NOW - 89_000), undefined, NOW)).toBe("running");
-  });
-
-  it("is finished without a task when the transcript is idle after end_turn", () => {
-    expect(deriveStatus(source({ endedTurn: true, report: "Done" }), undefined, NOW)).toBe("done");
-    expect(deriveStatus(source({ endedTurn: true }), undefined, NOW)).toBe("needs-look");
-  });
-
-  it("is unknown without a task when the transcript is idle mid-turn", () => {
-    expect(deriveStatus(source(), undefined, NOW)).toBe("unknown");
+  it("falls back to the transcript's end of turn, else unknown", () => {
+    expect(deriveAgentStatus(undefined, undefined, transcript({ endedTurn: true, report: "Done" }), QUIET, NOW)).toBe("done");
+    expect(deriveAgentStatus(undefined, undefined, transcript({ endedTurn: true }), QUIET, NOW)).toBe("needs-look");
+    expect(deriveAgentStatus(undefined, undefined, transcript(), QUIET, NOW)).toBe("unknown");
+    expect(deriveAgentStatus(undefined, undefined, null, QUIET, NOW)).toBe("unknown");
   });
 });
 
-describe("assembleAgents", () => {
-  it("joins meta, a real transcript and task facts into an agent", () => {
-    const real: AgentSource = {
-      agentId: "a2baef7967d8bccd4",
-      meta: JSON.parse(fixture("subagent-writes.meta.json")),
-      transcript: parseTranscript(fixture("subagent-writes.jsonl"), { sidechain: true }),
-      mtimeMs: QUIET,
-    };
-    const [agent] = assembleAgents([real], new Map([[real.agentId, task("completed", { totalTokens: 27357 })]]), NOW);
-    expect(agent).toMatchObject({
-      agentId: "a2baef7967d8bccd4",
-      parentAgentId: null,
-      description: "Draft scratch notes file",
-      agentType: "general-purpose",
-      model: "claude-haiku-5-5",
+describe("ownsAgent", () => {
+  it("matches a session name on the agent id's first 8 characters", () => {
+    expect(ownsAgent("Explore#ff796ad3", SUBAGENTS_AGENT)).toBe(true);
+    expect(ownsAgent("Explore#ca7df9fa", SUBAGENTS_AGENT)).toBe(false);
+    expect(ownsAgent(null, SUBAGENTS_AGENT)).toBe(false);
+  });
+});
+
+describe("assemble", () => {
+  it("joins Agent-tool spawns with their records and child sessions", () => {
+    const parent = parentFacts();
+    const { agents } = assemble(parent, children(), new Map(), workflowSources(parent), NOW);
+    const spawned = agents.filter((agent) => agent.workflowId === null);
+    expect(spawned.map((agent) => agent.agentId)).toEqual([SUBAGENTS_AGENT, WORKFLOWS_AGENT]);
+    expect(spawned[0]).toMatchObject({
+      description: "Map pi subagent disk footprint",
+      agentType: "Explore",
+      model: "claude-bridge/claude-sonnet-5-5",
       status: "done",
-      startedAt: Date.parse("2026-10-08T16:18:35.022Z"),
-      endedAt: NOW - 10_000,
+      startedAt: 1791489536831,
+      endedAt: 1791489605599,
+      totalTokens: 49949,
+      context: 41368,
+      contextWindow: 1_000_000,
       errors: 0,
-      totalTokens: 27357,
-      context: 27122,
-      contextWindow: 200_000,
     });
-    expect(agent?.report).toMatch(/^The scratch file is at/);
+    expect(spawned[0]?.steps.filter((step) => step.kind === "tool")).toHaveLength(12);
+    expect(spawned[0]?.report).toMatch(/^Findings below\./);
+    expect(spawned[0]?.prompt).toMatch(/^Research question, read-only\./);
   });
 
-  it("falls back to meta and the transcript when facts are missing", () => {
-    const bare: AgentSource = { agentId: "a9", meta: { model: "haiku" }, transcript: transcript({ lastAt: NOW - 5_000 }), mtimeMs: QUIET };
-    expect(assembleAgents([bare], new Map(), NOW)[0]).toMatchObject({
-      description: "a9",
-      agentType: "agent",
-      model: "haiku",
-      status: "unknown",
-      startedAt: null,
-      endedAt: NOW - 5_000,
-      totalTokens: null,
+  it("falls back to the .output file when no child session matches", () => {
+    const parent = parentFacts();
+    const output: ChildSource = { path: "/t/x.output", transcript: parsePiSession(fixture(`tasks/${SUBAGENTS_AGENT}.output`)), mtimeMs: QUIET };
+    const withoutSessions = children().filter((child) => !ownsAgent(child.transcript.name, SUBAGENTS_AGENT));
+    const { agents } = assemble(parent, withoutSessions, new Map([[SUBAGENTS_AGENT, output]]), [], NOW);
+    expect(agents.find((agent) => agent.agentId === SUBAGENTS_AGENT)).toMatchObject({ totalTokens: 49949, status: "done" });
+  });
+
+  it("shows a just-spawned agent with no transcript as running, then unknown once quiet", () => {
+    const parent = parentFacts();
+    parent.records.clear();
+    const spawnedAt = parent.spawns.get(SUBAGENTS_AGENT)!.at;
+    const agentAt = (now: number) => assemble(parent, [], new Map(), [], now).agents.find((agent) => agent.agentId === SUBAGENTS_AGENT);
+    expect(agentAt(spawnedAt + 1_000)).toMatchObject({ status: "running", endedAt: null, totalTokens: null, steps: [], prompt: "" });
+    expect(agentAt(spawnedAt + 100_000)).toMatchObject({ status: "unknown" });
+  });
+
+  it("prefers the notification's token count", () => {
+    const parent = parentFacts();
+    parent.notifications.set(SUBAGENTS_AGENT, { status: "completed", totalTokens: 50_000, durationMs: 68_768, error: null });
+    const { agents } = assemble(parent, children(), new Map(), [], NOW);
+    expect(agents.find((agent) => agent.agentId === SUBAGENTS_AGENT)?.totalTokens).toBe(50_000);
+  });
+
+  it("attributes the remaining child sessions to the workflow whose window holds their start", () => {
+    const parent = parentFacts();
+    const { agents, workflows } = assemble(parent, children(), new Map(), workflowSources(parent), NOW);
+    const demo = agents.filter((agent) => agent.workflowId === DEMO_RUN);
+    expect(demo).toHaveLength(DEMO_CHILDREN);
+    expect(demo.map((agent) => agent.status)).toEqual(Array(DEMO_CHILDREN).fill("done"));
+    expect(demo[0]).toMatchObject({
+      agentId: "01a11d13-7360-771f-b48d-25439b8dfd46",
+      agentType: "Explore",
+      description: 'Read-only. Look at the path "agents" in the current repo. In 1-2 sentences say what it is for, and list up to 4 key files.',
+      totalTokens: 9663,
+      model: "claude-bridge/claude-sonnet-5-5",
+    });
+    expect(demo.at(-1)?.agentType).toBe("general-purpose");
+    expect(workflows.find((workflow) => workflow.runId === DEMO_RUN)).toEqual({
+      runId: DEMO_RUN,
+      name: "demo-repo-tour",
+      description: "Demo: map three areas of this repo in parallel, suggest one improvement each, then synthesize",
+      status: "done",
+      phases: ["Map", "Suggest", "Synthesize"],
+      startedAt: Date.parse("2026-10-08T19:52:56.351Z"),
+      endedAt: Date.parse("2026-10-08T19:52:56.351Z") + 24477,
+      done: 7,
+      failed: 0,
+      totalTokens: 87842,
+      error: null,
     });
   });
 
-  it("has no end while running and counts failed steps", () => {
-    const failedStep = { at: 1, endAt: 2, kind: "tool" as const, name: "Bash", summary: "false", input: "{}", result: "Exit code 1", isError: true };
-    const [agent] = assembleAgents([source({ steps: [failedStep], lastAt: NOW })], new Map([["a1", task("running")]]), NOW);
-    expect(agent).toMatchObject({ status: "running", endedAt: null, errors: 1, startedAt: NOW - 60_000 });
-  });
-
-  it("links a nested agent to the agent whose tool call launched it", () => {
-    const parent = source({ toolUseIds: new Set(["toolu_child"]), firstAt: 1 }, QUIET, "parent");
-    const child = source({ firstAt: 2 }, QUIET, "child", "toolu_child");
-    const orphan = source({ firstAt: 3 }, QUIET, "orphan", "toolu_from_lead");
-    expect(assembleAgents([parent, child, orphan], new Map(), NOW).map((agent) => [agent.agentId, agent.parentAgentId])).toEqual([
-      ["parent", null],
-      ["child", "parent"],
-      ["orphan", null],
+  it("shows a workflow without a completion as running while its children write", () => {
+    const parent = parentFacts();
+    const { agents, workflows } = assemble(parent, children((t) => (t.firstAt! > Date.parse("2026-10-08T20:13:00Z") ? NOW - 5_000 : QUIET)), new Map(), workflowSources(parent), NOW);
+    expect(agents.filter((agent) => agent.workflowId === LIVE_RUN).map((agent) => [agent.agentType, agent.status, agent.endedAt])).toEqual([
+      ["general-purpose", "running", null],
     ]);
+    expect(workflows.find((workflow) => workflow.runId === LIVE_RUN)).toMatchObject({
+      name: "migrate-bb-plugins-to-pi",
+      status: "running",
+      phases: ["Build", "Review"],
+      endedAt: null,
+      totalTokens: null,
+      done: 0,
+    });
   });
 
-  it("sorts by start time", () => {
-    const late = source({ firstAt: 300 }, QUIET, "late");
-    const early = source({ firstAt: 100 }, QUIET, "early");
-    expect(assembleAgents([late, early], new Map(), NOW).map((agent) => agent.agentId)).toEqual(["early", "late"]);
+  it("shows a killed workflow and its mid-turn children as unknown once idle", () => {
+    const parent = parentFacts();
+    const later = NOW + 10 * 60_000;
+    const lastWrite = Date.parse("2026-10-08T20:14:00Z");
+    const { agents, workflows } = assemble(parent, children(() => lastWrite), new Map(), workflowSources(parent), later);
+    expect(agents.find((agent) => agent.workflowId === LIVE_RUN)?.status).toBe("unknown");
+    expect(workflows.find((workflow) => workflow.runId === LIVE_RUN)).toMatchObject({ status: "unknown", endedAt: lastWrite });
+  });
+
+  it("turns a still-running child of a finished run into unknown", () => {
+    const parent = parentFacts();
+    const fresh = children(() => NOW);
+    const midTurn = fresh.find((child) => child.transcript.name === "Explore#ca7df9fa")!;
+    midTurn.transcript = { ...midTurn.transcript, endedTurn: false };
+    const { agents } = assemble(parent, fresh, new Map(), workflowSources(parent), NOW);
+    expect(agents.find((agent) => agent.agentId === midTurn.transcript.sessionId)?.status).toBe("unknown");
+  });
+
+  it("marks a stopped workflow failed with its error", () => {
+    const parent = parentFacts();
+    parent.notifications.set(DEMO_RUN, { status: "stopped", totalTokens: 100, durationMs: 1_000, error: "killed" });
+    const { workflows } = assemble(parent, [], new Map(), workflowSources(parent), NOW);
+    expect(workflows.find((workflow) => workflow.runId === DEMO_RUN)).toMatchObject({ status: "failed", error: "killed", totalTokens: 100 });
+  });
+
+  it("drops child sessions outside every workflow window", () => {
+    const parent = parentFacts();
+    const { agents } = assemble(parent, children(), new Map(), [], NOW);
+    expect(agents.map((agent) => agent.workflowId)).toEqual([null, null]);
   });
 });

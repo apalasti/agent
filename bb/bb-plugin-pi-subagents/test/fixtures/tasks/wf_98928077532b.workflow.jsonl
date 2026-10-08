@@ -1,0 +1,7 @@
+{"index":0,"key":"ca0f527dc5032a2fc8cd789542c0ba9d","ok":true,"text":"{\"purpose\":\"The `agents` directory holds Markdown definitions (frontmatter with description, model, thinking level, and …"}
+{"index":1,"key":"d8ccf16efdbab0a7acf891b33729306a","ok":true,"text":"{\"purpose\":\"A bb plugin that shows Claude Code subagents within a bb thread: each one's model, context fill, current act…"}
+{"index":2,"key":"05bb31d61e9073422528d6fa6e495e69","ok":true,"text":"{\"purpose\":\"Holds a single repo-local skill, `compare-with-matt`. It is a manual-only workflow for comparing this pi-ada…"}
+{"index":3,"key":"db81b4a8b47fd080b943d691ad117198","ok":true,"text":"{\"file\":\"/Users/andraspalasti/fun/agent/agents/issue-fixer.md\",\"suggestion\":\"Add a rule to the \\\"Hard limits\\\" section o…"}
+{"index":4,"key":"addfd5c21ccee8040f98bc9121de37d0","ok":true,"text":"{\"suggestion\":\"In SubagentsPanel.tsx, the header counts every non-running agent as \\\"finished\\\", including those with st…"}
+{"index":5,"key":"a2133a984c8850ad1582b3c9fd1832fc","ok":true,"text":"{\"file\":\"/Users/andraspalasti/fun/agent/.agents/skills/compare-with-matt/LEDGER.md\",\"suggestion\":\"Fix the empty `## Not …"}
+{"index":6,"key":"780a1bb938f26954e1868356502254ac","ok":true,"text":"This repo is a personal setup for coding agents, built around pi and bb.\n\n- `agents/` holds Markdown sub-agent definitio…"}

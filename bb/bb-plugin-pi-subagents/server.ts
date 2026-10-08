@@ -1,9 +1,9 @@
 import type { BbPluginApi } from "@get-bb/plugin-sdk";
-import { assembleAgents } from "./src/assemble";
+import { assemble } from "./src/assemble";
 import { rpcContract, type ThreadAgents } from "./src/contract";
 import { EVENT_TYPES, foldEvents, type ThreadFacts } from "./src/events";
+import { contextWindow } from "./src/piSession";
 import { createSessionStore, type SessionStore } from "./src/sessions";
-import { contextWindow } from "./src/transcript";
 
 export type { rpcContract } from "./src/contract";
 
@@ -44,25 +44,18 @@ export function createPlugin(store: SessionStore, now: () => number) {
     }
 
     async function threadAgents(threadId: string): Promise<ThreadAgents> {
-      const { sessionId, tasks } = await threadFacts(threadId);
-      const empty: ThreadAgents = { sessionId, cwd: null, environmentId: null, lead: null, agents: [] };
-      if (!sessionId) return empty;
-      const dir = await store.findSessionDir(sessionId);
-      if (!dir) return empty;
-      const [lead, sources, environment] = await Promise.all([
-        store.readLead(dir, sessionId),
-        store.readAgents(dir, sessionId),
-        threadEnvironment(threadId),
-      ]);
+      const { providerThreadId } = await threadFacts(threadId);
+      const empty: ThreadAgents = { sessionId: null, cwd: null, environmentId: null, lead: null, agents: [], workflows: [] };
+      if (!providerThreadId) return empty;
+      const [thread, environment] = await Promise.all([store.readThread(providerThreadId), threadEnvironment(threadId)]);
+      if (!thread) return empty;
+      const { parent } = thread;
       return {
-        sessionId,
-        ...environment,
-        lead: lead && {
-          model: lead.model,
-          context: lead.context,
-          contextWindow: contextWindow(lead.model, lead.peakContext),
-        },
-        agents: assembleAgents(sources, tasks, now()),
+        sessionId: parent.header?.id ?? null,
+        cwd: environment.cwd ?? parent.header?.cwd ?? null,
+        environmentId: environment.environmentId,
+        lead: { model: parent.model, context: parent.context, contextWindow: contextWindow(parent.model, parent.peakContext) },
+        ...assemble(parent, thread.children, thread.outputs, thread.workflows, now()),
       };
     }
 

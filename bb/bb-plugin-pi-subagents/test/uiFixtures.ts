@@ -35,6 +35,7 @@ export function makeAgent(agentId: string, overrides: Partial<Agent> = {}): Agen
     totalTokens: 12_000,
     context: 20_000,
     contextWindow: 200_000,
+    workflowId: null,
     ...overrides,
   };
 }
@@ -46,6 +47,7 @@ export function threadAgents(agents: Agent[], overrides: Partial<ThreadAgents> =
     environmentId: "env_1",
     lead: { model: "claude-opus-5-5", context: 50_000, contextWindow: 200_000 },
     agents,
+    workflows: [],
     ...overrides,
   };
 }

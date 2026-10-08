@@ -1,78 +1,127 @@
-import { appendFile, rm } from "node:fs/promises";
+import { appendFile, readFile, rename, rm, truncate, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createSessionStore } from "../src/sessions";
-import { ERRORS_AGENT, SESSION_ID, WRITES_AGENT, seedProjects } from "./fakes";
+import { createSessionStore, encodeCwd, sessionDirName } from "../src/sessions";
+import {
+  DEMO_CHILD_SESSION,
+  DEMO_RUN,
+  LIVE_RUN,
+  PROVIDER_THREAD_ID,
+  SUBAGENTS_AGENT,
+  SUBAGENTS_SESSION,
+  UID,
+  seedDisk,
+  type Layout,
+} from "./fakes";
 
-let layout: Awaited<ReturnType<typeof seedProjects>>;
+let layout: Layout;
+
+const store = () => createSessionStore({ bridgeDir: layout.bridgeDir, piSessions: layout.piSessions, tmp: layout.tmp, uid: UID });
 
 beforeEach(async () => {
-  layout = await seedProjects();
+  layout = await seedDisk();
 });
 
 afterEach(async () => {
   await rm(layout.root, { recursive: true, force: true });
 });
 
+describe("path encodings", () => {
+  it("matches pi's session dir and pi-subagents' task dir names", () => {
+    expect(sessionDirName("/Users/andraspalasti/fun/agent")).toBe("--Users-andraspalasti-fun-agent--");
+    expect(encodeCwd("/Users/andraspalasti/fun/agent")).toBe("Users-andraspalasti-fun-agent");
+    expect(encodeCwd("C:\\w\\x")).toBe("w-x");
+  });
+});
+
 describe("createSessionStore", () => {
-  it("finds the project dir holding the session transcript", async () => {
-    const store = createSessionStore(layout.root);
-    expect(await store.findSessionDir(SESSION_ID)).toBe(layout.sessionDir);
-    expect(await store.findSessionDir("missing")).toBeNull();
+  it("reads the parent, its child sessions and its workflow files", async () => {
+    const thread = await store().readThread(PROVIDER_THREAD_ID);
+    expect(thread?.parentPath).toBe(layout.parentPath);
+    expect(thread?.parent.spawns.size).toBe(2);
+    expect(thread?.children.map((child) => child.transcript.name).sort()).toEqual([
+      "Explore#4f3c9ead",
+      "Explore#5c64547e",
+      "Explore#6c45e43b",
+      "Explore#91186f5e",
+      "Explore#9a764027",
+      "Explore#ca7df9fa",
+      "Explore#efc70e1f",
+      "Explore#ff796ad3",
+      "general-purpose#4563ed95",
+      "general-purpose#f7332955",
+    ]);
+    expect(thread?.children.every((child) => child.mtimeMs > 0)).toBe(true);
+    expect(thread?.outputs.size).toBe(0);
+    expect(thread?.workflows.map((workflow) => [workflow.launch.runId, workflow.meta.name, workflow.journal.done])).toEqual([
+      [DEMO_RUN, "demo-repo-tour", 7],
+      [LIVE_RUN, "migrate-bb-plugins-to-pi", 0],
+    ]);
+    expect(thread?.workflows[0]?.journalMtimeMs).toBeGreaterThan(0);
+    expect(thread?.workflows[1]?.journalMtimeMs).toBeNull();
   });
 
-  it("rescans for a missing session only after a minute", async () => {
-    let clock = 0;
-    const store = createSessionStore(layout.root, () => clock);
-    expect(await store.findSessionDir("late")).toBeNull();
-    await appendFile(join(layout.sessionDir, "late.jsonl"), "");
-    clock = 59_000;
-    expect(await store.findSessionDir("late")).toBeNull();
-    clock = 60_000;
-    expect(await store.findSessionDir("late")).toBe(layout.sessionDir);
+  it("skips sessions of other parents and sessions older than the parent", async () => {
+    const other = (await store().readThread(PROVIDER_THREAD_ID))?.children.map((child) => child.path) ?? [];
+    expect(other.some((path) => path.includes("2026-10-07T20-08-04"))).toBe(false);
   });
 
-  it("returns nothing for a missing projects root", async () => {
-    expect(await createSessionStore(join(layout.root, "nope")).findSessionDir(SESSION_ID)).toBeNull();
+  it("reads an agent's .output file when it has no child session", async () => {
+    await rm(join(layout.childDir, SUBAGENTS_SESSION));
+    const thread = await store().readThread(PROVIDER_THREAD_ID);
+    expect([...(thread?.outputs.keys() ?? [])]).toEqual([SUBAGENTS_AGENT]);
+    expect(thread?.outputs.get(SUBAGENTS_AGENT)?.transcript.totalTokens).toBe(49949);
   });
 
-  it("reads the lead transcript without sidechain lines", async () => {
-    const lead = await createSessionStore(layout.root).readLead(layout.sessionDir, SESSION_ID);
-    expect(lead?.model).toBe("claude-opus-5-5");
-    expect(await createSessionStore(layout.root).readLead(layout.sessionDir, "missing")).toBeNull();
+  it("returns null for a missing parent, an empty parent or an unsafe id", async () => {
+    expect(await store().readThread("pi_missing")).toBeNull();
+    expect(await store().readThread("../bridge/pi_e6c62b6b-9ba7-4f95-85af-6183a2877e86")).toBeNull();
+    await writeFile(join(layout.bridgeDir, "pi_empty.jsonl"), "");
+    expect(await store().readThread("pi_empty")).toBeNull();
   });
 
-  it("reads every agent with its meta and transcript", async () => {
-    const sources = await createSessionStore(layout.root).readAgents(layout.sessionDir, SESSION_ID);
-    const byId = new Map(sources.map((source) => [source.agentId, source]));
-    expect([...byId.keys()].sort()).toEqual([ERRORS_AGENT, WRITES_AGENT].sort());
-    expect(byId.get(WRITES_AGENT)?.meta).toMatchObject({ description: "Draft scratch notes file", model: "haiku" });
-    expect(byId.get(ERRORS_AGENT)?.transcript.handedBack).toBe(true);
-    expect(byId.get(WRITES_AGENT)?.mtimeMs).toBeGreaterThan(0);
+  it("returns no children when the session dir is missing", async () => {
+    await rm(layout.childDir, { recursive: true });
+    expect((await store().readThread(PROVIDER_THREAD_ID))?.children).toEqual([]);
   });
 
-  it("uses empty meta when the meta file is missing", async () => {
-    await rm(join(layout.subagents, `agent-${WRITES_AGENT}.meta.json`));
-    const sources = await createSessionStore(layout.root).readAgents(layout.sessionDir, SESSION_ID);
-    expect(sources.find((source) => source.agentId === WRITES_AGENT)?.meta).toEqual({});
+  it("folds only appended complete lines of the parent and restarts when it shrinks", async () => {
+    const sessions = store();
+    const first = await sessions.readThread(PROVIDER_THREAD_ID);
+    const record = JSON.stringify({ type: "custom", customType: "subagents:record", data: { id: "late-agent", status: "completed" } });
+    await appendFile(layout.parentPath, record.slice(0, 20));
+    expect((await sessions.readThread(PROVIDER_THREAD_ID))?.parent.records.has("late-agent")).toBe(false);
+    await appendFile(layout.parentPath, `${record.slice(20)}\n`);
+    const grown = await sessions.readThread(PROVIDER_THREAD_ID);
+    expect(grown?.parent).toBe(first?.parent);
+    expect(grown?.parent.records.has("late-agent")).toBe(true);
+
+    const text = await readFile(layout.parentPath, "utf8");
+    await truncate(layout.parentPath, text.indexOf("\n") + 1);
+    const shrunk = await sessions.readThread(PROVIDER_THREAD_ID);
+    expect(shrunk?.parent.records.size).toBe(0);
+    expect(shrunk?.parent.header?.id).toBe("01a11d12-e481-771f-b48d-2541fad34b6a");
   });
 
-  it("returns no agents when the session has no subagents dir", async () => {
-    await rm(join(layout.sessionDir, SESSION_ID), { recursive: true });
-    expect(await createSessionStore(layout.root).readAgents(layout.sessionDir, SESSION_ID)).toEqual([]);
+  it("reuses a child's parse while unchanged and reparses after it grows", async () => {
+    const sessions = store();
+    const transcriptOf = async () =>
+      (await sessions.readThread(PROVIDER_THREAD_ID))?.children.find((child) => child.path.endsWith(DEMO_CHILD_SESSION))?.transcript;
+    const first = await transcriptOf();
+    expect(await transcriptOf()).toBe(first);
+    const line = JSON.stringify({ type: "message", timestamp: "2026-10-08T19:53:05Z", message: { role: "assistant", content: [{ type: "text", text: "one more" }] } });
+    await appendFile(join(layout.childDir, DEMO_CHILD_SESSION), `${line}\n`);
+    const third = await transcriptOf();
+    expect(third).not.toBe(first);
+    expect(third?.report).toBe("one more");
   });
 
-  it("reuses the parse for an unchanged file and reparses after it grows", async () => {
-    const store = createSessionStore(layout.root);
-    const first = await store.readAgents(layout.sessionDir, SESSION_ID);
-    const second = await store.readAgents(layout.sessionDir, SESSION_ID);
-    const transcriptOf = (sources: typeof first) => sources.find((source) => source.agentId === WRITES_AGENT)?.transcript;
-    expect(transcriptOf(second)).toBe(transcriptOf(first));
-
-    const text = JSON.stringify({ type: "assistant", isSidechain: true, message: { content: [{ type: "text", text: "one more" }] } });
-    await appendFile(join(layout.subagents, `agent-${WRITES_AGENT}.jsonl`), `${text}\n`);
-    const third = await store.readAgents(layout.sessionDir, SESSION_ID);
-    expect(transcriptOf(third)).not.toBe(transcriptOf(first));
-    expect(transcriptOf(third)?.steps.at(-1)?.summary).toBe("one more");
+  it("finds a child session that appears after the first read", async () => {
+    const sessions = store();
+    const moved = join(layout.root, DEMO_CHILD_SESSION);
+    await rename(join(layout.childDir, DEMO_CHILD_SESSION), moved);
+    expect((await sessions.readThread(PROVIDER_THREAD_ID))?.children).toHaveLength(9);
+    await rename(moved, join(layout.childDir, DEMO_CHILD_SESSION));
+    expect((await sessions.readThread(PROVIDER_THREAD_ID))?.children).toHaveLength(10);
   });
 });

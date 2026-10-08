@@ -40,8 +40,24 @@ export const agentSchema = z.object({
   totalTokens: z.number().nullable(),
   context: z.number(),
   contextWindow: z.number(),
+  workflowId: z.string().nullable(),
 });
 export type Agent = z.infer<typeof agentSchema>;
+
+export const workflowSchema = z.object({
+  runId: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  status: agentStatusSchema,
+  phases: z.array(z.string()),
+  startedAt: z.number(),
+  endedAt: z.number().nullable(),
+  done: z.number(),
+  failed: z.number(),
+  totalTokens: z.number().nullable(),
+  error: z.string().nullable(),
+});
+export type Workflow = z.infer<typeof workflowSchema>;
 
 export const threadAgentsSchema = z.object({
   sessionId: z.string().nullable(),
@@ -49,6 +65,7 @@ export const threadAgentsSchema = z.object({
   environmentId: z.string().nullable(),
   lead: z.object({ model: z.string().nullable(), context: z.number(), contextWindow: z.number() }).nullable(),
   agents: z.array(agentSchema),
+  workflows: z.array(workflowSchema),
 });
 export type ThreadAgents = z.infer<typeof threadAgentsSchema>;
 
