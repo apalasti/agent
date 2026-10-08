@@ -11,6 +11,7 @@
 | `skills/diagnosing-bugs/` | `engineering/diagnosing-bugs/` |
 | `skills/domain-modeling/` | `engineering/domain-modeling/` |
 | `skills/grill-me/` | `productivity/grilling/` (his `grill-me` is an alias for it) |
+| `skills/pr/` | `engineering/pr/` |
 | `skills/prototype/` | `engineering/prototype/` |
 | `skills/research/` | `engineering/research/` |
 | `skills/tdd/` | `engineering/tdd/` |
@@ -74,6 +75,6 @@ Deferred by the user to a later session:
 
 - `improve-codebase-architecture`, reviewed 2026-10-01 and deferred again. Open questions: Matt's exit is grilling then `/to-spec` in the same conversation, but our `to-prd` leaves out the per-file outline AGENTS.md requires for restructures (route it through `to-prd` or `issue-tracker.md`'s "Decisions prose cannot carry"?); whether the picked candidate is rendered like a wayfinder `seam` ticket, which would move that method from `extensions/wayfinder/seam.md` into `codebase-design`; a pointer from `codebase-design`'s body, since its description claims "find deepening opportunities".
 - `~/.pi/agent/skills/visual-explainer` is a dangling symlink to `../../../.agents/skills/visual-explainer`.
-- Candidates: `grill-with-docs`, `pr`, `retro`, `to-questionnaire`, `wizard`, `ask-matt`, `triage`, `teach`, `git-guardrails-claude-code`, `migrate-to-shoehorn`, `scaffold-exercises`, `setup-pre-commit`, `claude-handoff`, `loop-me`, `setup-ts-deep-modules`, `writing-beats`, `writing-fragments`, `writing-shape`. An earlier reviewer recommended adopting the first four (`retro` user-invoked) and rejecting the rest.
+- Candidates: `grill-with-docs`, `retro`, `to-questionnaire`, `wizard`, `ask-matt`, `triage`, `teach`, `git-guardrails-claude-code`, `migrate-to-shoehorn`, `scaffold-exercises`, `setup-pre-commit`, `claude-handoff`, `loop-me`, `setup-ts-deep-modules`, `writing-beats`, `writing-fragments`, `writing-shape`. An earlier reviewer recommended adopting the first three and `pr` (since adopted) (`retro` user-invoked) and rejecting the rest.
 
 ## Not adopted
