@@ -14,7 +14,10 @@ const FAILED = new Set(["error", "stopped", "aborted"]);
 /** pi-subagents names an agent's session `<Type>#<first 8 chars of its id>`. */
 export const ownsAgent = (name: string | null, agentId: string) => name?.endsWith(`#${agentId.slice(0, 8)}`) ?? false;
 
-const finished = (report: string | null | undefined): AgentStatus => (report?.trim() ? "done" : "needs-look");
+const finished = (report: string | null): AgentStatus => (report ? "done" : "needs-look");
+
+const reportOf = (record: RecordFact | undefined, transcript: PiTranscript | null) =>
+  (record?.result?.trim() ? record.result : null) ?? transcript?.report ?? null;
 
 export function deriveAgentStatus(
   record: RecordFact | undefined,
@@ -24,7 +27,7 @@ export function deriveAgentStatus(
   now: number,
 ): AgentStatus {
   const status = record?.status ?? notification?.status;
-  if (status && COMPLETED.has(status)) return finished(record?.result ?? transcript?.report);
+  if (status && COMPLETED.has(status)) return finished(reportOf(record, transcript));
   if (status && FAILED.has(status)) return "failed";
   if (now - mtimeMs < RECENTLY_WRITTEN_MS) return "running";
   if (transcript?.endedTurn) return finished(transcript.report);
@@ -37,7 +40,7 @@ function deriveChildStatus(child: ChildSource, runFinished: boolean, now: number
   return "unknown";
 }
 
-const emptyActivity = { prompt: "", steps: [], report: null, files: [], context: 0, peakContext: 0 };
+const emptyActivity = { prompt: "", steps: [], files: [], context: 0, peakContext: 0 };
 
 function spawnedAgent(parent: ParentFacts, spawn: SpawnFact, source: ChildSource | undefined, now: number): Agent {
   const transcript = source?.transcript ?? null;
@@ -48,7 +51,7 @@ function spawnedAgent(parent: ParentFacts, spawn: SpawnFact, source: ChildSource
   const startedAt = record?.startedAt ?? transcript?.firstAt ?? spawn.at;
   const durationMs = notification?.durationMs;
   const endedAt = record?.completedAt ?? (durationMs ? startedAt + durationMs : (transcript?.lastAt ?? null));
-  const { prompt, steps, files, context, peakContext, report } = transcript ?? emptyActivity;
+  const { prompt, steps, files, context, peakContext } = transcript ?? emptyActivity;
   return {
     agentId: spawn.agentId,
     parentAgentId: null,
@@ -59,7 +62,7 @@ function spawnedAgent(parent: ParentFacts, spawn: SpawnFact, source: ChildSource
     startedAt,
     endedAt: status === "running" ? null : endedAt,
     prompt,
-    report: record?.result ?? report,
+    report: reportOf(record, transcript),
     steps,
     files,
     errors: steps.filter((step) => step.isError).length,

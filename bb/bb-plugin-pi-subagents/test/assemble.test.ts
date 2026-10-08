@@ -48,6 +48,7 @@ describe("deriveAgentStatus", () => {
 
   it("uses the transcript report when the record has none", () => {
     expect(deriveAgentStatus(record("completed", null), undefined, transcript({ report: "From transcript" }), QUIET, NOW)).toBe("done");
+    expect(deriveAgentStatus(record("completed", ""), undefined, transcript({ report: "From transcript" }), QUIET, NOW)).toBe("done");
   });
 
   it.each(["error", "stopped", "aborted"])("is failed on %s", (status) => {
@@ -113,6 +114,16 @@ describe("assemble", () => {
     const agentAt = (now: number) => assemble(parent, [], new Map(), [], now).agents.find((agent) => agent.agentId === SUBAGENTS_AGENT);
     expect(agentAt(spawnedAt + 1_000)).toMatchObject({ status: "running", endedAt: null, totalTokens: null, steps: [], prompt: "" });
     expect(agentAt(spawnedAt + 100_000)).toMatchObject({ status: "unknown" });
+  });
+
+  it("falls back to the transcript's report when the record's result is blank, else has none", () => {
+    const parent = parentFacts();
+    const blank = { ...parent.records.get(SUBAGENTS_AGENT)!, result: " \n" };
+    parent.records.set(SUBAGENTS_AGENT, blank);
+    const agentWith = (sources: ChildSource[]) =>
+      assemble(parent, sources, new Map(), [], NOW).agents.find((agent) => agent.agentId === SUBAGENTS_AGENT);
+    expect(agentWith(children())).toMatchObject({ status: "done", report: expect.stringMatching(/^Findings below\./) });
+    expect(agentWith([])).toMatchObject({ status: "needs-look", report: null });
   });
 
   it("prefers the notification's token count", () => {

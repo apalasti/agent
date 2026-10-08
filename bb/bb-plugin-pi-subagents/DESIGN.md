@@ -79,7 +79,9 @@ Workflow: notification `completed` → done; failed statuses → failed; journal
 else unknown.
 
 Known limits: workflow children carry no label or phase on disk, so they are titled by their prompt's first line;
-two concurrent workflows in one thread can mix children; a run killed with pi shows `unknown` once idle >90s.
+two concurrent workflows in one thread can mix children; a run killed with pi shows `unknown` once idle >90s; a
+foreground `Agent` call (`run_in_background: false`) has no `toolResult` until it finishes, so while it runs it is
+not shown, or is listed under a workflow that runs at the same time.
 
 ## Files
 
