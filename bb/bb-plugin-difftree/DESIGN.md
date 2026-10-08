@@ -174,6 +174,7 @@ capped at 200 lines with a "… N more rows" line. `--json` prints `TreeResult`.
 - Zero stat halves render dim instead of added/removed-colored: `+114 −0` no
   longer shows a red `−0` (UI round 2).
 - The truncation banner uses `role="status"`.
+- Wrap long lines: a toolbar toggle (`TextWrap`, `aria-pressed`) passes `overflow="wrap"` to bb's `Diff`; the choice is kept in `localStorage` (`difftree.wrapLines`). Default stays `scroll`; the design had no wrap control.
 - The CLI shows `?` for untracked files (git's letter), where the panel shows
   `A` with an "untracked" title.
 - `branchesResultSchema.message` (optional) — backend addition, logged in

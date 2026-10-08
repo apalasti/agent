@@ -26,7 +26,7 @@ export function noPatchReason(file: ChangedFile): string | null {
   return null;
 }
 
-function PatchBody({ threadId, scope, file }: { threadId: string; scope: Scope; file: ChangedFile }) {
+function PatchBody({ threadId, scope, file, wrap }: { threadId: string; scope: Scope; file: ChangedFile; wrap: boolean }) {
   const rpc = useRpc<typeof rpcContract>();
   const [state, setState] = useState<PatchState>({ status: "loading", previous: null });
   const [attempt, setAttempt] = useState(0);
@@ -65,17 +65,17 @@ function PatchBody({ threadId, scope, file }: { threadId: string; scope: Scope; 
   if (shown.patch.trim() === "") return <Note>No text changes (only the file mode or metadata changed).</Note>;
   return (
     <>
-      <Diff patch={shown.patch} path={file.path} className="text-xs" />
+      <Diff patch={shown.patch} path={file.path} overflow={wrap ? "wrap" : "scroll"} className="text-xs" />
       {shown.truncated ? <Note>bb truncated this patch; open the file to see all of it.</Note> : null}
     </>
   );
 }
 
-export function FilePatch({ threadId, scope, file }: { threadId: string; scope: Scope; file: ChangedFile }) {
+export function FilePatch({ threadId, scope, file, wrap }: { threadId: string; scope: Scope; file: ChangedFile; wrap: boolean }) {
   const reason = noPatchReason(file);
   return (
     <div role="group" aria-label={`Patch for ${file.path}`} className="border-b border-border bg-background">
-      {reason === null ? <PatchBody threadId={threadId} scope={scope} file={file} /> : <Note>{reason}</Note>}
+      {reason === null ? <PatchBody threadId={threadId} scope={scope} file={file} wrap={wrap} /> : <Note>{reason}</Note>}
     </div>
   );
 }

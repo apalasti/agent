@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, waitFor, within } from "@testing-library/react";
 import { loadPluginApp, renderSlot, type CapturedPluginApp } from "@get-bb/plugin-sdk/testing/app";
 import type { PluginCommandRegistration } from "@get-bb/plugin-sdk/app";
@@ -8,7 +8,10 @@ import { buildTree, initialExpanded, visibleRows } from "../../src/tree";
 import { REFETCH_DEBOUNCE_MS } from "../../src/ui/useDiffTree";
 import { available, branchesFixture, ENV, NU_FILES, NU_TREE, patchFor, rpcHandlers, TRUNCATED_TREE } from "./fixtures";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 beforeAll(() => {
   globalThis.ResizeObserver ??= class {
@@ -166,6 +169,30 @@ describe("Diff tree panel", () => {
 
     fireEvent.click(row(rendered, "frontend/src/pages/SolutionPage.tsx"));
     expect(rendered.queryByTestId("bb-diff")).toBeNull();
+  });
+
+  it("wraps long patch lines only after the toggle is pressed, and remembers the choice", async () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => void store.set(key, value),
+    });
+    const rendered = await renderPanel(NU_TREE, { patch: ({ path }) => patchFor(path) });
+    await treeOf(rendered);
+    fireEvent.click(rendered.getByRole("button", { name: "Expand all" }));
+    fireEvent.click(row(rendered, "frontend/src/pages/SolutionPage.tsx"));
+    expect((await rendered.findByTestId("bb-diff")).getAttribute("data-overflow")).toBe("scroll");
+
+    const toggle = rendered.getByRole("button", { name: "Wrap long lines" });
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+    expect(rendered.getByTestId("bb-diff").getAttribute("data-overflow")).toBe("wrap");
+
+    cleanup();
+    const again = await renderPanel(NU_TREE, { patch: ({ path }) => patchFor(path) });
+    await treeOf(again);
+    expect(again.getByRole("button", { name: "Wrap long lines" }).getAttribute("aria-pressed")).toBe("true");
   });
 
   it("explains binary and too-large files instead of fetching their patch", async () => {

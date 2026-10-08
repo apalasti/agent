@@ -66,6 +66,7 @@ export function TreeView({
   scope,
   files,
   query,
+  wrap,
   controllerRef,
 }: {
   threadId: string;
@@ -73,6 +74,7 @@ export function TreeView({
   scope: Scope;
   files: readonly ChangedFile[];
   query: string;
+  wrap: boolean;
   controllerRef: { current: TreeController | null };
 }) {
   const navigate = useBbNavigate();
@@ -187,7 +189,7 @@ export function TreeView({
           return (
             <div key={`${node.kind}:${node.path}`}>
               {row}
-              <FilePatch threadId={threadId} scope={scope} file={node.file} />
+              <FilePatch threadId={threadId} scope={scope} file={node.file} wrap={wrap} />
             </div>
           );
         }

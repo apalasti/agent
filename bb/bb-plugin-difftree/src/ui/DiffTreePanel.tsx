@@ -11,6 +11,7 @@ import { ScopePicker } from "./ScopePicker";
 import { Stats } from "./Stats";
 import { TreeView, type TreeController } from "./TreeView";
 import { useDiffTree } from "./useDiffTree";
+import { useWrapLines } from "./useWrapLines";
 
 type Available = Extract<TreeResult, { outcome: "available" }>;
 type NotAvailable = Exclude<TreeResult, Available>;
@@ -31,9 +32,28 @@ function StatusBox({ children, role = "status" }: { children: ReactNode; role?: 
   );
 }
 
-function IconButton({ icon, label, onClick, className }: { icon: string; label: string; onClick(): void; className?: string }) {
+function IconButton({
+  icon,
+  label,
+  onClick,
+  className,
+  pressed,
+}: {
+  icon: string;
+  label: string;
+  onClick(): void;
+  className?: string;
+  pressed?: boolean;
+}) {
   return (
-    <Button variant="ghost" size="icon" aria-label={label} onClick={onClick} className={cn("size-7 shrink-0 text-muted-foreground", className)}>
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label={label}
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={cn("size-7 shrink-0 text-muted-foreground", pressed && "bg-accent text-foreground", className)}
+    >
       <Icon name={icon} aria-hidden className="!size-3.5" />
     </Button>
   );
@@ -114,7 +134,17 @@ function FilterBar({
   );
 }
 
-function AvailableView({ threadId, result, refreshing }: { threadId: string; result: Available; refreshing: boolean }) {
+function AvailableView({
+  threadId,
+  result,
+  refreshing,
+  wrap,
+}: {
+  threadId: string;
+  result: Available;
+  refreshing: boolean;
+  wrap: boolean;
+}) {
   const [query, setQuery] = useState("");
   const controller = useRef<TreeController | null>(null);
   if (result.files.length === 0) {
@@ -139,6 +169,7 @@ function AvailableView({ threadId, result, refreshing }: { threadId: string; res
           scope={result.scope}
           files={result.files}
           query={query}
+          wrap={wrap}
           controllerRef={controller}
         />
       </div>
@@ -148,6 +179,7 @@ function AvailableView({ threadId, result, refreshing }: { threadId: string; res
 
 export function DiffTreePanel({ threadId }: PluginThreadPanelProps) {
   const { result, error, refreshing, refetch, setScope } = useDiffTree(threadId);
+  const [wrap, toggleWrap] = useWrapLines();
 
   let body: ReactNode;
   if (result === null && error !== null) {
@@ -162,7 +194,7 @@ export function DiffTreePanel({ threadId }: PluginThreadPanelProps) {
   } else if (result === null) {
     body = <StatusBox>Loading changes…</StatusBox>;
   } else if (result.outcome === "available") {
-    body = <AvailableView threadId={threadId} result={result} refreshing={refreshing} />;
+    body = <AvailableView threadId={threadId} result={result} refreshing={refreshing} wrap={wrap} />;
   } else {
     body = (
       <StatusBox>
@@ -186,11 +218,12 @@ export function DiffTreePanel({ threadId }: PluginThreadPanelProps) {
             onChange={setScope}
           />
         )}
+        <IconButton icon="TextWrap" label="Wrap long lines" pressed={wrap} onClick={toggleWrap} className="ml-auto" />
         <IconButton
           icon={refreshing ? "Loading" : "RotateCcw"}
           label="Refresh"
           onClick={refetch}
-          className={cn("ml-auto", refreshing && "[&_[data-icon-root]]:animate-spin")}
+          className={cn(refreshing && "[&_[data-icon-root]]:animate-spin")}
         />
       </div>
       {error !== null && result !== null ? (
