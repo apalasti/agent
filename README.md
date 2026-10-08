@@ -56,13 +56,13 @@ Finished issues are reviewed in chunks by `code-review`. The run ends with a rep
 
 ## bb
 
-[`bb-plugin-worktrees/`](bb-plugin-worktrees/README.md) is a [bb](https://getbb.app) plugin: a
+[`bb/bb-plugin-worktrees/`](bb/bb-plugin-worktrees/README.md) is a [bb](https://getbb.app) plugin: a
 sidebar of projects → git worktrees → threads, a New task dialog that starts each task in a
 fresh worktree, and a Workflow dialog for the `.scratch` maps and issues above.
 
 ```bash
-cd bb-plugin-worktrees && npm install && bb plugin build && cd ..
-bb plugin install ./bb-plugin-worktrees
+cd bb/bb-plugin-worktrees && npm install && bb plugin build && cd ../..
+bb plugin install ./bb/bb-plugin-worktrees
 ```
 
 pi slash commands such as `/wayfinder` and `/orchestrate` do not work inside bb: they drive
