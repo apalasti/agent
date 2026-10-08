@@ -54,20 +54,6 @@ needs-plan → ready-to-implement → in-progress → done
 
 Finished issues are reviewed in chunks by `code-review`. The run ends with a report and a `git reset --soft` undo; it never pushes.
 
-## Watch PR Workflow
-
-Watch an Azure DevOps PR for build errors and unresolved comments, and auto-deploy the agent to fix them. Authenticates via the Azure CLI session (`az login`).
-
-```
-/watch-pr <pr-url> [interval-seconds]     # watch a specific PR
-/watch-pr <repo-url> [interval-seconds]   # pick from the repo's active PRs
-/watch-pr [interval-seconds]              # pick from the current repo's active PRs
-/watch-pr status
-/watch-pr stop [pr-id|all]
-```
-
-See [`extensions/watch-pr/README.md`](extensions/watch-pr/README.md) for details.
-
 ## bb
 
 [`bb-plugin-worktrees/`](bb-plugin-worktrees/README.md) is a [bb](https://getbb.app) plugin: a
