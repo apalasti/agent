@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # setup.sh — symlink this repo's skills and extensions into pi's global config dirs,
-# and install the forked extensions under packages/ as pi packages
+# and build + install the bb plugins under bb/
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -86,6 +86,35 @@ done
 echo ""
 echo "Context  ($PI_AGENT_DIR)"
 link_item "$REPO_DIR/AGENTS.md" "$PI_AGENT_DIR/AGENTS.md"
+
+# ─── bb plugins ──────────────────────────────────────────────────────────────
+
+echo ""
+echo "bb plugins"
+
+if ! command -v bb >/dev/null; then
+  echo "  (bb not on PATH, skipping)"
+else
+  installed="$(bb plugin list --json)"
+  for dir in "$REPO_DIR/bb/"bb-plugin-*/; do
+    dir="${dir%/}"
+    name="$(basename "$dir")"
+    (cd "$dir" && npm install --silent && bb plugin build >/dev/null)
+    id="$(python3 -c '
+import json, sys
+for p in json.loads(sys.argv[1])["plugins"]:
+    if p["source"] == "path:" + sys.argv[2]:
+        print(p["id"])
+' "$installed" "$dir")"
+    if [[ -n "$id" ]]; then
+      bb plugin reload "$id" >/dev/null
+      echo "  ✓ rebuilt and reloaded: $name"
+    else
+      bb plugin install --yes "$dir" >/dev/null
+      echo "  ↗ installed: $name"
+    fi
+  done
+fi
 
 echo ""
 echo "Done. Restart pi (or run /reload) to pick up changes."

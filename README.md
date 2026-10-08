@@ -60,10 +60,11 @@ Finished issues are reviewed in chunks by `code-review`. The run ends with a rep
 sidebar of projects → git worktrees → threads, a New task dialog that starts each task in a
 fresh worktree, and a Tasks panel (a tab beside each thread) for the `.scratch` maps and issues above.
 
-```bash
-cd bb/bb-plugin-worktrees && npm install && bb plugin build && cd ../..
-bb plugin install ./bb/bb-plugin-worktrees
-```
+[`bb/bb-plugin-thread-namer/`](bb/bb-plugin-thread-namer/README.md) is an AI service that lets
+bb title threads (and write commit messages) with Claude Code's haiku.
+
+`./setup.sh` builds every `bb/bb-plugin-*` and installs it, or reloads it if it is already
+installed from that path.
 
 pi slash commands such as `/wayfinder` and `/orchestrate` do not work inside bb: they drive
 pi's interactive UI (pickers, editor prefill), which bb's pi bridge does not render. Use the

@@ -1,0 +1,31 @@
+{
+  "name": "bb-plugin-thread-namer",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "bb": ">=0.45",
+    "bbPluginSdk": ">=0.6.15"
+  },
+  "bb": {
+    "name": "Thread Namer",
+    "description": "An AI service that answers bb's thread-title and commit-message prompts with Claude Code (haiku by default).",
+    "branding": {
+      "icon": "Tag"
+    },
+    "server": "./server.ts"
+  },
+  "devDependencies": {
+    "@get-bb/plugin-sdk": "0.6.15",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.3.0",
+    "hono": "^4.13.13",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.7",
+    "zod": "^4.6.5"
+  }
+}
