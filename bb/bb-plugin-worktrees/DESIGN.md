@@ -133,7 +133,7 @@ bb-plugin-worktrees/
                             (a `project-checkout` defaultEnvironment seed still shows the main checkout)
   src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
-  src/ui/tasks/              Tasks panel (threadPanelAction): model.ts, useLaunch.ts, TasksPanel, EffortSection, TicketRow, BatchCard, HandoffBanner, ChartFooter, tone.ts
+  src/ui/tasks/              Tasks panel (threadPanelAction) + TasksHeaderButton: model.ts, useLaunch.ts, TasksPanel, EffortSection, TicketRow, BatchCard, HandoffBanner, ChartFooter, tone.ts
   src/scratch.ts            pure .scratch scanner + pi prompt composition (see `.scratch/` workflow)
   src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu
   skills/worktrees/SKILL.md the `bb task` CLI for agents
@@ -180,7 +180,9 @@ and had its own worktree discovery.)
 
 Surfaces: the **Tasks** tab of a thread's side panel (`TasksPanel`, a `threadPanelAction`; the
 worktree comes from `threadWorktree(threadId)`, and `useScratchView` refetches `scratch` every 5s
-and on the refresh epoch), and `bb task scratch | run
+and on the refresh epoch); a **Tasks** button in the header of every worktree thread
+(`TasksHeaderButton`, an `experimental_threadHeaderAction`) with the badge's runnable count, which
+opens or focuses that tab, since bb has no pinned or non-closable thread-panel tab; and `bb task scratch | run
 | orchestrate | chart | handoff` (documented in `skills/worktrees/SKILL.md`).
 
 Rules carried over from pi unchanged: an effort is `.scratch/<slug>/` with `MAP.md` and/or
@@ -225,7 +227,7 @@ src/ui/tasks/    TasksPanel({threadId}) loads threadWorktree then useScratchView
                  useLaunch(target, reload) → {agent, setAgent, busy, launch} (⌘/Ctrl-click stays put);
                  issues are one batch per effort (Orchestrate runs every open issue)
                  (The Workflow dialog was replaced by the Tasks panel.)
-test/scratch.test.ts, test/tasks-panel.test.tsx, test/tasks-model.test.ts, workflow block in test/server.test.ts
+test/scratch.test.ts, test/tasks-panel.test.tsx, test/tasks-header.test.tsx, test/tasks-model.test.ts, workflow block in test/server.test.ts
 ```
 
 Template placeholders, filled exactly as the pi extensions do (`__dirname` there is

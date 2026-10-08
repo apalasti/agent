@@ -174,6 +174,28 @@ export function useScratchView(projectId: string, path: string): { view: Scratch
   return { ...state, reload };
 }
 
+export type ThreadWorktree =
+  | { status: "loading" }
+  | { status: "outside" }
+  | { status: "error"; message: string }
+  | { status: "found"; projectId: string; path: string; label: string };
+
+export function useThreadWorktree(threadId: string): ThreadWorktree {
+  const rpc = useWorktreesRpc();
+  const [located, setLocated] = useState<ThreadWorktree>({ status: "loading" });
+  useEffect(() => {
+    let cancelled = false;
+    rpc.call("threadWorktree", { threadId }).then(
+      (result) => !cancelled && setLocated(result === null ? { status: "outside" } : { status: "found", ...result }),
+      (cause: unknown) => !cancelled && setLocated({ status: "error", message: errorMessage(cause) }),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [rpc, threadId]);
+  return located;
+}
+
 /** `loaded` turns true once the backend answered, so a composer can mount with its seed already in place. */
 export function useAgentDefaults(projectId: string, prefer?: string): { loaded: boolean; defaults: AgentDefaults | null } {
   const rpc = useWorktreesRpc();

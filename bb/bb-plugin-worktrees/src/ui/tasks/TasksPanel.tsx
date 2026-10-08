@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { experimental_ProviderModelPicker as ProviderModelPicker, useBbNavigate, type PluginThreadPanelProps } from "@get-bb/plugin-sdk/app";
 import { cn } from "@/lib/utils";
-import { errorMessage, useScratchView, useTasksExpanded, useWorktreesRpc } from "../data";
+import { useScratchView, useTasksExpanded, useThreadWorktree, useWorktreesRpc } from "../data";
 import { ChartFooter } from "./ChartFooter";
 import { EffortSection } from "./EffortSection";
 import { effortModel, legend, liveThreadMap, type EffortModel, type TaskRow, type TaskState } from "./model";
@@ -9,24 +9,11 @@ import { STATE_DOT, STATE_LABEL } from "./tone";
 import { needsPiWarning, useLaunch, type Modifiers } from "./useLaunch";
 
 type Worktree = { projectId: string; path: string; label: string };
-type Located = { status: "loading" } | { status: "outside" } | { status: "error"; message: string } | ({ status: "found" } & Worktree);
 
 const LEGEND_ORDER: readonly TaskState[] = ["running", "ready", "blocked", "done"];
 
 export function TasksPanel({ threadId }: PluginThreadPanelProps) {
-  const rpc = useWorktreesRpc();
-  const [located, setLocated] = useState<Located>({ status: "loading" });
-
-  useEffect(() => {
-    let cancelled = false;
-    rpc.call("threadWorktree", { threadId }).then(
-      (result) => !cancelled && setLocated(result === null ? { status: "outside" } : { status: "found", ...result }),
-      (cause: unknown) => !cancelled && setLocated({ status: "error", message: errorMessage(cause) }),
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [rpc, threadId]);
+  const located = useThreadWorktree(threadId);
 
   if (located.status === "found") return <WorktreeTasks key={`${located.projectId}:${located.path}`} {...located} />;
   if (located.status === "error") return <Alert message={located.message} />;

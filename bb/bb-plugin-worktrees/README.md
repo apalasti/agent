@@ -20,7 +20,8 @@ commands, into bb. [DESIGN.md](DESIGN.md) is the source of truth for behaviour a
   worktree the open thread belongs to: tickets grouped Running / Ready / Blocked / Done
   (Done collapsed), a one-button issue batch (Orchestrate), a hand-off banner, and
   "Chart a new map". Tickets and batches with a live thread show **Open**; ⌘-click starts
-  without leaving. It refreshes every 5s. Replaces the old Workflow dialog.
+  without leaving. It refreshes every 5s. A **Tasks** button in each worktree thread's
+  header shows the runnable count and opens the tab. Replaces the old Workflow dialog.
 - **Per-project settings** (the plugin's settings page, or project `⋯` → Worktree settings…) — base ref, overlay
   dir, setup and teardown commands, worktree tool (auto / gtr / git).
 
