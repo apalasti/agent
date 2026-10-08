@@ -1,5 +1,5 @@
 import type { PluginRpcTestHandlers } from "@get-bb/plugin-sdk/testing/app";
-import type { Agent, rpcContract, Step, ThreadAgents } from "../src/contract";
+import type { Agent, rpcContract, Step, ThreadAgents, Workflow } from "../src/contract";
 
 export const T0 = Date.parse("2026-10-08T10:00:00Z");
 
@@ -8,7 +8,7 @@ export function makeStep(overrides: Partial<Step> = {}): Step {
     at: T0,
     endAt: T0 + 1_000,
     kind: "tool",
-    name: "Bash",
+    name: "bash",
     summary: "npm test",
     input: '{"command":"npm test"}',
     result: "ok",
@@ -36,6 +36,23 @@ export function makeAgent(agentId: string, overrides: Partial<Agent> = {}): Agen
     context: 20_000,
     contextWindow: 200_000,
     workflowId: null,
+    ...overrides,
+  };
+}
+
+export function makeWorkflow(runId: string, overrides: Partial<Workflow> = {}): Workflow {
+  return {
+    runId,
+    name: runId,
+    description: null,
+    status: "done",
+    phases: [],
+    startedAt: T0,
+    endedAt: T0 + 24_500,
+    done: 0,
+    failed: 0,
+    totalTokens: null,
+    error: null,
     ...overrides,
   };
 }

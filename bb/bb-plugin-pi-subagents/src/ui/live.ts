@@ -1,6 +1,5 @@
 import type { Agent } from "../contract";
-
-export const QUIET_WARN_MS = 60_000;
+import { duration } from "./format";
 
 export type LiveState = { label: string; since: number; inFlight: boolean };
 
@@ -11,9 +10,7 @@ export function liveState(agent: Agent, now: number): LiveState {
   return { label: "thinking", since: last.endAt ?? last.at, inFlight: false };
 }
 
-export function contextTone(used: number, window: number): "ok" | "warn" | "critical" {
-  const ratio = window > 0 ? used / window : 0;
-  if (ratio > 0.85) return "critical";
-  if (ratio >= 0.6) return "warn";
-  return "ok";
+export function liveLabel(agent: Agent, now: number): string {
+  const live = liveState(agent, now);
+  return live.inFlight ? `${live.label} · ${duration(now - live.since)}` : live.label;
 }

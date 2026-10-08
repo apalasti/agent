@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contextTone, liveState } from "../src/ui/live";
+import { liveLabel, liveState } from "../src/ui/live";
 import { makeAgent, makeStep, T0 } from "./uiFixtures";
 
 describe("liveState", () => {
@@ -35,15 +35,13 @@ describe("liveState", () => {
   });
 });
 
-describe("contextTone", () => {
-  it("is ok under 60%, warn from 60% to 85%, critical above", () => {
-    expect(contextTone(119_999, 200_000)).toBe("ok");
-    expect(contextTone(120_000, 200_000)).toBe("warn");
-    expect(contextTone(170_000, 200_000)).toBe("warn");
-    expect(contextTone(170_001, 200_000)).toBe("critical");
+describe("liveLabel", () => {
+  it("adds the time in flight to a running tool call", () => {
+    const steps = [makeStep({ at: T0, endAt: null, summary: "npm test", result: null })];
+    expect(liveLabel(makeAgent("a", { steps }), T0 + 12_000)).toBe("bash: npm test · 12s");
   });
 
-  it("treats an empty window as ok", () => {
-    expect(contextTone(10, 0)).toBe("ok");
+  it("is just thinking between tool calls", () => {
+    expect(liveLabel(makeAgent("a", { steps: [makeStep()] }), T0 + 12_000)).toBe("thinking");
   });
 });

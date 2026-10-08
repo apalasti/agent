@@ -6,6 +6,10 @@ export function duration(ms: number | null): string {
   return m < 60 ? `${m}m ${s % 60}s` : `${Math.floor(m / 60)}h ${m % 60}m`;
 }
 
+export function elapsed(startedAt: number | null, endedAt: number | null, now: number): string | null {
+  return startedAt === null ? null : duration((endedAt ?? now) - startedAt);
+}
+
 export function kTokens(n: number | null): string {
   if (n === null) return "–";
   if (n < 1000) return String(n);
@@ -27,12 +31,4 @@ export function shortModel(model: string | null): string {
   const [, family = "", version = "", large] = claude;
   const name = `${family[0]!.toUpperCase()}${family.slice(1)}`;
   return [name, version.slice(1).replaceAll("-", "."), large ? "1M" : ""].filter(Boolean).join(" ");
-}
-
-export function workspacePath(path: string, cwd: string | null): string | null {
-  return cwd && path.startsWith(`${cwd}/`) ? path.slice(cwd.length + 1) : null;
-}
-
-export function relPath(path: string, cwd: string | null): string {
-  return workspacePath(path, cwd) ?? path.replace(/^\/Users\/[^/]+/, "~");
 }

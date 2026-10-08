@@ -1,12 +1,14 @@
 import { useState } from "react";
 import type { PluginThreadPanelProps } from "@get-bb/plugin-sdk/app";
-import { cn } from "@/lib/utils";
-import type { Agent, ThreadAgents } from "../contract";
-import { AgentDetail } from "./AgentDetail";
-import { AgentRow } from "./AgentRow";
-import { ContextBar } from "./ContextBar";
-import { shortModel } from "./format";
+import type { ThreadAgents } from "../contract";
+import { CardList } from "./CardList";
+import { TranscriptView } from "./TranscriptView";
 import { useNow, useThreadAgents } from "./useThreadAgents";
+import { WorkflowView } from "./WorkflowView";
+
+export type View = { kind: "list" } | { kind: "workflow"; runId: string } | { kind: "agent"; agentId: string; from: View };
+
+const LIST: View = { kind: "list" };
 
 export function SubagentsPanel({ threadId }: PluginThreadPanelProps) {
   const { data, error } = useThreadAgents(threadId);
@@ -19,60 +21,38 @@ export function SubagentsPanel({ threadId }: PluginThreadPanelProps) {
       ) : null}
       {data === null ? (
         error ? null : <p className="p-3 text-sm text-muted-foreground">Loading…</p>
-      ) : data.agents.length === 0 ? (
+      ) : data.agents.length === 0 && data.workflows.length === 0 ? (
         <p role="status" className="p-3 text-sm text-muted-foreground">
-          No Claude Code subagents in this thread.
+          No pi subagents or workflows in this thread.
         </p>
       ) : (
-        <AgentList data={data} />
+        <Views key={threadId} data={data} />
       )}
     </div>
   );
 }
 
-function AgentList({ data }: { data: ThreadAgents }) {
-  const running = data.agents.filter((agent) => agent.status === "running");
-  const finished = data.agents.filter((agent) => agent.status !== "running").reverse();
-  const ordered = [...running, ...finished];
-  const now = useNow(running.length > 0);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const open = ordered.find((agent) => agent.agentId === openId) ?? null;
+function Views({ data }: { data: ThreadAgents }) {
+  const [view, setView] = useState<View>(LIST);
+  const anyRunning = data.agents.some((agent) => agent.status === "running") || data.workflows.some((w) => w.status === "running");
+  const now = useNow(anyRunning);
 
-  return (
-    <>
-      <PanelHeader data={data} running={running} finished={finished} />
-      <div className={cn("overflow-y-auto", open ? "max-h-[45%] shrink-0" : "min-h-0 flex-1 pb-16")}>
-        {ordered.map((agent) => (
-          <AgentRow
-            key={agent.agentId}
-            agent={agent}
-            data={data}
-            now={now}
-            isOpen={agent === open}
-            onToggle={() => setOpenId(agent === open ? null : agent.agentId)}
-          />
-        ))}
-      </div>
-      {open ? <AgentDetail key={open.agentId} agent={open} now={now} /> : null}
-    </>
-  );
-}
-
-function PanelHeader({ data, running, finished }: { data: ThreadAgents; running: Agent[]; finished: Agent[] }) {
-  return (
-    <div className="flex shrink-0 items-center gap-3 border-b border-border px-3 py-2 text-xs">
-      <span className="font-medium">
-        {running.length} running
-        <span className="font-normal text-muted-foreground"> · {finished.length} finished</span>
-      </span>
-      <span className="flex-1" />
-      {data.lead ? (
-        <>
-          <span className="text-muted-foreground">Lead</span>
-          <span className="font-mono">{shortModel(data.lead.model)}</span>
-          <ContextBar used={data.lead.context} window={data.lead.contextWindow} />
-        </>
-      ) : null}
-    </div>
-  );
+  if (view.kind === "agent") {
+    const agent = data.agents.find((candidate) => candidate.agentId === view.agentId);
+    if (agent) return <TranscriptView agent={agent} now={now} onBack={() => setView(view.from)} />;
+  }
+  if (view.kind === "workflow") {
+    const workflow = data.workflows.find((candidate) => candidate.runId === view.runId);
+    if (workflow)
+      return (
+        <WorkflowView
+          workflow={workflow}
+          children={data.agents.filter((agent) => agent.workflowId === workflow.runId)}
+          now={now}
+          onBack={() => setView(LIST)}
+          onOpenAgent={(agentId) => setView({ kind: "agent", agentId, from: view })}
+        />
+      );
+  }
+  return <CardList data={data} now={now} onOpen={setView} />;
 }

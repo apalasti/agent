@@ -30,7 +30,10 @@ export function useThreadAgents(threadId: string): { data: ThreadAgents | null; 
   }, [rpc, threadId]);
 
   const current = polled.threadId === threadId ? polled : { data: null, error: null };
-  const running = current.data?.agents.some((agent) => agent.status === "running") ?? false;
+  const running =
+    current.data?.agents.some((agent) => agent.status === "running") ||
+    current.data?.workflows.some((workflow) => workflow.status === "running") ||
+    false;
   useEffect(reload, [reload]);
   useEffect(() => {
     const id = setInterval(reload, running ? RUNNING_POLL_MS : IDLE_POLL_MS);

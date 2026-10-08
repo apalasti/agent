@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { firstLine } from "../src/text";
-import { clock, duration, kTokens, relPath, shortModel } from "../src/ui/format";
+import { clock, duration, elapsed, kTokens, shortModel } from "../src/ui/format";
 
 describe("shortModel", () => {
   it("shows Claude ids as a capitalised family and dotted version, without provider or date", () => {
@@ -49,12 +49,15 @@ describe("kTokens", () => {
   });
 });
 
-describe("paths and text", () => {
-  it("makes paths relative to the workspace, else home-relative", () => {
-    expect(relPath("/w/src/a.ts", "/w")).toBe("src/a.ts");
-    expect(relPath("/Users/me/notes.md", "/w")).toBe("~/notes.md");
-    expect(relPath("/etc/hosts", null)).toBe("/etc/hosts");
+describe("elapsed", () => {
+  it("runs to the end, or to now while unfinished, and is absent without a start", () => {
+    expect(elapsed(0, 511_000, 900_000)).toBe("8m 31s");
+    expect(elapsed(0, null, 12_000)).toBe("12s");
+    expect(elapsed(null, null, 12_000)).toBeNull();
   });
+});
+
+describe("text", () => {
 
   it("takes the first non-empty line", () => {
     expect(firstLine("\n  \n  Found 3 files.\nMore")).toBe("Found 3 files.");
