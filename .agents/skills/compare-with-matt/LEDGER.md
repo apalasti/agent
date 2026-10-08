@@ -22,7 +22,7 @@
 | `skills/issue-tracker.md` | `engineering/setup-matt-pocock-skills/issue-tracker-local.md`, `triage-labels.md` |
 | `extensions/issues/orchestrate.md`, `agents/issue-*.md` | `engineering/implement-spec/`, `engineering/implement/` |
 
-Ours only: `skills/review-map/`, `agents/{Explore,Plan,general-purpose}.md`, `templates/CODING_STANDARDS.md`, and the extensions' TypeScript (code, nothing to pair).
+Ours only: `skills/review-map/`, `skills/show-me/` (HumanLayer's, MIT), `agents/{Explore,Plan,general-purpose}.md`, `templates/CODING_STANDARDS.md`, and the extensions' TypeScript (code, nothing to pair).
 
 No counterpart for Matt's `productivity/handoff/`: implementers hand off through `## In Progress` entries, written from `issue-tracker.md`'s handoff format.
 
