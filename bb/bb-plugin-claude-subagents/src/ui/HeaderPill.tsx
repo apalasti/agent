@@ -48,7 +48,7 @@ function idleSummary(agents: Agent[]): { text: string; icon: string; tone: strin
   const needLook = agents.filter((agent) => agent.status === "failed" || agent.status === "needs-look").length;
   if (needLook > 0) return { text: `${needLook} need a look`, icon: "AlertTriangle", tone: "text-warning-text" };
   const done = agents.filter((agent) => agent.status === "done").length;
-  if (done > 0) return { text: `${done} done`, icon: "CircleCheck", tone: "text-success-foreground" };
+  if (done > 0) return { text: `${done} done`, icon: "CircleCheck", tone: "text-success" };
   return { text: `${agents.length} unknown`, icon: "CircleQuestion", tone: "text-muted-foreground" };
 }
 

@@ -53,7 +53,7 @@ describe("Claude subagents panel", () => {
       expect.stringContaining("No report"),
       expect.stringContaining("Done"),
     ]);
-    expect(rendered.getByText("Done").parentElement!.className).toContain("text-success-foreground");
+    expect(rendered.getByText("Done").parentElement!.className).toContain("text-success");
     expect(rendered.getByText(/1 running/).textContent).toBe("1 running · 4 finished");
   });
 
@@ -79,6 +79,13 @@ describe("Claude subagents panel", () => {
     const row = await rendered.findByRole("article", { name: "editor" });
     expect(within(row).getAllByRole("link").map((link) => link.textContent)).toEqual(["src/a.ts"]);
     expect(row.textContent).toContain("~/notes.md+2−0");
+  });
+
+  it("warns about a full context only while the agent is still running", async () => {
+    const full = { context: 180_000, contextWindow: 200_000 };
+    const rendered = await renderPanel([running("busy", full), makeAgent("finished", full)]);
+    expect(within(await rendered.findByRole("article", { name: "busy" })).getByText("180k/200k").className).toContain("text-destructive");
+    expect(within(rendered.getByRole("article", { name: "finished" })).getByText("180k/200k").className).toContain("text-muted-foreground");
   });
 
   it("drafts a stop instruction naming the agent id in the composer", async () => {
@@ -123,7 +130,7 @@ describe("header pill", () => {
   it("shows a green done count when every finished agent reported", async () => {
     const rendered = await renderPill([makeAgent("a"), makeAgent("b")]);
     await rendered.findByRole("button", { name: "Claude subagents: 2 done" });
-    expect(rendered.getByText("2 done").className).toContain("text-success-foreground");
+    expect(rendered.getByText("2 done").className).toContain("text-success");
   });
 
   it("asks for a look when a finished agent failed or handed back nothing", async () => {

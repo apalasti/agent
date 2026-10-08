@@ -1,7 +1,6 @@
 # bb-plugin-claude-subagents
 
-See what Claude Code subagents in a bb thread are doing, and act on them. For threads on the Claude Code provider;
-`bb-plugin-subagents` covers pi.
+See what Claude Code subagents in a bb thread are doing, and act on them. For threads on the Claude Code provider.
 
 - **Header pill**: while agents run, a spinner, "N running" and the newest agent's context fill and current tool.
   When none run, green "N done", or amber "N need a look" when one failed or handed back no report. Click to open

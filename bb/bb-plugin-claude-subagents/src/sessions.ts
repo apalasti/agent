@@ -7,6 +7,7 @@ import { parseTranscript, type Transcript } from "./transcript";
 export type SessionStore = ReturnType<typeof createSessionStore>;
 
 const AGENT_FILE = /^agent-(.+)\.jsonl$/;
+const MISS_RETRY_MS = 60_000;
 
 async function readMeta(path: string): Promise<AgentMeta> {
   try {
@@ -16,8 +17,9 @@ async function readMeta(path: string): Promise<AgentMeta> {
   }
 }
 
-export function createSessionStore(root = join(homedir(), ".claude", "projects")) {
+export function createSessionStore(root = join(homedir(), ".claude", "projects"), now: () => number = Date.now) {
   const sessionDirs = new Map<string, string>();
+  const missedAt = new Map<string, number>();
   const parsed = new Map<string, { key: string; transcript: Transcript }>();
 
   async function readTranscript(path: string, sidechain: boolean) {
@@ -34,13 +36,17 @@ export function createSessionStore(root = join(homedir(), ".claude", "projects")
   async function findSessionDir(sessionId: string): Promise<string | null> {
     const cached = sessionDirs.get(sessionId);
     if (cached) return cached;
+    const missed = missedAt.get(sessionId);
+    if (missed !== undefined && now() - missed < MISS_RETRY_MS) return null;
     for (const project of await readdir(root).catch(() => [])) {
       const dir = join(root, project);
       if (await stat(join(dir, `${sessionId}.jsonl`)).catch(() => null)) {
         sessionDirs.set(sessionId, dir);
+        missedAt.delete(sessionId);
         return dir;
       }
     }
+    missedAt.set(sessionId, now());
     return null;
   }
 

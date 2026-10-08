@@ -5,8 +5,8 @@ import { contextTone } from "./live";
 const FILL = { ok: "bg-foreground/50", warn: "bg-amber-500", critical: "bg-destructive" } as const;
 const TEXT = { ok: "text-muted-foreground", warn: "text-warning-text", critical: "text-destructive" } as const;
 
-export function ContextBar({ used, window, className }: { used: number; window: number; className?: string }) {
-  const tone = contextTone(used, window);
+export function ContextBar({ used, window, warn = true, className }: { used: number; window: number; warn?: boolean; className?: string }) {
+  const tone = warn ? contextTone(used, window) : "ok";
   const percent = window > 0 ? Math.min(100, (used / window) * 100) : 0;
   return (
     <span

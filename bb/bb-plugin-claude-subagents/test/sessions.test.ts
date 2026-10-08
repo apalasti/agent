@@ -21,6 +21,17 @@ describe("createSessionStore", () => {
     expect(await store.findSessionDir("missing")).toBeNull();
   });
 
+  it("rescans for a missing session only after a minute", async () => {
+    let clock = 0;
+    const store = createSessionStore(layout.root, () => clock);
+    expect(await store.findSessionDir("late")).toBeNull();
+    await appendFile(join(layout.sessionDir, "late.jsonl"), "");
+    clock = 59_000;
+    expect(await store.findSessionDir("late")).toBeNull();
+    clock = 60_000;
+    expect(await store.findSessionDir("late")).toBe(layout.sessionDir);
+  });
+
   it("returns nothing for a missing projects root", async () => {
     expect(await createSessionStore(join(layout.root, "nope")).findSessionDir(SESSION_ID)).toBeNull();
   });

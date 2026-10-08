@@ -28,7 +28,7 @@ export function AgentRow({ agent, data, now, isOpen, onToggle }: AgentRowProps) 
         </button>
         <span className="shrink-0 font-mono text-muted-foreground">{shortModel(agent.model)}</span>
         <span className="flex-1" />
-        <ContextBar used={agent.context} window={agent.contextWindow} />
+        <ContextBar used={agent.context} window={agent.contextWindow} warn={agent.status === "running"} />
         <span className="w-14 shrink-0 text-right text-muted-foreground tabular-nums">
           {agent.startedAt === null ? "–" : duration((agent.endedAt ?? now) - agent.startedAt)}
         </span>

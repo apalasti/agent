@@ -4,7 +4,7 @@ import type { AgentStatus } from "../contract";
 
 const BADGES: Record<AgentStatus, { icon: string; word: string; tone: string }> = {
   running: { icon: "Loading", word: "Running", tone: "text-muted-foreground" },
-  done: { icon: "CircleCheck", word: "Done", tone: "text-success-foreground" },
+  done: { icon: "CircleCheck", word: "Done", tone: "text-success" },
   "needs-look": { icon: "AlertTriangle", word: "No report", tone: "text-warning-text" },
   failed: { icon: "CircleX", word: "Failed", tone: "text-destructive" },
   unknown: { icon: "CircleQuestion", word: "Unknown", tone: "text-muted-foreground/75" },

@@ -204,3 +204,7 @@ Deviations from the outline above, agreed after the two halves were built:
   File `+a −r` use `text-diff-added`/`text-diff-removed` so green stays reserved for "done".
 - A handback counts only while it is the agent's last tool call, so an agent resumed with `Follow up…` shows
   running again instead of staying green.
+- "Done" and the idle pill use `text-success` (the theme's green); `text-success-foreground` mixes in ink and reads
+  olive in the light theme. A finished agent's context bar stays neutral: its fill is no longer actionable.
+- Session-dir misses are cached for a minute (`createSessionStore(root, now)`), so threads without a Claude session
+  don't rescan `~/.claude/projects` on every poll.
