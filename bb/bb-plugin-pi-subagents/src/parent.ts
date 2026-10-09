@@ -6,6 +6,14 @@ export type SpawnFact = {
   at: number;
   toolCallId: string;
 };
+export type PendingCall = {
+  toolCallId: string;
+  agentType: string;
+  description: string;
+  prompt: string;
+  modelHint: string | null;
+  at: number;
+};
 export type RecordFact = {
   status: string;
   result: string | null;
@@ -21,6 +29,7 @@ export type ParentFacts = {
   context: number;
   peakContext: number;
   spawns: Map<string, SpawnFact>;
+  pending: Map<string, PendingCall>;
   records: Map<string, RecordFact>;
   notifications: Map<string, NotificationFact>;
   workflows: Map<string, WorkflowLaunch>;
@@ -41,7 +50,7 @@ type Line = {
     role?: string;
     toolName?: string;
     toolCallId?: string;
-    content?: { type?: string; text?: string }[] | string;
+    content?: { type?: string; text?: string; id?: string; name?: string; arguments?: Details }[] | string;
     details?: Details;
     provider?: string;
     model?: string;
@@ -56,6 +65,7 @@ export function emptyParentFacts(): ParentFacts {
     context: 0,
     peakContext: 0,
     spawns: new Map(),
+    pending: new Map(),
     records: new Map(),
     notifications: new Map(),
     workflows: new Map(),
@@ -129,6 +139,19 @@ export function foldParentLine(raw: string, into: ParentFacts): ParentFacts {
       into.context = (message.usage.input ?? 0) + (message.usage.cacheRead ?? 0) + (message.usage.cacheWrite ?? 0);
       into.peakContext = Math.max(into.peakContext, into.context);
     }
+    if (!Number.isNaN(at) && Array.isArray(message.content))
+      for (const block of message.content) {
+        const args = block.arguments ?? {};
+        if (block.type !== "toolCall" || block.name !== "Agent" || !block.id || args.resume) continue;
+        into.pending.set(block.id, {
+          toolCallId: block.id,
+          agentType: str(args.subagent_type) ?? "agent",
+          description: str(args.description) ?? block.id,
+          prompt: str(args.prompt) ?? "",
+          modelHint: str(args.model),
+          at,
+        });
+      }
     return into;
   }
   if (message.role !== "toolResult" || Number.isNaN(at)) return into;
@@ -136,6 +159,7 @@ export function foldParentLine(raw: string, into: ParentFacts): ParentFacts {
   const body = text(message.content);
 
   if (message.toolName === "Agent") {
+    if (message.toolCallId) into.pending.delete(message.toolCallId);
     const agentId = str(details.agentId);
     if (!agentId || into.spawns.has(agentId)) return into;
     into.spawns.set(agentId, {

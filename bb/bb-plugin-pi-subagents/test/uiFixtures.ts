@@ -36,6 +36,8 @@ export function makeAgent(agentId: string, overrides: Partial<Agent> = {}): Agen
     context: 20_000,
     contextWindow: 200_000,
     workflowId: null,
+    callId: null,
+    pending: false,
     ...overrides,
   };
 }

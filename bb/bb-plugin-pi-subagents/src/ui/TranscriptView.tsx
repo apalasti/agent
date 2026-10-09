@@ -23,7 +23,7 @@ export function TranscriptView({ agent, now, onBack }: { agent: Agent; now: numb
         <PromptCard prompt={agent.prompt} />
         <ActivitySummary steps={agent.steps} running={agent.status === "running"} now={now} />
         <Outcome agent={agent} now={now} />
-        {agent.workflowId === null ? <AgentActions agent={agent} /> : null}
+        {agent.workflowId === null && !agent.pending ? <AgentActions agent={agent} /> : null}
       </div>
     </>
   );

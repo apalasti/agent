@@ -1,5 +1,5 @@
 import type { Agent, AgentStatus, Workflow } from "./contract";
-import type { NotificationFact, ParentFacts, RecordFact, SpawnFact, WorkflowLaunch } from "./parent";
+import type { NotificationFact, ParentFacts, PendingCall, RecordFact, SpawnFact, WorkflowLaunch } from "./parent";
 import { contextWindow, type PiTranscript } from "./piSession";
 import { firstLine } from "./text";
 import type { Journal, WorkflowMeta } from "./workflow";
@@ -70,8 +70,19 @@ function spawnedAgent(parent: ParentFacts, spawn: SpawnFact, source: ChildSource
     context,
     contextWindow: contextWindow(model, peakContext, spawn.modelHint),
     workflowId: null,
+    callId: spawn.toolCallId || null,
+    pending: false,
   };
 }
+
+function pendingAgent(parent: ParentFacts, call: PendingCall, source: ChildSource | undefined, now: number): Agent {
+  const spawn = { ...call, agentId: call.toolCallId };
+  return { ...spawnedAgent(parent, spawn, source, now), pending: true };
+}
+
+/** pi writes no agent id until a foreground call returns, but the child session starts with the call's prompt. */
+const runsCall = (child: ChildSource, call: PendingCall) =>
+  child.transcript.prompt === call.prompt && child.transcript.firstAt !== null && child.transcript.firstAt >= call.at;
 
 function childAgent(child: ChildSource, runId: string, runFinished: boolean, now: number): Agent {
   const { transcript } = child;
@@ -94,6 +105,8 @@ function childAgent(child: ChildSource, runId: string, runFinished: boolean, now
     context: transcript.context,
     contextWindow: contextWindow(transcript.model, transcript.peakContext),
     workflowId: runId,
+    callId: null,
+    pending: false,
   };
 }
 
@@ -137,6 +150,13 @@ export function assemble(
     if (child) owned.add(child);
     return spawnedAgent(parent, spawn, child ?? outputs.get(spawn.agentId), now);
   });
+  for (const call of [...parent.pending.values()].sort((a, b) => a.at - b.at)) {
+    const child = children
+      .filter((candidate) => !owned.has(candidate) && runsCall(candidate, call))
+      .sort((a, b) => a.transcript.firstAt! - b.transcript.firstAt!)[0];
+    if (child) owned.add(child);
+    agents.push(pendingAgent(parent, call, child, now));
+  }
 
   const runs: Run[] = workflows
     .map((source) => {

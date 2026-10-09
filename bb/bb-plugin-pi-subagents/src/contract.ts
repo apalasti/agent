@@ -41,8 +41,14 @@ export const agentSchema = z.object({
   context: z.number(),
   contextWindow: z.number(),
   workflowId: z.string().nullable(),
+  callId: z.string().nullable(),
+  /** Its foreground Agent call has not returned, so `agentId` is still the call id. */
+  pending: z.boolean(),
 });
 export type Agent = z.infer<typeof agentSchema>;
+
+/** Survives the switch from call id to agent id when a pending call returns. */
+export const agentKey = (agent: Agent) => agent.callId ?? agent.agentId;
 
 export const workflowSchema = z.object({
   runId: z.string(),

@@ -166,6 +166,26 @@ describe("transcript view", () => {
     expect(rendered.inspection.composer.text).toContain("Use steer_subagent on agent `a1b2c3`:");
   });
 
+  it("offers no actions while the lead still waits on the agent's call", async () => {
+    const rendered = await openNotebook(running("toolu_1", { description: "plan", callId: "toolu_1", pending: true }));
+    expect(rendered.queryByRole("button", { name: "Steer…" })).toBeNull();
+    expect(rendered.queryByRole("button", { name: "Follow up…" })).toBeNull();
+  });
+
+  it("stays open when a pending agent's call returns its real id", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    let data = threadAgents([running("toolu_1", { description: "plan", callId: "toolu_1", pending: true })]);
+    const { panel } = await slots();
+    const rendered = renderSlot(panel, { threadId: "thr_1", params: null }, { rpc: { threadAgents: () => data } });
+    fireEvent.click(within(await rendered.findByRole("article", { name: "plan" })).getByRole("button", { name: "View transcript" }));
+
+    data = threadAgents([makeAgent("7a77e17d-4851", { description: "plan", callId: "toolu_1", report: "Planned." })]);
+    act(() => void vi.advanceTimersByTime(2_000));
+    await rendered.findByText("Planned.");
+    expect(rendered.getByRole("heading", { name: "plan" })).toBeTruthy();
+    expect(rendered.getByRole("button", { name: "Follow up…" })).toBeTruthy();
+  });
+
   it("drafts a follow up for a finished agent", async () => {
     const rendered = await openNotebook(makeAgent("f00d"));
     expect(rendered.queryByRole("button", { name: "Steer…" })).toBeNull();

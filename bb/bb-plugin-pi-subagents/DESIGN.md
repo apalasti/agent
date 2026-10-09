@@ -35,7 +35,7 @@ Principle: every element on screen is either something to act on or tells you wh
     overflows; a copy button under it copies the raw prompt), a muted activity summary with a chevron that expands
     into the step list (time, tool, summary, duration or spinner; click for input/result), then the report
     (`Markdown`), the live label with a spinner while running, or amber "No report handed back".
-    Actions, top-level agents only: `Steer…` while running drafts "Use steer_subagent on agent `<id>`: ";
+    Actions, top-level agents whose call has returned only: `Steer…` while running drafts "Use steer_subagent on agent `<id>`: ";
     `Follow up…` otherwise drafts "Resume agent `<id>` (Agent tool, resume) and ". Both insert into the thread
     composer (`useComposer().insert(text, { at: "end", block: true })`); the user sends. Workflow children get no
     actions: those tools cannot address them. pi-subagents has no stop tool, so there is no `Stop…`.
@@ -63,14 +63,22 @@ Principle: every element on screen is either something to act on or tells you wh
 | session id, cwd | that file's first line `{type:"session", id, cwd}` |
 | lead model + context | parent file: last `model_change`, last assistant `message.usage` |
 | agent spawned | parent file: `toolResult` `toolName:"Agent"`, `details.{agentId, subagentType, modelName, description}` |
+| agent still in its call | parent file: assistant `toolCall` `name:"Agent"` (not `resume`) with no `toolResult` yet; `arguments.{subagent_type, description, prompt, model}` |
 | agent finished | parent file: `custom` `customType:"subagents:record"` `data.{id,status,result,error,startedAt,completedAt}` |
 | agent tokens/duration | parent file: `custom_message` `customType:"subagent-notification"` `details.{totalTokens,durationMs,status}` and each of `details.others` |
 | agent transcript | child session in `~/.pi/agent/sessions/--<cwd>--/` whose header `parentSession` is the parent file and whose `session_info.name` ends `#<agentId[0..8]>`; else `$TMPDIR/pi-subagents-<uid>/<encodeCwd>/<sessionId>/tasks/<agentId>.output` |
+| pending agent transcript | earliest unclaimed child session of this parent whose first user message equals the call's `prompt` and that started at or after the call |
 | workflow run | parent file: `toolResult` `toolName:"SubagentWorkflow"`, `details.taskId`, `Script:` line → task dir |
 | workflow meta | `<runId>.workflow.js` `export const meta = {…}` (`name`, `description`, `phases[].title`) |
 | workflow progress | `<runId>.workflow.jsonl` lines `{index, ok}`, deduped by index; a partial last line is skipped |
 | workflow finished | `subagent-notification` whose task id is the run id |
-| workflow children | child sessions of this parent not owned by an `Agent` spawn, attributed to the latest run whose window (start → end, or now) contains their first line |
+| workflow children | child sessions of this parent not owned by an `Agent` spawn or pending call, attributed to the latest run whose window (start → end, or now) contains their first line |
+
+A foreground `Agent` call (`run_in_background: false`) writes its `toolResult`, and so the agent id, only when the
+agent finishes. Until then the agent is listed from its `toolCall` as `pending`, with the tool-call id as `agentId`
+and `callId`; once the result lands `agentId` becomes the real id and `callId` stays, so the panel keys views and
+cards on `agentKey` (`callId ?? agentId`). A pending agent gets no `Steer…`/`Follow up…`: both need the real id, and
+the lead is blocked inside the call.
 
 Status, agent: record/notification `completed` or `steered` → done/needs-look by report; `error|stopped|aborted` →
 failed; transcript written <90s ago → running; last assistant turn ended → done/needs-look; else unknown.
@@ -79,9 +87,9 @@ Workflow: notification `completed` → done; failed statuses → failed; journal
 else unknown.
 
 Known limits: workflow children carry no label or phase on disk, so they are titled by their prompt's first line;
-two concurrent workflows in one thread can mix children; a run killed with pi shows `unknown` once idle >90s; a
-foreground `Agent` call (`run_in_background: false`) has no `toolResult` until it finishes, so while it runs it is
-not shown, or is listed under a workflow that runs at the same time.
+two concurrent workflows in one thread can mix children; a run killed with pi shows `unknown` once idle >90s, and
+so does a foreground `Agent` call whose lead was killed before it returned. (Replaces: foreground agents were not
+shown until their call returned.)
 
 ## Files
 
@@ -89,12 +97,12 @@ not shown, or is listed under a workflow that runs at the same time.
 package.json            id/name/description, scripts typecheck + test
 app.tsx                 definePluginApp: header action + panel action (both id "pi-subagents")
 server.ts               createPlugin(store, now): rpc threadAgents; per-thread incremental event fold
-src/contract.ts         zod schemas (Step, FileChange, AgentStatus, Agent, Workflow, ThreadAgents) + rpcContract
+src/contract.ts         zod schemas (Step, FileChange, AgentStatus, Agent, Workflow, ThreadAgents) + rpcContract; agentKey
 src/events.ts           fold thread/identity → providerThreadId
 src/piSession.ts        pure parser of pi session / .output jsonl; summarizeTool, changesFromArgs, contextWindow
-src/parent.ts           pure line-at-a-time fold of the parent session (spawns, records, notifications, workflow launches)
+src/parent.ts           pure line-at-a-time fold of the parent session (spawns, pending Agent calls, records, notifications, workflow launches)
 src/workflow.ts         pure parseMeta(js), parseJournal(jsonl)
-src/assemble.ts         pure join → { agents, workflows }; deriveAgentStatus, ownsAgent
+src/assemble.ts         pure join → { agents, workflows }; deriveAgentStatus, ownsAgent; pairs pending calls with child sessions by prompt
 src/sessions.ts         fs store: tails the parent file, indexes child sessions, reads task dirs, caches by size:mtime
 src/text.ts             firstLine
 src/ui/format.ts        duration, elapsed, kTokens, clock, shortModel

@@ -2,7 +2,7 @@ import { useBbNavigate, type PluginThreadHeaderActionProps } from "@get-bb/plugi
 import { Icon } from "@/components/ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { Agent, AgentStatus, ThreadAgents, Workflow } from "../contract";
+import { agentKey, type Agent, type AgentStatus, type ThreadAgents, type Workflow } from "../contract";
 import { shortModel } from "./format";
 import { liveLabel } from "./live";
 import { useNow, useThreadAgents } from "./useThreadAgents";
@@ -102,7 +102,7 @@ function RunningTooltip({ running, workflows, now }: { running: Agent[]; workflo
       {running.map((agent) => {
         const percent = agent.contextWindow > 0 ? Math.round((agent.context / agent.contextWindow) * 100) : 0;
         return (
-          <li key={agent.agentId}>
+          <li key={agentKey(agent)}>
             <span className="font-medium">{agent.description}</span>
             <span className="opacity-80">
               {" "}

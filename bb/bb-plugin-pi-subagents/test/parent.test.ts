@@ -79,6 +79,43 @@ describe("foldParentLine", () => {
     expect(more.spawns.get(SUBAGENTS_AGENT)?.description).toBe("Map pi subagent disk footprint");
   });
 
+  it("holds an Agent call as pending until its tool result lands", () => {
+    const [beforeResults, afterResults] = [lines(fixture("parent.jsonl")).slice(0, 31), lines(fixture("parent.jsonl")).slice(31)];
+    const pending = fold(beforeResults.join("\n"));
+    expect(pending.spawns.size).toBe(0);
+    expect([...pending.pending.values()]).toEqual([
+      {
+        toolCallId: "toolu_019Yi49sdKUqFZ8dkuN8Ysdo",
+        agentType: "Explore",
+        description: "Map pi subagent disk footprint",
+        prompt: expect.stringMatching(/^Research question, read-only\./),
+        modelHint: null,
+        at: Date.parse("2026-10-08T19:58:56.820Z"),
+      },
+      expect.objectContaining({ toolCallId: "toolu_013vKvBs9ZhwAgQRNNG9qFEH", description: "Map pi workflow disk footprint" }),
+    ]);
+    expect(fold(afterResults.join("\n"), pending).pending.size).toBe(0);
+  });
+
+  it("clears a pending call whose result carries no agent id, and never holds a resume", () => {
+    const call = (id: string, args: Record<string, unknown>) =>
+      JSON.stringify({
+        type: "message",
+        timestamp: "2026-10-08T21:00:00Z",
+        message: { role: "assistant", content: [{ type: "toolCall", id, name: "Agent", arguments: args }] },
+      });
+    const failed = JSON.stringify({
+      type: "message",
+      timestamp: "2026-10-08T21:00:01Z",
+      message: { role: "toolResult", toolName: "Agent", toolCallId: "c1", content: [{ type: "text", text: "Unknown agent type" }], details: {} },
+    });
+    const facts = fold(
+      [call("c1", { description: "x", subagent_type: "Nope", prompt: "p" }), call("c2", { prompt: "more", resume: SUBAGENTS_AGENT })].join("\n"),
+    );
+    expect([...facts.pending.keys()]).toEqual(["c1"]);
+    expect(fold(failed, facts).pending.size).toBe(0);
+  });
+
   it("falls back to the result text for the description and type", () => {
     const result = JSON.stringify({
       type: "message",

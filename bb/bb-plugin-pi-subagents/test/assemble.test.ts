@@ -203,6 +203,54 @@ describe("assemble", () => {
     expect(workflows.find((workflow) => workflow.runId === DEMO_RUN)).toMatchObject({ status: "failed", error: "killed", totalTokens: 100 });
   });
 
+  it("shows a call still waiting on its result as a running agent with its child session's transcript", () => {
+    const parent = lines(fixture("parent.jsonl"))
+      .slice(0, 31)
+      .reduce((facts, line) => foldParentLine(line, facts), emptyParentFacts());
+    const writing = Date.parse("2026-10-08T19:59:30Z");
+    const { agents } = assemble(parent, children(() => writing), new Map(), workflowSources(parent), writing + 5_000);
+    const pending = agents.filter((agent) => agent.workflowId === null);
+    expect(pending.map((agent) => [agent.agentId, agent.callId, agent.pending, agent.status, agent.endedAt])).toEqual([
+      ["toolu_019Yi49sdKUqFZ8dkuN8Ysdo", "toolu_019Yi49sdKUqFZ8dkuN8Ysdo", true, "running", null],
+      ["toolu_013vKvBs9ZhwAgQRNNG9qFEH", "toolu_013vKvBs9ZhwAgQRNNG9qFEH", true, "running", null],
+    ]);
+    expect(pending[0]).toMatchObject({
+      description: "Map pi subagent disk footprint",
+      agentType: "Explore",
+      model: "claude-bridge/claude-sonnet-5-5",
+      prompt: expect.stringMatching(/^Research question, read-only\./),
+    });
+    expect(pending[0]?.steps.length).toBeGreaterThan(0);
+    expect(pending[1]?.prompt).not.toBe(pending[0]?.prompt);
+  });
+
+  it("keeps a pending agent's child session out of a workflow running at the same time", () => {
+    const parent = lines(fixture("parent.jsonl"))
+      .slice(0, 31)
+      .reduce((facts, line) => foldParentLine(line, facts), emptyParentFacts());
+    parent.notifications.delete(DEMO_RUN);
+    const { agents } = assemble(parent, children(), new Map(), workflowSources(parent), NOW);
+    const pendingPrompts = agents.filter((agent) => agent.pending).map((agent) => agent.prompt);
+    expect(pendingPrompts).toEqual([expect.stringMatching(/^Research/), expect.stringMatching(/^Research/)]);
+    expect(agents.filter((agent) => agent.workflowId === DEMO_RUN).map((agent) => agent.prompt)).not.toContain(pendingPrompts[0]);
+    expect(agents.filter((agent) => agent.workflowId === DEMO_RUN).map((agent) => agent.prompt)).not.toContain(pendingPrompts[1]);
+  });
+
+  it("shows a pending call without a child session yet as starting, and keeps the call id once the result lands", () => {
+    const parent = lines(fixture("parent.jsonl"))
+      .slice(0, 31)
+      .reduce((facts, line) => foldParentLine(line, facts), emptyParentFacts());
+    const calledAt = Date.parse("2026-10-08T19:58:56.820Z");
+    expect(assemble(parent, [], new Map(), [], calledAt + 1_000).agents[0]).toMatchObject({
+      status: "running",
+      steps: [],
+      startedAt: calledAt,
+      pending: true,
+    });
+    const { agents } = assemble(parentFacts(), children(), new Map(), [], NOW);
+    expect(agents.find((agent) => agent.agentId === SUBAGENTS_AGENT)).toMatchObject({ callId: "toolu_019Yi49sdKUqFZ8dkuN8Ysdo", pending: false });
+  });
+
   it("drops child sessions outside every workflow window", () => {
     const parent = parentFacts();
     const { agents } = assemble(parent, children(), new Map(), [], NOW);

@@ -1,4 +1,4 @@
-import type { Agent, Workflow } from "../contract";
+import { agentKey, type Agent, type Workflow } from "../contract";
 import { AgentCard } from "./AgentCard";
 import { ViewHeader } from "./ViewHeader";
 
@@ -7,7 +7,7 @@ type WorkflowViewProps = {
   children: Agent[];
   now: number;
   onBack: () => void;
-  onOpenAgent: (agentId: string) => void;
+  onOpenAgent: (key: string) => void;
 };
 
 export function WorkflowView({ workflow, children, now, onBack, onOpenAgent }: WorkflowViewProps) {
@@ -20,7 +20,7 @@ export function WorkflowView({ workflow, children, now, onBack, onOpenAgent }: W
         {workflow.phases.length > 0 ? <p className="text-muted-foreground">{workflow.phases.join(" · ")}</p> : null}
         {inStartOrder.length === 0 ? <p className="text-muted-foreground">No agents started yet.</p> : null}
         {inStartOrder.map((agent) => (
-          <AgentCard key={agent.agentId} agent={agent} now={now} onViewTranscript={() => onOpenAgent(agent.agentId)} />
+          <AgentCard key={agentKey(agent)} agent={agent} now={now} onViewTranscript={() => onOpenAgent(agentKey(agent))} />
         ))}
       </div>
     </>

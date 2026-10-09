@@ -1,4 +1,4 @@
-import type { ThreadAgents } from "../contract";
+import { agentKey, type ThreadAgents } from "../contract";
 import { AgentCard } from "./AgentCard";
 import type { View } from "./SubagentsPanel";
 import { WorkflowCard } from "./WorkflowCard";
@@ -22,10 +22,10 @@ export function CardList({ data, now, onOpen }: { data: ThreadAgents; now: numbe
       ))}
       {agents.map((agent) => (
         <AgentCard
-          key={agent.agentId}
+          key={agentKey(agent)}
           agent={agent}
           now={now}
-          onViewTranscript={() => onOpen({ kind: "agent", agentId: agent.agentId, from: { kind: "list" } })}
+          onViewTranscript={() => onOpen({ kind: "agent", key: agentKey(agent), from: { kind: "list" } })}
         />
       ))}
     </div>

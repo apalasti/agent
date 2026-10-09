@@ -1,12 +1,12 @@
 import { useState } from "react";
 import type { PluginThreadPanelProps } from "@get-bb/plugin-sdk/app";
-import type { ThreadAgents } from "../contract";
+import { agentKey, type ThreadAgents } from "../contract";
 import { CardList } from "./CardList";
 import { TranscriptView } from "./TranscriptView";
 import { useNow, useThreadAgents } from "./useThreadAgents";
 import { WorkflowView } from "./WorkflowView";
 
-export type View = { kind: "list" } | { kind: "workflow"; runId: string } | { kind: "agent"; agentId: string; from: View };
+export type View = { kind: "list" } | { kind: "workflow"; runId: string } | { kind: "agent"; key: string; from: View };
 
 const LIST: View = { kind: "list" };
 
@@ -38,7 +38,7 @@ function Views({ data }: { data: ThreadAgents }) {
   const now = useNow(anyRunning);
 
   if (view.kind === "agent") {
-    const agent = data.agents.find((candidate) => candidate.agentId === view.agentId);
+    const agent = data.agents.find((candidate) => agentKey(candidate) === view.key);
     if (agent) return <TranscriptView agent={agent} now={now} onBack={() => setView(view.from)} />;
   }
   if (view.kind === "workflow") {
@@ -50,7 +50,7 @@ function Views({ data }: { data: ThreadAgents }) {
           children={data.agents.filter((agent) => agent.workflowId === workflow.runId)}
           now={now}
           onBack={() => setView(LIST)}
-          onOpenAgent={(agentId) => setView({ kind: "agent", agentId, from: view })}
+          onOpenAgent={(key) => setView({ kind: "agent", key, from: view })}
         />
       );
   }
