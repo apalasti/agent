@@ -2,9 +2,10 @@ import type { PluginSidebarThreadIndicator, PluginSidebarThreadRowStatus } from 
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import type { Rollup } from "../group";
+import { Spinner, STATUS } from "../kit";
 
 const GLYPH = "pointer-events-none size-4 shrink-0";
-const WORKING = "animate-shine-icon text-muted-foreground/50";
+const WORKING = "animate-shine-icon text-subtle-foreground";
 
 const ACTIVITY_ICONS: Partial<Record<PluginSidebarThreadIndicator, string>> = {
   workflow: "Workflow",
@@ -41,7 +42,7 @@ export function UnreadDot({ label }: { label?: string }) {
     <span
       role={label ? "img" : undefined}
       aria-label={label}
-      className="size-[5px] shrink-0 rounded-full bg-muted-foreground/60"
+      className="size-1.5 shrink-0 rounded-full bg-muted-foreground"
     />
   );
 }
@@ -57,19 +58,13 @@ export function IndicatorGlyph({
   switch (indicator) {
     case "unread-error":
     case "queued-failed":
-      return <Icon name="CircleX" className={cn(GLYPH, "text-destructive")} aria-label={aria} />;
+      return <Icon name="CircleX" className={cn(GLYPH, STATUS.failed.tone)} aria-label={aria} />;
     case "waiting-for-input":
-      return <Icon name="CircleQuestion" className={cn(GLYPH, "text-muted-foreground/75")} aria-label={aria} />;
+      return <Icon name="CircleQuestion" className={cn(GLYPH, STATUS.idle.tone)} aria-label={aria} />;
     case "queued-waiting":
-      return <Icon name="Clock" className={cn(GLYPH, "text-muted-foreground/75")} aria-label={aria} />;
+      return <Icon name="Clock" className={cn(GLYPH, "text-subtle-foreground")} aria-label={aria} />;
     case "runtime":
-      return (
-        <Icon
-          name="Loading"
-          className={cn(GLYPH, "animate-spin text-muted-foreground/50 motion-reduce:animate-none")}
-          aria-label={aria}
-        />
-      );
+      return <LabelledSpinner label={aria} />;
     case "working-draft":
       return <Icon name="Edit" className={cn(GLYPH, WORKING)} aria-label={aria ?? "Working, unsent draft"} />;
     case "draft":
@@ -88,19 +83,19 @@ export function IndicatorGlyph({
 export function RowStatusGlyph({ status }: { status: PluginSidebarThreadRowStatus }) {
   const tone =
     status.tone === "running"
-      ? "animate-shine-icon text-success"
+      ? cn("animate-shine-icon", STATUS.running.tone)
       : status.tone === "success"
-        ? "text-success-foreground"
+        ? STATUS.ready.tone
         : status.tone === "error"
-          ? "text-destructive"
+          ? STATUS.failed.tone
           : "text-muted-foreground";
   return <Icon name={status.icon} className={cn(GLYPH, tone)} aria-label={status.label} />;
 }
 
 export function RunningStatusLine({ label }: { label: string }) {
   return (
-    <span data-row-status-line="" className="pointer-events-none flex min-w-0 items-center gap-1 text-[11px] leading-4 text-subtle-foreground">
-      <Icon name="Loading" className="size-3 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+    <span data-row-status-line="" className="pointer-events-none flex min-w-0 items-center gap-1 text-xs leading-4 text-subtle-foreground">
+      <Spinner className="size-3" />
       <span className="min-w-0 truncate">{label}</span>
     </span>
   );
@@ -113,7 +108,15 @@ export function runningSummary(labels: readonly string[]): string | null {
 export function RunningRollupGlyph({ labels }: { labels: readonly string[] }) {
   const summary = runningSummary(labels);
   if (summary === null) return null;
-  return <Icon name="Loading" className={cn(GLYPH, "size-3.5 animate-spin text-success motion-reduce:animate-none")} aria-label={summary} />;
+  return <LabelledSpinner label={summary} className="size-3.5" />;
+}
+
+function LabelledSpinner({ label, className }: { label: string | undefined; className?: string }) {
+  return (
+    <span role={label ? "img" : undefined} aria-label={label} className="pointer-events-none inline-flex shrink-0">
+      <Spinner className={cn("size-4", STATUS.running.tone, className)} />
+    </span>
+  );
 }
 
 const ROLLUP_LABEL: Record<Rollup, string | null> = {

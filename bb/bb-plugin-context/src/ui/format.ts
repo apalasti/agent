@@ -7,7 +7,7 @@ function trimmed(value: number, digits: number): string {
 /** 999 → "999", 4_120 → "4.1k", 27_183 → "27k", 1_250_000 → "1.3m". */
 export function formatTokens(n: number): string {
   const abs = Math.abs(n);
-  const sign = n < 0 ? "-" : "";
+  const sign = n < 0 ? "−" : "";
   if (abs < 1_000) return `${sign}${Math.round(abs)}`;
   if (abs < 9_950) return `${sign}${trimmed(abs / 1_000, 1)}k`;
   if (abs < 999_500) return `${sign}${Math.round(abs / 1_000)}k`;
@@ -37,7 +37,7 @@ export function toneFor(used: number | null, limit: number | null): Tone {
 export const TONE_TEXT: Record<Tone, string> = {
   muted: "text-muted-foreground",
   warn: "text-warning-text",
-  danger: "text-destructive",
+  danger: "text-destructive-text",
 };
 
 /** Bars fill against the usable limit: autocompact fires before the window is full. */
@@ -45,22 +45,22 @@ export function usableLimit(window: Pick<ContextWindow, "autoCompactAt" | "conte
   return window.autoCompactAt ?? window.contextWindow;
 }
 
-export const CATEGORY_STYLE: Record<CategoryId, { dot: string; short: string }> = {
-  system: { dot: "bg-slate-500", short: "System" },
-  tools: { dot: "bg-violet-500", short: "Tools" },
-  memory: { dot: "bg-yellow-500", short: "Memory" },
-  skills: { dot: "bg-fuchsia-500", short: "Skills" },
-  user: { dot: "bg-sky-500", short: "Messages" },
-  assistant: { dot: "bg-emerald-500", short: "Assistant" },
-  thinking: { dot: "bg-teal-300", short: "Thinking" },
-  toolCalls: { dot: "bg-indigo-400", short: "Tool calls" },
-  toolResults: { dot: "bg-orange-500", short: "Tool results" },
-  summary: { dot: "bg-cyan-600", short: "Summary" },
-  other: { dot: "bg-stone-400", short: "Other" },
-  unattributed: { dot: "bg-zinc-400", short: "Unattributed" },
-  reserved: { dot: "bg-rose-300", short: "Autocompact buffer" },
-  free: { dot: "bg-transparent", short: "Free" },
-  deferred: { dot: "bg-zinc-300", short: "On demand" },
+export const CATEGORY_FILL: Record<CategoryId, string> = {
+  system: "bg-foreground/70",
+  tools: "bg-foreground/45",
+  memory: "bg-pr-merged/50",
+  skills: "bg-pr-merged",
+  user: "bg-success",
+  assistant: "bg-attention",
+  thinking: "bg-attention/50",
+  toolCalls: "bg-file-accent/50",
+  toolResults: "bg-file-accent",
+  summary: "bg-success/50",
+  other: "bg-foreground/25",
+  unattributed: "bg-foreground/25",
+  reserved: "bg-warning/50",
+  free: "bg-muted",
+  deferred: "bg-foreground/25",
 };
 
 export function usedTotal(window: ContextWindow, segments: readonly Segment[]): number {

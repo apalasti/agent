@@ -30,6 +30,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import type { ScratchSummary, WorktreeStatus } from "../contract";
 import { rollupIndicator, runningStatusLabels, type ProjectNode, type ThreadNode, type WorktreeNode } from "../group";
+import { StatusDot, Tag } from "../kit";
 import { collapseKey, useIsOnScreen, useScratchSummary, useWorktreeStatus } from "./data";
 import {
   IndicatorGlyph,
@@ -65,7 +66,7 @@ function useList(): ListContextValue {
 const ROW = "relative flex w-full items-center gap-2 rounded-md pr-0 text-sm";
 const GROUP_ROW = cn(ROW, "group/row h-7 text-muted-foreground");
 const ICON_BUTTON =
-  "relative z-10 size-7 shrink-0 rounded-md p-0 text-subtle-foreground hover:bg-state-hover hover:text-muted-foreground data-[state=open]:bg-state-active data-[state=open]:text-muted-foreground [&_[data-icon-root]]:size-4";
+  "relative z-10 size-6.5 shrink-0 rounded-md p-0 text-subtle-foreground hover:bg-state-hover hover:text-muted-foreground data-[state=open]:bg-state-active data-[state=open]:text-muted-foreground [&_[data-icon-root]]:size-4";
 const REVEAL_ON_HOVER =
   "pointer-events-none opacity-0 group-hover/row:pointer-events-auto group-hover/row:opacity-100 group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-has-[[data-state=open]]/row:pointer-events-auto group-has-[[data-state=open]]/row:opacity-100";
 const HIDE_ON_HOVER =
@@ -215,7 +216,7 @@ export function GroupHeader({
   className?: string;
 }) {
   return (
-    <div className={cn(GROUP_ROW, "pl-2 text-xs font-medium text-sidebar-foreground/75", className)}>
+    <div className={cn(GROUP_ROW, "pl-2 text-xs font-medium", className)}>
       <button
         type="button"
         aria-hidden="true"
@@ -317,13 +318,11 @@ function ScratchBadge({ summary }: { summary: ScratchSummary }) {
   return (
     <Tooltip delayDuration={350} disableHoverableContent>
       <TooltipTrigger asChild>
-        <span
-          role="img"
-          aria-label={text}
-          className="pointer-events-auto flex h-5 shrink-0 items-center gap-0.5 rounded px-1 text-[11px] tabular-nums text-subtle-foreground"
-        >
-          <Icon name="ListTodo" className="size-3" aria-hidden="true" />
-          {count}
+        <span role="img" aria-label={text} className="pointer-events-auto flex shrink-0">
+          <Tag>
+            <Icon name="ListTodo" className="size-3" aria-hidden="true" />
+            {count}
+          </Tag>
         </span>
       </TooltipTrigger>
       <TooltipContent side="bottom">{text}</TooltipContent>
@@ -339,7 +338,7 @@ export function IdleWorktreesRow({ count, collapsed, onToggle }: { count: number
       <span className="pointer-events-none relative z-10 inline-flex size-4 shrink-0 items-center justify-center">
         <Icon name="Layers" className="size-4" aria-hidden="true" />
       </span>
-      <span className="pointer-events-none relative z-10 flex min-w-0 flex-1 items-center gap-1 opacity-75">
+      <span className="pointer-events-none relative z-10 flex min-w-0 flex-1 items-center gap-1">
         <span className="min-w-0 truncate">{label}</span>
         <span className="pointer-events-auto">
           <Chevron collapsed={collapsed} onToggle={onToggle} label={label} />
@@ -419,19 +418,19 @@ export function WorktreeRow({ projectId, group, depth = 0 }: { projectId: string
       <span className="pointer-events-none relative z-10 inline-flex size-4 shrink-0 items-center justify-center">
         <Icon name={worktreeIcon(group)} className="size-4" aria-hidden="true" />
       </span>
-      <span className={cn("pointer-events-none relative z-10 flex min-w-0 flex-1 items-center gap-1.5", isEmpty && "opacity-60")}>
-        <span className={cn("min-w-0 truncate", group.kind === "worktree" && group.worktree?.isMain && "text-sidebar-foreground/90")}>
+      <span className={cn("pointer-events-none relative z-10 flex min-w-0 flex-1 items-center gap-1.5", isEmpty && "text-subtle-foreground")}>
+        <span className={cn("min-w-0 truncate", group.kind === "worktree" && group.worktree?.isMain && "text-sidebar-foreground")}>
           {group.label}
         </span>
-        {group.worktree?.isDetached ? <span className="shrink-0 text-subtle-foreground">· detached</span> : null}
+        {group.worktree?.isDetached ? <Tag>detached</Tag> : null}
         {group.worktree?.isLocked ? <Icon name="Lock" className="size-3 shrink-0" aria-label="Locked worktree" /> : null}
         {summary ? (
           <Tooltip delayDuration={350} disableHoverableContent>
             <TooltipTrigger asChild>
               <span role="img" aria-label={summary} title={summary} className="pointer-events-auto flex h-7 shrink-0 items-center gap-1.5 px-0.5">
-                {dirty > 0 ? <span className="size-1.5 shrink-0 rounded-full bg-amber-500/80" /> : null}
+                {dirty > 0 ? <StatusDot status="warning" /> : null}
                 {ahead > 0 || behind > 0 ? (
-                  <span className="text-[11px] tabular-nums text-subtle-foreground">
+                  <span className="text-xs tabular-nums text-subtle-foreground">
                     {ahead > 0 ? `↑${ahead}` : null}
                     {ahead > 0 && behind > 0 ? " " : null}
                     {behind > 0 ? `↓${behind}` : null}
@@ -566,7 +565,7 @@ export function ThreadRow({ node, depth }: { node: ThreadNode; depth: number }) 
   const entries = threadEntries(thread, actions, split.isAvailable, () => setRenaming(true), list.onNavigate);
 
   const passive = shortcut ? (
-    <kbd className="pointer-events-none inline-flex shrink-0 items-center rounded-sm bg-state-hover px-1.5 py-1 font-sans text-xs leading-none tabular-nums text-subtle-foreground opacity-60">
+    <kbd className="pointer-events-none inline-flex shrink-0 items-center rounded-sm bg-state-hover px-1.5 py-1 font-sans text-xs leading-none tabular-nums text-subtle-foreground">
       {shortcut.label}
     </kbd>
   ) : rowStatusWins(indicator, rowStatus) && rowStatus ? (

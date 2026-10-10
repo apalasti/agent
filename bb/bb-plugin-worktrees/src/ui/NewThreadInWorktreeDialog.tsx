@@ -47,17 +47,17 @@ export function NewThreadInWorktreeDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[min(52rem,calc(100vw-2rem))] max-w-none gap-5">
+      <DialogContent className="gap-5 sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>New thread in {group.label}</DialogTitle>
           <DialogDescription>Starts a thread in this worktree's existing checkout.</DialogDescription>
         </DialogHeader>
         {/* The composer cannot show a worktree path in its environment chips, and has no prop to hide them. */}
-        <div className="flex items-start gap-2.5 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
-          <Icon name="GitBranch" className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <div className="flex items-start gap-2.5 rounded-md bg-surface-recessed px-3 py-2 text-sm">
+          <Icon name="GitBranch" className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium">{group.label}</div>
-            <div className="truncate font-mono text-xs text-muted-foreground" title={path}>
+            <div className="truncate font-mono text-xs text-subtle-foreground" title={path}>
               {formatHomePathForDisplay(path)}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">

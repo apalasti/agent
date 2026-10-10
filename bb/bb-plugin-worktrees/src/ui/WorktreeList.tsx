@@ -79,7 +79,7 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
               <p className="px-2 py-1.5 text-xs text-muted-foreground">Loading threads…</p>
             ) : null}
             {status === "error" ? (
-              <p role="alert" className="px-2 py-1.5 text-xs text-destructive">
+              <p role="alert" className="px-2 py-1.5 text-xs text-destructive-text">
                 Couldn't load threads.
               </p>
             ) : null}
@@ -109,7 +109,7 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
                   {projectCollapsed ? null : (
                     <>
                       {errors[projectId] ? (
-                        <p className="truncate px-2 text-xs text-destructive/80" title={errors[projectId]}>
+                        <p className="truncate px-2 py-1.5 text-xs text-destructive-text" title={errors[projectId]}>
                           Couldn't list worktrees: {errors[projectId]}
                         </p>
                       ) : null}
@@ -117,7 +117,7 @@ export function WorktreeList({ activeThreadId, onNavigate }: PluginThreadListPro
                       projectNode.idleWorktrees.length === 0 &&
                       projectNode.worktreesLoaded &&
                       !errors[projectId] ? (
-                        <p className="px-2 py-1 text-xs text-muted-foreground">No worktrees</p>
+                        <p className="px-2 py-1.5 text-xs text-muted-foreground">No worktrees</p>
                       ) : null}
                       {projectNode.worktrees.map((group) => (
                         <div key={group.key} className="flex flex-col gap-px">

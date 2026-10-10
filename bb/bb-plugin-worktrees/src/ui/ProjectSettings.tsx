@@ -3,9 +3,11 @@ import { useSdk } from "@get-bb/plugin-sdk/app";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ProjectConfig, ResolvedConfig } from "../contract";
+import { Spinner } from "../kit";
 import { errorMessage, useWorktreesRpc } from "./data";
 import { useProjectConfig } from "./fields";
 
@@ -51,7 +53,9 @@ function Field({
   const id = useId();
   return (
     <div className="grid gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-xs">
+        {label}
+      </Label>
       <Input
         id={id}
         value={value}
@@ -60,7 +64,7 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className={mono ? "h-8 font-mono text-sm" : "h-8 text-sm"}
       />
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="text-xs text-subtle-foreground">{hint}</p> : null}
     </div>
   );
 }
@@ -76,8 +80,8 @@ export function ProjectSettingsForm({ projectId, onSaved }: { projectId: string;
     if (config !== null) setDraft(toDraft(config));
   }, [config]);
 
-  if (error !== null) return <p className="text-sm text-destructive">{error}</p>;
-  if (config === null || draft === null) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (error !== null) return <p className="text-sm text-destructive-text">{error}</p>;
+  if (config === null || draft === null) return <LoadingLine>Loading…</LoadingLine>;
 
   const update = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
   const dirty = JSON.stringify(fromDraft(draft)) !== JSON.stringify(fromDraft(toDraft(config)));
@@ -135,7 +139,9 @@ export function ProjectSettingsForm({ projectId, onSaved }: { projectId: string;
         />
       </div>
       <div className="grid gap-1.5 sm:max-w-[50%]">
-        <Label htmlFor={toolId}>Worktree tool</Label>
+        <Label htmlFor={toolId} className="text-xs">
+          Worktree tool
+        </Label>
         <select
           id={toolId}
           value={draft.tool}
@@ -170,7 +176,7 @@ export function ProjectSettingsDialog({
 }) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[min(40rem,calc(100vw-2rem))] max-w-none">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Worktree settings — {projectName}</DialogTitle>
           <DialogDescription>Used by New task, Remove worktree, and `bb task`.</DialogDescription>
@@ -197,23 +203,33 @@ export function SettingsSection() {
     };
   }, [sdk]);
 
-  if (error !== null) return <p className="text-sm text-destructive">{error}</p>;
-  if (projects === null) return <p className="text-sm text-muted-foreground">Loading projects…</p>;
+  if (error !== null) return <p className="text-sm text-destructive-text">{error}</p>;
+  if (projects === null) return <LoadingLine>Loading projects…</LoadingLine>;
   if (projects.length === 0) return <p className="text-sm text-muted-foreground">No projects yet.</p>;
 
   return (
-    <div className="grid gap-3">
+    <div className="divide-y divide-border-hairline overflow-hidden rounded-lg border border-border">
       {projects.map((project) => (
-        <details key={project.id} className="group rounded-lg border border-border">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium">
-            {project.name}
-            <span className="text-xs font-normal text-muted-foreground group-open:hidden">Edit</span>
+        <details key={project.id} className="group">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-medium hover:bg-state-hover [&::-webkit-details-marker]:hidden">
+            <Icon name="ChevronRight" className="size-3.5 shrink-0 text-subtle-foreground group-open:rotate-90" aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">{project.name}</span>
+            <span className="text-xs font-normal text-subtle-foreground group-open:hidden">Edit</span>
           </summary>
-          <div className="border-t border-border px-4 py-4">
+          <div className="border-t border-border-hairline px-4 py-4">
             <ProjectSettingsForm projectId={project.id} />
           </div>
         </details>
       ))}
     </div>
+  );
+}
+
+function LoadingLine({ children }: { children: string }) {
+  return (
+    <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+      <Spinner />
+      {children}
+    </p>
   );
 }

@@ -62,7 +62,7 @@ export function NewTaskDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[min(52rem,calc(100vw-2rem))] max-w-none gap-5">
+      <DialogContent className="gap-5 sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>New task in {projectName}</DialogTitle>
           <DialogDescription>

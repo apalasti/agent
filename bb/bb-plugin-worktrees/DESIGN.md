@@ -7,6 +7,9 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
 
 ## User-facing surfaces
 
+Styling follows the repo-wide `bb/STYLE.md` and the shared primitives synced into `src/kit/` (was: a plugin-local
+oklch palette for task states, bordered cards in the Tasks panel, and opacity-faded text).
+
 1. **Sidebar thread list "Worktrees"** (`app.slots.experimental_threadList`).
    Pinned threads first, then `Project → Worktree → Thread (→ child threads)`.
    Every git worktree of the project's repo is known (from `git worktree list`), including
@@ -17,9 +20,9 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
    which buried other projects under idle rows). Threads whose environment path matches no git worktree get their
    own group keyed by path; threads without an environment go in a trailing "Other" group.
    - Project row: name, collapse chevron, `+` → **New task** dialog.
-   - Worktree row: branch (or dir name plus a muted "· detached" when detached), dirty dot
-     and ahead/behind count sharing one tooltip ("3 uncommitted files · 2 ahead of origin/x"),
-     thread count when collapsed; a muted `ListTodo` badge with the count of frontier tickets +
+   - Worktree row: branch (or dir name plus a "detached" tag when detached), a warning status dot
+     for uncommitted files and the ahead/behind count sharing one tooltip ("3 uncommitted files · 2 ahead of origin/x"),
+     thread count when collapsed; a `ListTodo` tag with the count of frontier tickets +
      open issues + hand-off-ready maps in its `.scratch` (tooltip "3 ready tickets · 2 open
      issues"; not clickable, since no host surface toggles the Tasks panel; there is no `Map` host icon);
      hover `+` → new thread *in this worktree*; `⋯` menu:
@@ -31,7 +34,7 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
      spinner under the title, so it shows even while bb's busy spinner owns the glyph slot
      (was: the status only replaced the glyph, and lost to the spinner exactly while an
      orchestrator waited on its subagents). Clicking the line opens the thread. Collapsed
-     worktree and project rows add a green spinner for running statuses inside them, and the
+     worktree and project rows add a muted spinner for running statuses inside them, and the
      worktree row's tooltip lists their labels.
 2. **New task dialog** — the `task.sh` port. Fields: Branch (required), Base ref (defaults
    to the project's configured base, e.g. `wizz/main`), plus an embedded
@@ -133,7 +136,9 @@ bb-plugin-worktrees/
                             (a `project-checkout` defaultEnvironment seed still shows the main checkout)
   src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
-  src/ui/tasks/              Tasks panel (threadPanelAction) + TasksHeaderButton: model.ts, useLaunch.ts, TasksPanel, EffortSection, TicketRow, BatchCard, HandoffBanner, ChartFooter, tone.ts
+  src/ui/tasks/              Tasks panel (threadPanelAction) + TasksHeaderButton: model.ts, useLaunch.ts, TasksPanel, EffortSection, TicketRow, BatchGroup, HandoffGroup, ChartFooter, tone.ts (task state → kit status)
+  src/ui/CollapsibleLabel.tsx  a SectionLabel that toggles its group (the Tasks panel's Done)
+  src/kit/                  shared UI primitives, synced from bb/kit/src — never edit here
   src/scratch.ts            pure .scratch scanner + pi prompt composition (see `.scratch/` workflow)
   src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu
   skills/worktrees/SKILL.md the `bb task` CLI for agents

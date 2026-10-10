@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useBbNavigate, type PluginThreadHeaderActionProps } from "@get-bb/plugin-sdk/app";
-import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ScratchSummary } from "../../contract";
+import { HeaderPill, Hint } from "../../kit";
 import { useRefreshEpoch, useThreadWorktree, useWorktreesRpc } from "../data";
 import { scratchSummaryText } from "../rows";
 
@@ -35,23 +34,15 @@ function WorktreeTasksButton({ projectId, path, compact }: { projectId: string; 
   const text = summary === null ? null : scratchSummaryText(summary);
   const count = summary === null ? 0 : summary.readyTickets + summary.openIssues + summary.handoffs;
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={350} disableHoverableContent>
-        <TooltipTrigger asChild>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 gap-1 px-2 text-xs tabular-nums"
-            aria-label={text === null ? "Open Tasks" : `Open Tasks: ${text}`}
-            onClick={() => navigate.openThreadPanel({ actionId: TASKS_PANEL_ACTION_ID })}
-          >
-            <Icon name="ListTodo" className="size-3.5" aria-hidden="true" />
-            {compact ? null : "Tasks"}
-            {count > 0 ? <span className="text-muted-foreground">{count}</span> : null}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">{text ?? "Open Tasks"}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Hint label={text ?? "Open Tasks"}>
+      <HeaderPill
+        aria-label={text === null ? "Open Tasks" : `Open Tasks: ${text}`}
+        onClick={() => navigate.openThreadPanel({ actionId: TASKS_PANEL_ACTION_ID })}
+      >
+        <Icon name="ListTodo" aria-hidden="true" />
+        {compact ? null : "Tasks"}
+        {count > 0 ? <span className="text-subtle-foreground">{count}</span> : null}
+      </HeaderPill>
+    </Hint>
   );
 }

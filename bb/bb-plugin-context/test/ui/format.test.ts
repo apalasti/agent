@@ -9,7 +9,7 @@ describe("formatTokens", () => {
     [27_183, "27k"],
     [1_000_000, "1m"],
     [1_250_000, "1.3m"],
-    [-31_000, "-31k"],
+    [-31_000, "−31k"],
   ])("%d → %s", (n, expected) => {
     expect(formatTokens(n)).toBe(expected);
   });

@@ -73,7 +73,7 @@ export function TaskWorktreeInputs({ projectId, value, onChange }: PluginEnviron
           autoFocus
           compact
         />
-        <p className="mt-2 text-xs text-muted-foreground">Leave the branch empty to name it from the prompt.</p>
+        <p className="mt-2 text-xs text-subtle-foreground">Leave the branch empty to name it from the prompt.</p>
       </PopoverContent>
     </Popover>
   );

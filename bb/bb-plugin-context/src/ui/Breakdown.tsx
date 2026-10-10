@@ -1,25 +1,17 @@
 import { useState } from "react";
-import { Icon } from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Category, Entry } from "../contract";
-import { CATEGORY_STYLE, formatTokens, percent } from "./format";
+import { Chevron, Dot, Leading, SectionLabel } from "../kit";
+import { CATEGORY_FILL, formatTokens, percent } from "./format";
+import { RowAction } from "./RowAction";
 
 type CategoryEntry = Category["entries"][number];
-
-function Disclosure({ open }: { open: boolean }) {
-  return (
-    <Icon
-      name="ChevronRight"
-      aria-hidden
-      className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", open && "rotate-90")}
-    />
-  );
-}
 
 function Detail({ detail }: { detail: string | null }) {
   if (detail === null || detail === "") return null;
   return (
-    <span title={detail} className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
+    <span title={detail} className="min-w-0 truncate font-mono text-xs text-subtle-foreground">
       {detail}
     </span>
   );
@@ -29,14 +21,15 @@ function TurnRef({ entry, onSelectTurn }: { entry: Entry; onSelectTurn: (turnInd
   if (entry.turnIndex === null) return null;
   const turnIndex = entry.turnIndex;
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={() => onSelectTurn(turnIndex)}
       aria-label={`Show turn ${turnIndex}`}
-      className="shrink-0 rounded px-1 text-[11px] tabular-nums text-muted-foreground hover:bg-muted hover:text-foreground"
+      className="h-5 shrink-0 px-1 text-xs font-normal tabular-nums text-subtle-foreground"
     >
       #{turnIndex}
-    </button>
+    </Button>
   );
 }
 
@@ -57,8 +50,8 @@ function EntryLine({
 }) {
   return (
     <div
-      className="flex min-w-0 items-center gap-2 py-1 text-xs"
-      style={{ paddingLeft: `${2.25 + depth}rem` }}
+      className="flex h-7 min-w-0 items-center gap-2 pr-3 text-sm hover:bg-state-hover"
+      style={{ paddingLeft: `${2 + depth}rem` }}
       title={fullName(entry)}
       data-entry
     >
@@ -68,9 +61,9 @@ function EntryLine({
       ) : (
         <Detail detail={entry.detail} />
       )}
-      <span className="ml-auto flex shrink-0 items-center gap-1 pr-4">
+      <span className="ml-auto flex shrink-0 items-center gap-1">
         <TurnRef entry={entry} onSelectTurn={onSelectTurn} />
-        <span className="w-12 text-right tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
+        <span className="w-12 text-right text-xs tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
       </span>
     </div>
   );
@@ -85,20 +78,15 @@ function EntryRow({ entry, onSelectTurn }: { entry: CategoryEntry; onSelectTurn:
   }
   return (
     <div>
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full min-w-0 items-center gap-2 py-1 pl-6 pr-4 text-left text-xs hover:bg-muted/50"
-      >
-        <Disclosure open={open} />
-        <span className="min-w-0 max-w-[50%] shrink-0 truncate text-foreground">{entry.label}</span>
+      <RowAction aria-expanded={open} onClick={() => setOpen((value) => !value)} className="pl-5">
+        <Chevron open={open} />
+        <span className="min-w-0 max-w-[50%] shrink-0 truncate">{entry.label}</span>
         <Detail detail={entry.detail} />
-        <span className="ml-auto hidden shrink-0 text-[11px] text-muted-foreground @[20rem]:inline">
+        <span className="ml-auto hidden shrink-0 text-xs text-subtle-foreground @[20rem]:inline">
           {entry.children.length} largest
         </span>
-        <span className="ml-auto w-12 shrink-0 @[20rem]:ml-0 text-right tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
-      </button>
+        <span className="ml-auto w-12 shrink-0 @[20rem]:ml-0 text-right text-xs tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
+      </RowAction>
       {open ? (
         <div role="group" aria-label={`${entry.label} items`}>
           {entry.children.map((child) => (
@@ -141,39 +129,27 @@ function CategoryRow({
   const suffix = share.window ?? hint?.short ?? null;
   const content = (
     <>
-      {expandable ? <Disclosure open={open} /> : <span className="size-3.5 shrink-0" />}
-      <span
-        className={cn(
-          "size-2 shrink-0 rounded-full",
-          CATEGORY_STYLE[category.id].dot,
-          category.id === "free" && "border border-border",
-        )}
-      />
+      <Leading>{expandable ? <Chevron open={open} /> : null}</Leading>
+      <Dot className={cn(CATEGORY_FILL[category.id], category.id === "free" && "border border-border")} />
       <span
         className={cn("min-w-0 flex-1 truncate", muted ? "text-muted-foreground" : "text-foreground")}
         title={[category.label, share.window, hint?.full].filter(Boolean).join(" · ")}
       >
         {category.label}
-        {suffix === null ? null : <span className="text-xs tabular-nums text-muted-foreground"> · {suffix}</span>}
+        {suffix === null ? null : <span className="text-xs tabular-nums text-subtle-foreground"> · {suffix}</span>}
       </span>
-      <span className="w-14 shrink-0 text-right tabular-nums text-foreground">{formatTokens(category.tokens)}</span>
-      <span className="hidden w-10 shrink-0 text-right tabular-nums text-muted-foreground @[17rem]:inline">{share.used}</span>
+      <span className="w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{formatTokens(category.tokens)}</span>
+      <span className="hidden w-10 shrink-0 text-right text-xs tabular-nums text-subtle-foreground @[17rem]:inline">{share.used}</span>
     </>
   );
-  const rowClass = "flex w-full min-w-0 items-center gap-2 px-4 py-1.5 text-left text-sm";
   return (
     <li>
       {expandable ? (
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
-          className={cn(rowClass, "hover:bg-muted/50")}
-        >
+        <RowAction aria-expanded={open} onClick={() => setOpen((value) => !value)}>
           {content}
-        </button>
+        </RowAction>
       ) : (
-        <div className={rowClass}>{content}</div>
+        <div className="flex h-7 min-w-0 items-center gap-2 px-3 text-sm hover:bg-state-hover">{content}</div>
       )}
       {open ? (
         <div role="group" aria-label={`${category.label} entries`} className="pb-1">
@@ -213,10 +189,8 @@ export function Breakdown({
         ))}
       </ul>
       {deferred.length === 0 ? null : (
-        <div className="mt-2 opacity-75">
-          <p className="px-4 pb-0.5 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Available on demand (not counted)
-          </p>
+        <div className="mt-1 border-t border-border-hairline">
+          <SectionLabel>Available on demand (not counted)</SectionLabel>
           <ul aria-label="Available on demand">
             {deferred.map((category) => (
               <CategoryRow key={category.id} category={category} used={used} contextWindow={null} onSelectTurn={onSelectTurn} />

@@ -12,9 +12,11 @@ import { Icon } from "@/components/ui/icon";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { CourseChange, Turn } from "../contract";
+import { Callout, Meter, StatusWord } from "../kit";
 import { CourseChangeRow } from "./CourseChangeRow";
 import { formatTokens } from "./format";
 import { FORK_ICON } from "./icon";
+import { RowMenuTrigger } from "./RowAction";
 
 export type TurnFlash = { turnIndex: number; nonce: number };
 
@@ -48,10 +50,14 @@ function added(turn: Turn): string | null {
 }
 
 function MiniBar({ tokens, contextWindow }: { tokens: number | null; contextWindow: number | null }) {
-  const width = tokens === null || contextWindow === null || contextWindow <= 0 ? 0 : Math.min(100, (tokens / contextWindow) * 100);
+  const known = tokens !== null && contextWindow !== null && contextWindow > 0;
   return (
-    <span aria-hidden="true" className="relative hidden h-1 w-12 shrink-0 overflow-hidden rounded-full bg-muted @[22rem]:block">
-      <span className="absolute inset-y-0 left-0 rounded-full bg-foreground/50" style={{ width: `${width}%` }} />
+    <span aria-hidden="true" className="hidden w-12 shrink-0 @[22rem]:block">
+      <Meter
+        segments={[{ value: known ? tokens : 0, className: "bg-foreground/45" }]}
+        max={known ? contextWindow : 1}
+        label="Context after this turn"
+      />
     </span>
   );
 }
@@ -102,7 +108,7 @@ function RewindEditor({
     }
   };
   return (
-    <div className="space-y-2 border-l-2 border-border bg-muted/30 px-4 py-3" role="group" aria-label={`Edit turn ${turn.index}`}>
+    <div className="space-y-2 bg-surface-recessed px-3 py-3" role="group" aria-label={`Edit turn ${turn.index}`}>
       <Textarea
         value={text}
         onChange={(event) => setText(event.target.value)}
@@ -112,15 +118,15 @@ function RewindEditor({
         autoFocus
       />
       {turn.textTruncated ? (
-        <p className="text-xs text-warning-text">
+        <Callout tone="warning" className="mx-0 my-0">
           This message was too long to load in full; only its beginning is shown and Rerun sends exactly this text.
-        </p>
+        </Callout>
       ) : null}
       <p className="text-xs text-muted-foreground" data-rewind-summary>
         {rewindSummary(turn, lastIndex, current)}
       </p>
       <div className="flex items-center justify-end gap-2">
-        {blocker === null ? null : <span className="mr-auto text-xs text-muted-foreground">{blocker}</span>}
+        {blocker === null ? null : <span className="mr-auto text-xs text-subtle-foreground">{blocker}</span>}
         <Button variant="ghost" size="sm" onClick={onClose} disabled={pending}>
           Cancel
         </Button>
@@ -152,7 +158,7 @@ function TurnMenuItem({
       <Icon name={icon} aria-hidden className="mt-px" />
       <span className="flex min-w-0 flex-col">
         <span>{label}</span>
-        {blocker === null ? null : <span className="max-w-56 text-[11px] text-muted-foreground">{blocker}</span>}
+        {blocker === null ? null : <span className="max-w-56 text-xs text-subtle-foreground">{blocker}</span>}
       </span>
     </DropdownMenuItem>
   );
@@ -197,23 +203,25 @@ function TurnRow({
     <li data-turn={turn.index} aria-label={`Turn ${turn.index}`}>
       <div
         className={cn(
-          "group flex min-w-0 items-center gap-2 px-4 py-1.5 text-sm transition-colors duration-700",
-          flashing ? "bg-accent" : "hover:bg-muted/40",
+          "group/row flex min-h-7 min-w-0 items-center gap-2 px-3 py-1 text-sm transition-colors duration-700",
+          flashing ? "bg-state-active" : "hover:bg-state-hover hover:duration-0",
           greyed && "text-muted-foreground",
         )}
       >
-        <span className="w-7 shrink-0 tabular-nums text-xs text-muted-foreground">#{turn.index}</span>
+        <span className="w-7 shrink-0 text-xs tabular-nums text-subtle-foreground">#{turn.index}</span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className={cn("truncate", greyed ? "text-muted-foreground" : "text-foreground")} title={turn.preview}>
             {displayPreview(turn.preview)}
           </span>
-          {greyed || turn.running ? (
-            <span className="text-[11px] text-muted-foreground">
-              {turn.running ? "running" : turn.state === "summarized" ? "summarized by compaction" : "cleared"}
+          {turn.running ? (
+            <span className="text-xs">
+              <StatusWord status="running">running</StatusWord>
             </span>
+          ) : greyed ? (
+            <span className="text-xs text-subtle-foreground">{turn.state === "summarized" ? "summarized by compaction" : "cleared"}</span>
           ) : null}
         </span>
-        <span className="hidden w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground @[18rem]:inline" title="Added by this turn">
+        <span className="hidden w-14 shrink-0 text-right text-xs tabular-nums text-subtle-foreground @[18rem]:inline" title="Added by this turn">
           {delta ?? ""}
         </span>
         <span className="w-10 shrink-0 text-right text-xs tabular-nums" title="Context after this turn">
@@ -222,14 +230,7 @@ function TurnRow({
         <MiniBar tokens={turn.tokensAfter} contextWindow={contextWindow} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-6 shrink-0 text-muted-foreground/60 group-hover:text-foreground group-focus-within:text-foreground"
-              aria-label={`Actions for turn ${turn.index}`}
-            >
-              <Icon name="MoreHorizontal" className="size-3.5" aria-hidden />
-            </Button>
+            <RowMenuTrigger label={`Actions for turn ${turn.index}`} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" mobileTitle={`Turn ${turn.index}`}>
             <TurnMenuItem label="Edit from here…" icon="Edit" blocker={editBlocked} onSelect={() => setEditing(true)} />

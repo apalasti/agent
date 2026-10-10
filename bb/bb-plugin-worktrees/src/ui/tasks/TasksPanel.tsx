@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import { experimental_ProviderModelPicker as ProviderModelPicker, useBbNavigate, type PluginThreadPanelProps } from "@get-bb/plugin-sdk/app";
-import { cn } from "@/lib/utils";
+import { Icon } from "@/components/ui/icon";
+import { Mono, PanelBody, PanelFooter, PanelState, PanelToolbar, StatusDot } from "../../kit";
 import { useScratchView, useTasksExpanded, useThreadWorktree, useWorktreesRpc } from "../data";
 import { ChartFooter } from "./ChartFooter";
 import { EffortSection } from "./EffortSection";
 import { effortModel, legend, liveThreadMap, type EffortModel, type TaskRow, type TaskState } from "./model";
-import { STATE_DOT, STATE_LABEL } from "./tone";
+import { STATE_LABEL, STATE_STATUS } from "./tone";
 import { needsPiWarning, useLaunch, type Modifiers } from "./useLaunch";
 
 type Worktree = { projectId: string; path: string; label: string };
@@ -16,20 +17,11 @@ export function TasksPanel({ threadId }: PluginThreadPanelProps) {
   const located = useThreadWorktree(threadId);
 
   if (located.status === "found") return <WorktreeTasks key={`${located.projectId}:${located.path}`} {...located} />;
-  if (located.status === "error") return <Alert message={located.message} />;
-  return (
-    <p className="p-4 text-sm text-muted-foreground">
-      {located.status === "outside" ? "This thread isn't in a git worktree, so there is no .scratch to show." : "Reading .scratch…"}
-    </p>
-  );
-}
-
-function Alert({ message }: { message: string }) {
-  return (
-    <p role="alert" className="m-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-      {message}
-    </p>
-  );
+  if (located.status === "error") return <PanelState kind="error">{located.message}</PanelState>;
+  if (located.status === "outside") {
+    return <PanelState kind="empty">This thread isn't in a git worktree, so there is no .scratch to show.</PanelState>;
+  }
+  return <PanelState kind="loading">Reading .scratch…</PanelState>;
 }
 
 function WorktreeTasks({ projectId, path, label }: Worktree) {
@@ -61,32 +53,34 @@ function WorktreeTasks({ projectId, path, label }: Worktree) {
 
   return (
     <div className="flex h-full min-h-0 flex-col text-sm">
-      <header className="border-b border-border px-3 py-2">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-sm font-medium">Tasks</h2>
-          <span className="min-w-0 flex-1 truncate text-xs text-subtle-foreground" title={path}>
-            {label}
+      <PanelToolbar className="gap-2 px-3">
+        <span className="flex min-w-0 flex-1 items-center gap-1.5 text-muted-foreground" title={path}>
+          <Icon name="GitBranch" className="size-3.5 shrink-0" aria-hidden="true" />
+          <Mono className="min-w-0 truncate">{label}</Mono>
+        </span>
+        {models.length > 0 ? (
+          <span className="flex shrink-0 gap-2 text-xs tabular-nums text-subtle-foreground">
+            {LEGEND_ORDER.map((state) => (
+              <span key={state} className="flex items-center gap-1">
+                <StatusDot status={STATE_STATUS[state]} />
+                {counts[state]} {STATE_LABEL[state].toLowerCase()}
+              </span>
+            ))}
           </span>
-        </div>
-        <div className="mt-1 flex gap-3 text-xs tabular-nums text-subtle-foreground">
-          {LEGEND_ORDER.map((state) => (
-            <span key={state} className="flex items-center gap-1">
-              <span className={cn("size-1.5 rounded-full", STATE_DOT[state])} aria-hidden="true" />
-              {counts[state]} {STATE_LABEL[state].toLowerCase()}
-            </span>
-          ))}
-        </div>
-      </header>
+        ) : null}
+      </PanelToolbar>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <PanelBody>
         {error !== null && view === null ? (
-          <Alert message={error} />
+          <PanelState kind="error" onRetry={reload}>
+            {error}
+          </PanelState>
         ) : view === null ? (
-          <p className="p-4 text-xs text-muted-foreground">Reading .scratch…</p>
+          <PanelState kind="loading">Reading .scratch…</PanelState>
         ) : models.length === 0 ? (
-          <p className="p-4 text-muted-foreground">No maps or issues in this worktree's .scratch yet.</p>
+          <PanelState kind="empty">No maps or issues in this worktree's .scratch yet.</PanelState>
         ) : (
-          <div className="grid divide-y divide-border">
+          <>
             {models.map((model) => (
               <EffortSection
                 key={model.slug}
@@ -100,11 +94,11 @@ function WorktreeTasks({ projectId, path, label }: Worktree) {
                 onHandoff={handoff}
               />
             ))}
-          </div>
+          </>
         )}
-      </div>
+      </PanelBody>
 
-      <footer className="grid gap-3 border-t border-border px-3 py-3">
+      <PanelFooter className="flex-col flex-nowrap items-stretch gap-3">
         <ChartFooter busy={busy} onChart={chart} />
         <div className="flex items-start justify-between gap-2">
           {agent !== null ? (
@@ -119,7 +113,7 @@ function WorktreeTasks({ projectId, path, label }: Worktree) {
           )}
           <span className="shrink-0 text-xs text-muted-foreground">⌘-click to start without leaving</span>
         </div>
-      </footer>
+      </PanelFooter>
     </div>
   );
 }

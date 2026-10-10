@@ -88,7 +88,9 @@ describe("TasksPanel", () => {
     expect(view.getByText("Build A")).toBeTruthy();
     expect(view.queryByText("Build C")).toBeNull();
     expect(view.getAllByRole("button", { name: "Run" })).toHaveLength(1);
-    fireEvent.click(view.getByRole("button", { name: /Done · 1/ }));
+    const done = view.getByRole("button", { name: /^Done/ });
+    expect(done.textContent).toBe("Done1");
+    fireEvent.click(done);
     expect(view.getByText("Name it")).toBeTruthy();
   });
 

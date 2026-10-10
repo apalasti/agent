@@ -169,6 +169,12 @@ display name "Context".
 
 ## Surfaces
 
+Visual style follows `bb/STYLE.md` and its shared kit (`src/kit/`, synced from `bb/kit/src/`): host tokens only,
+flush sections under sentence-case section labels, kit rows, `PanelState` / `Callout` states and a pinned
+`PanelFooter`. Category fills are host tokens (`CATEGORY_FILL` in `src/ui/format.ts`); tool definitions and
+tool results differ, and the autocompact buffer is a muted warning tint, never red. (Revised: was a
+14-colour Tailwind palette, uppercase section titles, dashed status boxes and `px-4` gutters.)
+
 - **Context ring** (replaces bb's ring at the bottom-right of the composer footer).
   (Revised: this was a one-line meter banner above the prompt; the user preferred one richer
   ring where bb's sits, with the panel unchanged.)
@@ -189,7 +195,7 @@ display name "Context".
     window, with the % as text to its left at every width (`11%`, `≈11%` when estimated,
     tone-coloured, inside the button). (Revised: bb shows the % only on narrow screens; the
     user asked for it always.) Ring colour follows the tone: muted below 60%
-    of the usable limit (`autoCompactAt ?? window`), amber from 60%, red from 85%. `≈` and a
+    of the usable limit (`autoCompactAt ?? window`), warning from 60%, destructive from 85% (host text tokens). `≈` and a
     dashed ring while the basis is estimated or recomputing. Renders nothing while
     `window.basis === "none"`.
   - **Hover card** (opens on hover and on keyboard focus; Radix hover card, about 320 px):
@@ -239,7 +245,7 @@ display name "Context".
          (Revised: this said `message`. The real args need `operationId` and an `input` array.)
        - **Fork from here**: `sdk.threads.fork({ sourceThreadId, sourceSeqEnd: lastSeq })`,
          then navigate to the new thread.
-  5. Footer: **Compact** (`sdk.threads.compact`) and **Clear context**
+  5. Footer (pinned below the scrolling body): **Compact** (`sdk.threads.compact`) and **Clear context**
      (`sdk.threads.clearContext`), each behind a confirm that states the current size.
 - **CLI** `bb context show [--thread <id> | --self] [--turns N] [--json]`. A bounded text
   summary (categories, top items, the last N turns) for agents checking their own context.
@@ -262,9 +268,10 @@ bb-plugin-context/
   src/claudeTranscript.ts  parseClaudeTranscript(text: string): SessionContext
   src/compose.ts       composeReport(input: ComposeInput): ContextReport; toMeter(report): Meter
   src/collect.ts       createCollector(deps: { sdk: CollectSdk; fs: CollectFs; roots }): Collector
-  src/ui/format.ts     formatTokens(n): string; percent(n, d); toneFor(used, limit); CATEGORY_STYLE
+  src/ui/format.ts     formatTokens(n): string; percent(n, d); toneFor(used, limit); CATEGORY_FILL
   src/ui/data.ts       useMeter(threadId); useReport(threadId)
-  src/ui/MeterBar.tsx  <MeterBar segments total autoCompactAt size />
+  src/ui/MeterBar.tsx  <MeterBar segments total autoCompactAt size /> (kit Meter, reserved buffer at the right end)
+  src/ui/RowAction.tsx RowAction (a kit-style row that is a button), RowMenuTrigger (always-visible `…`)
   src/ui/ContextRing.tsx     composer action: anchor + portal into bb's footer, ring button, hover card
   src/ui/footerSlot.ts       useFooterSlot(anchor): HTMLElement | null (insert span, observe, re-insert)
   src/ui/ContextPanel.tsx    panel shell: header, Breakdown, LargestItems, Turns, footer

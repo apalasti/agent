@@ -18,7 +18,7 @@ commands, into bb. [DESIGN.md](DESIGN.md) is the source of truth for behaviour a
   command, removes the worktree, optionally deletes the branch.
 - **Tasks panel** (a "Tasks" tab in a thread's side panel) — the `.scratch` efforts of the
   worktree the open thread belongs to: tickets grouped Running / Ready / Blocked / Done
-  (Done collapsed), a one-button issue batch (Orchestrate), a hand-off banner, and
+  (Done collapsed), a one-button issue batch (Orchestrate), a hand-off section, and
   "Chart a new map". Tickets and batches with a live thread show **Open**; ⌘-click starts
   without leaving. It refreshes every 5s. A **Tasks** button in each worktree thread's
   header shows the runnable count and opens the tab. Replaces the old Workflow dialog.

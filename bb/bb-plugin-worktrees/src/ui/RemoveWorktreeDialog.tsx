@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { formatHomePathForDisplay } from "@/lib/utils";
 import type { WorktreeStatus } from "../contract";
 import { flattenThreads, type WorktreeNode } from "../group";
+import { Callout, CodeWell, Spinner } from "../kit";
 import { errorMessage, useWorktreesRpc } from "./data";
 
 export function RemoveWorktreeDialog({
@@ -74,7 +75,7 @@ export function RemoveWorktreeDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && !busy && onClose()}>
-      <DialogContent className="w-[min(34rem,calc(100vw-2rem))] max-w-none">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Remove worktree {group.label}?</DialogTitle>
           <DialogDescription className="truncate" title={path}>
@@ -88,7 +89,7 @@ export function RemoveWorktreeDialog({
               <p>
                 {threads.length === 1 ? "This thread will be archived:" : `These ${threads.length} threads will be archived:`}
               </p>
-              <ul className="max-h-40 overflow-y-auto rounded-md border border-border px-3 py-1.5 text-muted-foreground">
+              <ul className="max-h-40 overflow-y-auto rounded-md bg-surface-recessed px-2.5 py-1.5 text-muted-foreground">
                 {threads.map((thread) => (
                   <li key={thread.id} className="truncate py-0.5">
                     {thread.displayTitle}
@@ -101,15 +102,18 @@ export function RemoveWorktreeDialog({
           )}
 
           {status === null && statusError === null ? (
-            <p className="text-xs text-muted-foreground">Checking for uncommitted changes…</p>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Spinner className="size-3" />
+              Checking for uncommitted changes…
+            </p>
           ) : null}
           {statusError !== null ? (
             <p className="text-xs text-muted-foreground">Couldn't check for uncommitted changes: {statusError}</p>
           ) : null}
           {dirty > 0 ? (
-            <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-destructive">
+            <Callout tone="error" className="m-0">
               {dirty} uncommitted {dirty === 1 ? "change" : "changes"} will be lost.
-            </p>
+            </Callout>
           ) : null}
           {status !== null && status.ahead > 0 ? (
             <p className="text-xs text-muted-foreground">
@@ -136,10 +140,8 @@ export function RemoveWorktreeDialog({
 
           {failure !== null ? (
             <div role="alert" className="grid gap-1">
-              <p className="text-destructive">Removal failed.</p>
-              <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-md bg-muted px-3 py-2 font-mono text-xs">
-                {failure}
-              </pre>
+              <p className="text-destructive-text">Removal failed.</p>
+              <CodeWell tone="error">{failure}</CodeWell>
             </div>
           ) : null}
         </div>

@@ -4,10 +4,11 @@ import { useBbNavigate, useComposer } from "@get-bb/plugin-sdk/app";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 import type { Meter } from "../contract";
+import { Dot, LinkButton, Spinner } from "../kit";
 import { CourseChangeIcon, CourseChangeText } from "./CourseChangeRow";
 import { useMeter, useReport } from "./data";
 import { useFooterSlot } from "./footerSlot";
-import { CATEGORY_STYLE, formatTokens, percent, TONE_TEXT, toneFor, usableLimit, usedTotal, type Tone } from "./format";
+import { CATEGORY_FILL, formatTokens, percent, TONE_TEXT, toneFor, usableLimit, usedTotal, type Tone } from "./format";
 import { MeterBar } from "./MeterBar";
 
 export const PANEL_ACTION_ID = "context";
@@ -62,7 +63,7 @@ function RingWithCard({ threadId, meter }: { threadId: string; meter: Meter }) {
           type="button"
           aria-label={accessibleName(meter, used)}
           onClick={openPanel}
-          className="select-none -my-1 -mr-1 inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-full pl-2 pr-2 transition-colors hover:bg-state-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-md:my-0 max-md:-mr-3 max-md:-ml-1 max-md:h-11 max-md:pr-3.5"
+          className="select-none -my-1 -mr-1 inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-full pl-2 pr-2 transition-colors hover:bg-state-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-md:my-0 max-md:-mr-3 max-md:-ml-1 max-md:h-11 max-md:pr-3.5"
         >
           <span aria-hidden="true" className={cn("text-xs tabular-nums", TONE_TEXT[tone])}>
             {isApproximate(meter) ? "≈" : ""}
@@ -134,7 +135,7 @@ function Card({
           </span>
           {contextWindow === null ? " tokens" : ` / ${formatTokens(contextWindow)} tokens`}
           {share === null ? null : ` · ${share}`}
-          {recomputing ? <span className="ml-1.5 italic text-muted-foreground/80">recomputing</span> : null}
+          {recomputing ? <span className="ml-1.5 text-subtle-foreground">recomputing</span> : null}
         </span>
         {autoCompactAt === null ? null : <span className="shrink-0">autocompact at {formatTokens(autoCompactAt)}</span>}
       </div>
@@ -142,21 +143,17 @@ function Card({
       <ul aria-label="Used context" className="flex flex-col gap-0.5">
         {categories.map((segment) => (
           <li key={segment.id} className="flex items-center gap-2">
-            <span className={cn("size-2 shrink-0 rounded-full", CATEGORY_STYLE[segment.id].dot)} />
+            <Dot className={CATEGORY_FILL[segment.id]} />
             <span className="min-w-0 flex-1 truncate">{segment.label}</span>
             <span className="shrink-0 tabular-nums">{formatTokens(segment.tokens)}</span>
-            <span className="w-9 shrink-0 text-right tabular-nums text-muted-foreground">{percent(segment.tokens, used)}</span>
+            <span className="w-9 shrink-0 text-right tabular-nums text-subtle-foreground">{percent(segment.tokens, used)}</span>
           </li>
         ))}
       </ul>
       <ReportDetails threadId={threadId} />
-      <button
-        type="button"
-        onClick={onShowDetails}
-        className="-mx-1 -mb-1 rounded-md px-1 py-1 text-left font-medium text-foreground transition-colors hover:bg-state-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
+      <LinkButton onClick={onShowDetails} className="self-start">
         Show details
-      </button>
+      </LinkButton>
     </div>
   );
 }
@@ -164,27 +161,34 @@ function Card({
 function ReportDetails({ threadId }: { threadId: string }) {
   const { report, error } = useReport(threadId);
   if (report === null) {
-    return <p className="border-t pt-2 text-muted-foreground">{error === null ? "Loading largest items…" : "Couldn't load the breakdown"}</p>;
+    return error === null ? (
+      <p className="flex items-center gap-1.5 border-t border-border-hairline pt-2 text-muted-foreground">
+        <Spinner />
+        Loading largest items…
+      </p>
+    ) : (
+      <p className="border-t border-border-hairline pt-2 text-destructive-text">Couldn't load the breakdown</p>
+    );
   }
   const lastChange = report.courseChanges[report.courseChanges.length - 1];
   const largest = report.largest.slice(0, 3);
   if (largest.length === 0 && lastChange === undefined) return null;
   return (
-    <div className="flex flex-col gap-2 border-t pt-2">
+    <div className="flex flex-col gap-2 border-t border-border-hairline pt-2">
       {largest.length === 0 ? null : (
         <ul aria-label="Largest items" className="flex flex-col gap-0.5">
           {largest.map((item) => (
             <li key={`${item.categoryId}-${item.id}`} className="flex min-w-0 items-center gap-2">
-              <span className={cn("size-2 shrink-0 rounded-full", CATEGORY_STYLE[item.categoryId].dot)} />
+              <Dot className={CATEGORY_FILL[item.categoryId]} />
               <span className="max-w-[45%] shrink-0 truncate" title={item.label}>
                 {item.label}
               </span>
               {item.detail === null ? null : (
-                <span title={item.detail} className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
+                <span title={item.detail} className="min-w-0 truncate font-mono text-xs text-subtle-foreground">
                   {item.detail}
                 </span>
               )}
-              <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">
+              <span className="ml-auto shrink-0 tabular-nums text-subtle-foreground">
                 {item.turnIndex === null ? "" : `#${item.turnIndex}`}
               </span>
               <span className="w-9 shrink-0 text-right tabular-nums">{formatTokens(item.tokens)}</span>

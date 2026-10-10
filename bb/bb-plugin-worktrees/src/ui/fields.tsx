@@ -94,14 +94,14 @@ export function useBranchSuggestions(projectId: string | null, query: string): s
 export function BranchCheckMessage({ check }: { check: BranchCheck }) {
   if (check.state === "invalid") {
     return (
-      <p role="alert" className="text-xs text-destructive">
+      <p role="alert" className="text-xs text-destructive-text">
         {check.message}
       </p>
     );
   }
   if (check.state === "ok" && check.existingWorktreePath !== null) {
     return (
-      <p className="truncate text-xs text-muted-foreground" title={check.existingWorktreePath}>
+      <p className="truncate text-xs text-subtle-foreground" title={check.existingWorktreePath}>
         A worktree for this branch exists; the thread will start there.
       </p>
     );
@@ -137,7 +137,9 @@ export function TaskFields({
   return (
     <div className={cn("grid gap-3", compact ? "grid-cols-1" : "sm:grid-cols-2")}>
       <div className="grid min-w-0 gap-1.5">
-        <Label htmlFor={branchId}>Branch</Label>
+        <Label htmlFor={branchId} className="text-xs">
+          Branch
+        </Label>
         <Input
           id={branchId}
           value={branch}
@@ -151,7 +153,9 @@ export function TaskFields({
         <BranchCheckMessage check={check} />
       </div>
       <div className="grid min-w-0 gap-1.5">
-        <Label htmlFor={fromId}>Base</Label>
+        <Label htmlFor={fromId} className="text-xs">
+          Base
+        </Label>
         <Input
           id={fromId}
           value={from}
