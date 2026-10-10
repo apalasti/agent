@@ -1,8 +1,7 @@
-import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
-import { Mono, Row, RowButton, RowTitle, StatusDot, Tag } from "../../kit";
+import { Mono, Row, RowButton, RowMenuTrigger, RowTitle, StatusDot, Tag } from "../../kit";
 import type { TaskRow } from "./model";
 import { STATE_STATUS } from "./tone";
 import type { Modifiers } from "./useLaunch";
@@ -72,15 +71,7 @@ function Action({
       <RowButton onClick={() => onOpenThread(threadId)}>Open</RowButton>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-6.5 text-muted-foreground [&_[data-icon-root]]:size-3.5"
-            aria-label={`More for ${row.ref}`}
-            disabled={busy !== null}
-          >
-            <Icon name="MoreHorizontal" />
-          </Button>
+          <RowMenuTrigger label={`More for ${row.ref}`} disabled={busy !== null} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={() => onRun(row, { metaKey: false, ctrlKey: false })}>

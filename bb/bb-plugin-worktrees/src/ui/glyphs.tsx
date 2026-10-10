@@ -64,7 +64,7 @@ export function IndicatorGlyph({
     case "queued-waiting":
       return <Icon name="Clock" className={cn(GLYPH, "text-subtle-foreground")} aria-label={aria} />;
     case "runtime":
-      return <LabelledSpinner label={aria} />;
+      return <Spinner label={aria} className={cn("size-4", STATUS.running.tone)} />;
     case "working-draft":
       return <Icon name="Edit" className={cn(GLYPH, WORKING)} aria-label={aria ?? "Working, unsent draft"} />;
     case "draft":
@@ -108,16 +108,9 @@ export function runningSummary(labels: readonly string[]): string | null {
 export function RunningRollupGlyph({ labels }: { labels: readonly string[] }) {
   const summary = runningSummary(labels);
   if (summary === null) return null;
-  return <LabelledSpinner label={summary} className="size-3.5" />;
+  return <Spinner label={summary} className={STATUS.running.tone} />;
 }
 
-function LabelledSpinner({ label, className }: { label: string | undefined; className?: string }) {
-  return (
-    <span role={label ? "img" : undefined} aria-label={label} className="pointer-events-none inline-flex shrink-0">
-      <Spinner className={cn("size-4", STATUS.running.tone, className)} />
-    </span>
-  );
-}
 
 const ROLLUP_LABEL: Record<Rollup, string | null> = {
   "unread-error": "A thread here failed",

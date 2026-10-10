@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 import type { ContextReport } from "../contract";
-import { Callout, Dot, Hint, PanelBody, PanelFooter, PanelState, SectionLabel, Spinner } from "../kit";
+import { ActionRow, Callout, Dot, Group, Hint, PanelBody, PanelFooter, PanelState, Spinner } from "../kit";
 import { Breakdown } from "./Breakdown";
 import { useReport } from "./data";
 import {
@@ -31,20 +31,10 @@ import {
 } from "./format";
 import { CLEAR_ICON, COMPACT_ICON } from "./icon";
 import { MeterBar } from "./MeterBar";
-import { RowAction } from "./RowAction";
 import { Turns, type TurnFlash } from "./Turns";
 
 function message(cause: unknown): string {
   return cause instanceof Error ? cause.message : String(cause);
-}
-
-function Section({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
-  return (
-    <section aria-label={title} className="border-t border-border-hairline pb-1">
-      <SectionLabel aside={aside}>{title}</SectionLabel>
-      {children}
-    </section>
-  );
 }
 
 const SOURCE_NOTE: Record<ContextReport["source"]["kind"], string> = {
@@ -144,7 +134,7 @@ function LargestItems({ report, onSelectTurn }: { report: ContextReport; onSelec
               <div className="flex h-7 min-w-0 items-center gap-2 px-3 text-sm hover:bg-state-hover">{content}</div>
             ) : (
               <Hint label={`Show turn ${turnIndex}`}>
-                <RowAction onClick={() => onSelectTurn(turnIndex)}>{content}</RowAction>
+                <ActionRow onClick={() => onSelectTurn(turnIndex)}>{content}</ActionRow>
               </Hint>
             )}
           </li>
@@ -295,22 +285,21 @@ function ReportView({
         )}
         <Header report={report} used={used} />
         {report.categories.length === 0 ? null : (
-          <Section title="What's in it">
+          <Group label="What's in it" aria-label="What's in it">
             <Breakdown
               categories={report.categories}
               used={used}
               contextWindow={report.window.contextWindow}
               onSelectTurn={selectTurn}
             />
-          </Section>
+          </Group>
         )}
         {report.largest.length === 0 ? null : (
-          <Section title="Largest items">
+          <Group label="Largest items" aria-label="Largest items">
             <LargestItems report={report} onSelectTurn={selectTurn} />
-          </Section>
+          </Group>
         )}
-        <Section
-          title="Turns"
+        <Group label="Turns" aria-label="Turns"
           aside={
             busy ? (
               <span className="inline-flex items-center gap-1">
@@ -334,7 +323,7 @@ function ReportView({
               onChanged={refetch}
             />
           )}
-        </Section>
+        </Group>
       </PanelBody>
       <Footer threadId={threadId} used={used} busy={busy} onChanged={refetch} />
     </>

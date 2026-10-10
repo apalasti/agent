@@ -11,7 +11,7 @@ import { Icon } from "@/components/ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export type MenuEntry =
-  | { kind: "item"; label: string; icon?: string; destructive?: boolean; disabled?: boolean; hint?: string; checked?: boolean; description?: string }
+  | { kind: "item"; label: string; icon?: string; destructive?: boolean; disabled?: boolean; hint?: string; checked?: boolean; description?: string; onSelect?: () => void }
   | { kind: "separator" }
   | { kind: "label"; label: string };
 
@@ -29,6 +29,7 @@ export function RowMenu({ label, entries, children }: { label: string; entries: 
               key={entry.label}
               variant={entry.destructive ? "destructive" : "default"}
               disabled={entry.disabled}
+              onSelect={entry.onSelect}
               className={entry.hint || entry.description ? "items-start" : undefined}
             >
               {entry.icon ? <Icon name={entry.icon} aria-hidden className={entry.hint || entry.description ? "mt-px" : undefined} /> : null}

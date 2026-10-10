@@ -137,7 +137,6 @@ bb-plugin-worktrees/
   src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
   src/ui/tasks/              Tasks panel (threadPanelAction) + TasksHeaderButton: model.ts, useLaunch.ts, TasksPanel, EffortSection, TicketRow, BatchGroup, HandoffGroup, ChartFooter, tone.ts (task state → kit status)
-  src/ui/CollapsibleLabel.tsx  a SectionLabel that toggles its group (the Tasks panel's Done)
   src/kit/                  shared UI primitives, synced from bb/kit/src — never edit here
   src/scratch.ts            pure .scratch scanner + pi prompt composition (see `.scratch/` workflow)
   src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu

@@ -271,7 +271,6 @@ bb-plugin-context/
   src/ui/format.ts     formatTokens(n): string; percent(n, d); toneFor(used, limit); CATEGORY_FILL
   src/ui/data.ts       useMeter(threadId); useReport(threadId)
   src/ui/MeterBar.tsx  <MeterBar segments total autoCompactAt size /> (kit Meter, reserved buffer at the right end)
-  src/ui/RowAction.tsx RowAction (a kit-style row that is a button), RowMenuTrigger (always-visible `…`)
   src/ui/ContextRing.tsx     composer action: anchor + portal into bb's footer, ring button, hover card
   src/ui/footerSlot.ts       useFooterSlot(anchor): HTMLElement | null (insert span, observe, re-insert)
   src/ui/ContextPanel.tsx    panel shell: header, Breakdown, LargestItems, Turns, footer

@@ -12,11 +12,10 @@ import { Icon } from "@/components/ui/icon";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { CourseChange, Turn } from "../contract";
-import { Callout, Meter, StatusWord } from "../kit";
+import { Callout, Meter, RowMenuTrigger, StatusWord } from "../kit";
 import { CourseChangeRow } from "./CourseChangeRow";
 import { formatTokens } from "./format";
 import { FORK_ICON } from "./icon";
-import { RowMenuTrigger } from "./RowAction";
 
 export type TurnFlash = { turnIndex: number; nonce: number };
 

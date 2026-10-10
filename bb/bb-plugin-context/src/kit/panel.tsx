@@ -114,9 +114,21 @@ export function PanelBody({ children, className }: { children: ReactNode; classN
   return <div className={cn("min-h-0 flex-1 overflow-y-auto", className)}>{children}</div>;
 }
 
-export function Group({ label, aside, children, className }: { label?: ReactNode; aside?: ReactNode; children: ReactNode; className?: string }) {
+export function Group({
+  label,
+  aside,
+  children,
+  className,
+  "aria-label": ariaLabel,
+}: {
+  label?: ReactNode;
+  aside?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  "aria-label"?: string;
+}) {
   return (
-    <section className={cn("border-t border-border-hairline pb-1 first:border-t-0", !label && "pt-1", className)}>
+    <section aria-label={ariaLabel} className={cn("border-t border-border-hairline pb-1 first:border-t-0", !label && "pt-1", className)}>
       {label ? <SectionLabel aside={aside}>{label}</SectionLabel> : null}
       {children}
     </section>

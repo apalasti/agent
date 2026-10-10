@@ -13,8 +13,14 @@ export const STATUS: Record<Status, { glyph: string | null; tone: string; dot: s
   idle: { glyph: "CircleQuestion", tone: "text-subtle-foreground", dot: "border border-subtle-foreground" },
 };
 
-export function Spinner({ className }: { className?: string }) {
-  return <Icon name="Loading" aria-hidden className={cn("size-3.5 shrink-0 animate-spin motion-reduce:animate-none", className)} />;
+export function Spinner({ label, className }: { label?: string; className?: string }) {
+  const icon = <Icon name="Loading" aria-hidden className={cn("size-3.5 shrink-0 animate-spin motion-reduce:animate-none", className)} />;
+  if (!label) return icon;
+  return (
+    <span role="img" aria-label={label} className="pointer-events-none inline-flex shrink-0">
+      {icon}
+    </span>
+  );
 }
 
 export function StatusGlyph({ status, className }: { status: Status; className?: string }) {

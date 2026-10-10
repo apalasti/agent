@@ -2,9 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Category, Entry } from "../contract";
-import { Chevron, Dot, Leading, SectionLabel } from "../kit";
+import { ActionRow, Chevron, Dot, Leading, SectionLabel } from "../kit";
 import { CATEGORY_FILL, formatTokens, percent } from "./format";
-import { RowAction } from "./RowAction";
 
 type CategoryEntry = Category["entries"][number];
 
@@ -78,7 +77,7 @@ function EntryRow({ entry, onSelectTurn }: { entry: CategoryEntry; onSelectTurn:
   }
   return (
     <div>
-      <RowAction aria-expanded={open} onClick={() => setOpen((value) => !value)} className="pl-5">
+      <ActionRow aria-expanded={open} onClick={() => setOpen((value) => !value)} className="pl-5">
         <Chevron open={open} />
         <span className="min-w-0 max-w-[50%] shrink-0 truncate">{entry.label}</span>
         <Detail detail={entry.detail} />
@@ -86,7 +85,7 @@ function EntryRow({ entry, onSelectTurn }: { entry: CategoryEntry; onSelectTurn:
           {entry.children.length} largest
         </span>
         <span className="ml-auto w-12 shrink-0 @[20rem]:ml-0 text-right text-xs tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
-      </RowAction>
+      </ActionRow>
       {open ? (
         <div role="group" aria-label={`${entry.label} items`}>
           {entry.children.map((child) => (
@@ -145,9 +144,9 @@ function CategoryRow({
   return (
     <li>
       {expandable ? (
-        <RowAction aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        <ActionRow aria-expanded={open} onClick={() => setOpen((value) => !value)}>
           {content}
-        </RowAction>
+        </ActionRow>
       ) : (
         <div className="flex h-7 min-w-0 items-center gap-2 px-3 text-sm hover:bg-state-hover">{content}</div>
       )}

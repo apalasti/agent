@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
@@ -120,38 +120,85 @@ export function TwoLineRow({
   );
 }
 
-export function RowIconButton({ icon, label, onClick, className }: { icon: string; label: string; onClick?: () => void; className?: string }) {
-  return (
+export const RowIconButton = forwardRef<
+  HTMLButtonElement,
+  { icon: string; label: string } & Omit<ComponentPropsWithoutRef<typeof Button>, "children">
+>(({ icon, label, onClick, className, ...props }, ref) => (
+  <Button
+    ref={ref}
+    type="button"
+    variant="ghost"
+    size="icon"
+    aria-label={label}
+    onClick={(event) => {
+      event.stopPropagation();
+      onClick?.(event);
+    }}
+    className={cn("size-6.5 shrink-0 text-muted-foreground [&_[data-icon-root]]:size-3.5", className)}
+    {...props}
+  >
+    <Icon name={icon} aria-hidden />
+  </Button>
+));
+RowIconButton.displayName = "RowIconButton";
+
+export const RowMenuTrigger = forwardRef<HTMLButtonElement, { label: string } & Omit<ComponentPropsWithoutRef<typeof Button>, "children">>(
+  ({ label, onClick, className, ...props }, ref) => (
     <Button
+      ref={ref}
       type="button"
       variant="ghost"
       size="icon"
       aria-label={label}
       onClick={(event) => {
         event.stopPropagation();
-        onClick?.();
+        onClick?.(event);
       }}
-      className={cn("size-6.5 shrink-0 text-muted-foreground [&_[data-icon-root]]:size-3.5", className)}
+      className={cn(
+        "size-6.5 shrink-0 text-subtle-foreground group-hover/row:text-foreground group-focus-within/row:text-foreground [&_[data-icon-root]]:size-3.5",
+        className,
+      )}
+      {...props}
     >
-      <Icon name={icon} aria-hidden />
+      <Icon name="MoreHorizontal" aria-hidden />
     </Button>
-  );
-}
+  ),
+);
+RowMenuTrigger.displayName = "RowMenuTrigger";
 
 export function RowMoreMenu({ label, entries }: { label: string; entries: readonly MenuEntry[] }) {
   return (
     <RowMenu label={label} entries={entries}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label={label}
-        onClick={(event) => event.stopPropagation()}
-        className="size-6.5 shrink-0 text-muted-foreground [&_[data-icon-root]]:size-3.5"
-      >
-        <Icon name="MoreHorizontal" aria-hidden />
-      </Button>
+      <RowMenuTrigger label={label} />
     </RowMenu>
+  );
+}
+
+/** A whole row that is itself the control (disclosure, jump-to). */
+export const ActionRow = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<typeof Button>>(({ className, ...props }, ref) => (
+  <Button
+    ref={ref}
+    type="button"
+    variant="ghost"
+    className={cn(
+      "flex h-7 w-full min-w-0 justify-start gap-2 rounded-none px-3 text-left text-sm font-normal text-foreground focus-visible:ring-inset [&_[data-icon-root]]:size-3.5",
+      className,
+    )}
+    {...props}
+  />
+));
+ActionRow.displayName = "ActionRow";
+
+/** A row title that opens the row: its hit area stretches over the row, so the whole row is one keyboard stop. */
+export function RowOpen({ onClick, children }: { onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="block w-full cursor-pointer truncate text-left outline-none after:absolute after:inset-0 focus-visible:after:ring-1 focus-visible:after:ring-inset focus-visible:after:ring-ring"
+    >
+      {children}
+    </button>
   );
 }
 

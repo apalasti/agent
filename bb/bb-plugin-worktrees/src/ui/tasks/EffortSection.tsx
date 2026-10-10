@@ -1,5 +1,4 @@
-import { Group, Meter, SectionLabel, STATUS } from "../../kit";
-import { CollapsibleLabel } from "../CollapsibleLabel";
+import { CollapsibleLabel, Group, Meter, SectionLabel, STATUS } from "../../kit";
 import { BatchGroup } from "./BatchGroup";
 import { HandoffGroup } from "./HandoffGroup";
 import type { EffortModel, TaskRow, TaskState } from "./model";
