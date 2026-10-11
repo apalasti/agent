@@ -15,7 +15,7 @@ export function Card({ label, children, interactive = false, className }: { labe
   return (
     <article
       aria-label={label}
-      className={cn("relative flex min-w-0 flex-col gap-1 rounded-xl bg-muted/40 px-4 py-3 text-sm", interactive && "hover:bg-muted/70", className)}
+      className={cn("relative flex min-w-0 flex-col gap-1 rounded-xl bg-muted/40 px-4 py-3 text-xs", interactive && "hover:bg-muted/70", className)}
     >
       {children}
     </article>
@@ -25,7 +25,7 @@ export function Card({ label, children, interactive = false, className }: { labe
 export function CardHeader({ title, aside }: { title: ReactNode; aside?: ReactNode }) {
   return (
     <div className="flex min-w-0 items-baseline gap-3">
-      <span className="min-w-0 flex-1 truncate text-foreground">{title}</span>
+      <span className="min-w-0 flex-1 truncate text-sm text-foreground">{title}</span>
       {aside === undefined || aside === null ? null : <span className="shrink-0 tabular-nums text-muted-foreground">{aside}</span>}
     </div>
   );
@@ -94,12 +94,12 @@ export function DisclosureHeader({
       aria-expanded={open}
       onClick={onToggle}
       className={cn(
-        "flex h-auto w-full items-baseline justify-start gap-3 rounded-none px-3 py-2 text-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground",
+        "flex h-auto w-full items-baseline justify-start gap-3 rounded-none px-3 pb-1 pt-3 text-2xs font-semibold text-muted-foreground hover:bg-transparent hover:text-foreground",
         className,
       )}
     >
       <span className="min-w-0 flex-1 truncate text-left">{title}</span>
-      {aside === undefined || aside === null ? null : <span className="shrink-0 tabular-nums">{aside}</span>}
+      {aside === undefined || aside === null ? null : <span className="shrink-0 text-xs font-normal tabular-nums">{aside}</span>}
       <Chevron open={open} className="self-center" />
     </Button>
   );

@@ -11,7 +11,7 @@ type CategoryEntry = Category["entries"][number];
 const GRID = "grid h-7 min-w-0 grid-cols-[0.75rem_minmax(0,1fr)_4rem_3rem] items-center gap-x-2 px-3 text-sm";
 
 function Num({ children, strong = false }: { children: ReactNode; strong?: boolean }) {
-  return <span className={cn("text-right tabular-nums", strong ? "text-foreground" : "text-muted-foreground")}>{children}</span>;
+  return <span className={cn("text-right text-xs tabular-nums", strong ? "text-foreground" : "text-muted-foreground")}>{children}</span>;
 }
 
 function Detail({ detail }: { detail: string | null }) {

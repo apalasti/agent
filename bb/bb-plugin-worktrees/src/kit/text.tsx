@@ -17,14 +17,14 @@ export function SectionLabel({
   return (
     <div
       className={cn(
-        "flex items-baseline gap-2 text-sm font-medium text-muted-foreground",
+        "flex items-baseline gap-2 text-2xs font-semibold text-muted-foreground",
         inset ? "px-3 pb-1 pt-3" : "pb-1",
         className,
       )}
     >
       <span className="min-w-0 flex-1 truncate">{children}</span>
       {aside === undefined || aside === null ? null : (
-        <span className="shrink-0 font-normal tabular-nums">{aside}</span>
+        <span className="shrink-0 text-2xs font-normal tabular-nums text-subtle-foreground">{aside}</span>
       )}
     </div>
   );
@@ -90,14 +90,14 @@ export function CollapsibleLabel({
       aria-expanded={open}
       onClick={onToggle}
       className={cn(
-        "flex h-auto w-full items-baseline justify-start gap-1.5 rounded-none pb-1 text-sm font-medium text-muted-foreground hover:bg-transparent hover:text-foreground",
+        "flex h-auto w-full items-baseline justify-start gap-1 rounded-none pb-1 text-2xs font-semibold text-muted-foreground hover:bg-transparent hover:text-foreground",
         inset ? "px-3 pt-3" : "px-0",
         className,
       )}
     >
-      <Chevron open={open} className="size-3.5 self-center" />
+      <Chevron open={open} className="size-3 self-center" />
       <span className="min-w-0 flex-1 truncate text-left">{children}</span>
-      {aside === undefined || aside === null ? null : <span className="shrink-0 font-normal tabular-nums">{aside}</span>}
+      {aside === undefined || aside === null ? null : <span className="shrink-0 text-2xs font-normal tabular-nums text-subtle-foreground">{aside}</span>}
     </Button>
   );
 }

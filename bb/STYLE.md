@@ -26,11 +26,12 @@ token, status, state and dialog rules below carried over unchanged.
 |---|---|---|
 | `text-sm` | 13 | row titles, body, inputs, panel state messages |
 | `text-xs` | 12 | metadata, menus, notes, row buttons |
-| `text-2xs` | 10 | tags only |
+| `text-2xs` | 10 | section labels and tags only |
 - No `text-[10px]`, `text-[11px]`, `text-[13px]`: 13px is `text-sm`; 11px metadata becomes `text-xs`
-  `text-subtle-foreground`; 11px tags become `text-2xs`.
-- Inside cards, title and details are both `text-sm`; the details are `text-muted-foreground`.
-- Weights: `font-medium` section labels. No `font-semibold` hero numbers, no `font-bold`.
+  `text-subtle-foreground`; 11px labels/tags become `text-2xs`.
+- Inside cards the title is `text-sm`, details `text-xs text-muted-foreground` (the reference pictures' larger
+  card and label text was tried and dropped as too big).
+- Weights: `font-medium` titles, `font-semibold` section labels. No hero numbers, no `font-bold`.
 - Sentence case everywhere. No `uppercase`, no `tracking-*`.
 - `font-mono text-xs` for ids, paths, branches, tool calls, shortcuts. `tabular-nums` on every number.
   Minus is U+2212.
@@ -50,7 +51,7 @@ token, status, state and dialog rules below carried over unchanged.
 
 ## 3a. Cards (`bb/style-reference/workflow-card.png`)
 - `CardStack`: `flex flex-col gap-2 p-3`. `Card`: `<article aria-label>`, `rounded-xl bg-muted/40 px-4 py-3
-  text-sm`, no border, no shadow. Cards never nest.
+  text-xs`, no border, no shadow. Cards never nest.
 - `CardHeader`: title (`text-foreground`, truncates) with the duration or count on the right.
 - Then `Words` lines: details as plain words with `gap-x-3` between them ("Workflow  Completed",
   "14 agents  1.2M tokens"). No `·`, no leading status icon; the status is a word, toned per §6.
@@ -60,8 +61,8 @@ token, status, state and dialog rules below carried over unchanged.
 - A card that opens a sub-view has a `RowOpen` title (its hit area covers the card) and `interactive`.
 
 ## 4. Section label
-`SectionLabel`: `px-3 pb-1 pt-3 text-sm font-medium text-muted-foreground`, sentence case, optional
-right-aligned `tabular-nums` aside. `inset={false}` inside a card. `CollapsibleLabel` is the same with a leading
+`SectionLabel`: `px-3 pb-1 pt-3 text-2xs font-semibold text-muted-foreground`, sentence case, optional
+right-aligned `text-2xs tabular-nums text-subtle-foreground` aside. `inset={false}` inside a card. `CollapsibleLabel` is the same with a leading
 chevron; `DisclosureHeader` is a section title with its aside and a trailing chevron ("Context window
 197.1k / 1M (20%) ⌄").
 
@@ -101,8 +102,8 @@ chevron; `DisclosureHeader` is a section title with its aside and a trailing che
 - Buttons are always the vendored `Button` (or a kit wrapper of it). No hand-rolled `<button class=…>` chrome.
 - Hover hints use `Hint` (a tooltip), not `title` on buttons; disabled controls get their reason in a `Hint`.
 - Context breakdown (`bb/style-reference/context.png`): a thin `Meter` across the top; then one row per
-  category: `Swatch` (`size-3 rounded-sm`), name in `text-foreground`, tokens right-aligned in
-  `text-muted-foreground`, share right-aligned in `text-foreground` (`—` when it has no share). No lines
+  category: `Swatch` (`size-3 rounded-sm`), name in `text-sm text-foreground`, tokens right-aligned in
+  `text-xs text-muted-foreground`, share right-aligned in `text-xs text-foreground` (`—` when it has no share). No lines
   between rows. Groups that fold ("MCP tools") use a leading chevron and show an item count instead of a share.
 - Context fills: the big categories get strong, distinct theme colours (`bg-file-accent`, `bg-warning`,
   `bg-success`, `bg-attention`, `bg-pr-merged`); system-type categories are greys (`bg-foreground/45`), the

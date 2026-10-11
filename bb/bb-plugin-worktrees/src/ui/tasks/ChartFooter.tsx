@@ -11,7 +11,7 @@ export function ChartFooter({ busy, onChart }: { busy: string | null; onChart: (
   };
   return (
     <section className="grid gap-1.5">
-      <h3 className="text-sm font-medium text-muted-foreground">Chart a new map</h3>
+      <h3 className="text-xs font-medium text-muted-foreground">Chart a new map</h3>
       <div className="flex items-center gap-2">
         <Input
           value={idea}
