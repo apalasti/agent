@@ -62,12 +62,18 @@ export function CardSection({
   );
 }
 
-/** One small square per item, coloured by its status. */
+function tickFill(status: Status): string {
+  if (status === "done") return "bg-foreground/20";
+  if (status === "idle") return "bg-muted";
+  return STATUS[status].dot;
+}
+
+/** One small square per item, coloured by its status; finished items recede to light grey. */
 export function Ticks({ statuses, label }: { statuses: readonly Status[]; label?: string }) {
   return (
     <span role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true} className="flex flex-wrap gap-1">
       {statuses.map((status, index) => (
-        <span key={index} className={cn("size-2 rounded-sm", status === "idle" ? "bg-muted" : STATUS[status].dot)} />
+        <span key={index} className={cn("size-2 rounded-xs", tickFill(status))} />
       ))}
     </span>
   );
@@ -94,7 +100,7 @@ export function DisclosureHeader({
       aria-expanded={open}
       onClick={onToggle}
       className={cn(
-        "flex h-auto w-full items-baseline justify-start gap-3 rounded-none px-3 pb-1 pt-3 text-2xs font-semibold text-muted-foreground hover:bg-transparent hover:text-foreground",
+        "flex h-auto w-full items-baseline justify-start gap-3 rounded-none px-3 pb-1 pt-3 text-xs font-medium text-muted-foreground hover:bg-transparent hover:text-foreground",
         className,
       )}
     >

@@ -56,7 +56,7 @@ function EntryLine({
 }) {
   return (
     <div className={GRID} title={fullName(entry)} data-entry>
-      <span className={cn("col-start-2 flex min-w-0 items-center gap-2", depth > 0 && "pl-5")}>
+      <span className={cn("col-start-2 flex min-w-0 items-center gap-2", depth > 0 ? "pl-11" : "pl-5.5")}>
         {label === null ? null : <span className="min-w-0 max-w-[50%] shrink-0 truncate text-foreground">{label}</span>}
         {label === null && !entry.detail ? (
           <span className="shrink-0 text-muted-foreground">{entry.label}</span>
@@ -121,32 +121,42 @@ function categoryTitle(category: Category, share: string | null): string {
   return [category.label, scope, CATEGORY_HINT[category.id]?.full].filter(Boolean).join("\n");
 }
 
-function LegendRow({ category, used, contextWindow }: { category: Category; used: number; contextWindow: number | null }) {
+function CategoryRow({
+  category,
+  used,
+  contextWindow,
+  onSelectTurn,
+}: {
+  category: Category;
+  used: number;
+  contextWindow: number | null;
+  onSelectTurn: (turnIndex: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
   const share = shareOf(category, used, contextWindow);
   const hint = CATEGORY_HINT[category.id];
-  return (
-    <li className={GRID} title={categoryTitle(category, share)}>
+  const expandable = category.entries.length > 0;
+  const cells = (
+    <>
       <Swatch className={cn(CATEGORY_FILL[category.id], category.id === "free" && "border border-border")} />
-      <span className="flex min-w-0 items-baseline gap-3">
+      <span className="flex min-w-0 items-center gap-1.5">
         <span className="min-w-0 truncate text-foreground">{category.label}</span>
         {hint === undefined ? null : <span className="shrink-0 text-xs text-subtle-foreground">{hint.short}</span>}
+        {expandable ? <Chevron open={open} className="size-3" /> : null}
       </span>
       <Num>{formatTokens(category.tokens)}</Num>
       <Num strong>{share ?? "—"}</Num>
-    </li>
+    </>
   );
-}
-
-function CategoryGroup({ category, onSelectTurn }: { category: Category; onSelectTurn: (turnIndex: number) => void }) {
-  const [open, setOpen] = useState(false);
   return (
-    <li>
-      <ActionRow aria-expanded={open} onClick={() => setOpen((value) => !value)} className={GRID}>
-        <Chevron open={open} />
-        <span className="min-w-0 truncate text-muted-foreground">{category.label}</span>
-        <Num>{formatTokens(category.tokens)}</Num>
-        <Num>{category.entries.length}</Num>
-      </ActionRow>
+    <li title={categoryTitle(category, share)}>
+      {expandable ? (
+        <ActionRow aria-expanded={open} onClick={() => setOpen((value) => !value)} className={GRID}>
+          {cells}
+        </ActionRow>
+      ) : (
+        <div className={GRID}>{cells}</div>
+      )}
       {open ? (
         <div role="group" aria-label={`${category.label} entries`} className="pb-1">
           {category.entries.map((entry) => (
@@ -171,25 +181,17 @@ export function Breakdown({
 }) {
   const counted = categories.filter((category) => category.kind !== "deferred" && category.tokens > 0);
   const deferred = categories.filter((category) => category.kind === "deferred" && category.tokens > 0);
-  const itemized = [...counted, ...deferred].filter((category) => category.entries.length > 0);
   return (
     <div>
       <ul aria-label="Context categories">
         {counted.map((category) => (
-          <LegendRow key={category.id} category={category} used={used} contextWindow={contextWindow} />
+          <CategoryRow key={category.id} category={category} used={used} contextWindow={contextWindow} onSelectTurn={onSelectTurn} />
         ))}
       </ul>
       {deferred.length === 0 ? null : (
         <ul aria-label="Available on demand">
           {deferred.map((category) => (
-            <LegendRow key={category.id} category={category} used={used} contextWindow={null} />
-          ))}
-        </ul>
-      )}
-      {itemized.length === 0 ? null : (
-        <ul aria-label="Category details" className="mt-1">
-          {itemized.map((category) => (
-            <CategoryGroup key={category.id} category={category} onSelectTurn={onSelectTurn} />
+            <CategoryRow key={category.id} category={category} used={used} contextWindow={null} onSelectTurn={onSelectTurn} />
           ))}
         </ul>
       )}

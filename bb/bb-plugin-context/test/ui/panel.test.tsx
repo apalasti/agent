@@ -77,7 +77,7 @@ describe("Context panel", () => {
 
   it("expands categories into entries and tool results into their largest items", async () => {
     const rendered = await renderPanel(makeReport());
-    const categories = rendered.getByRole("list", { name: "Category details" });
+    const categories = rendered.getByRole("list", { name: "Context categories" });
     expect(within(categories).queryByText("Bash")).toBeNull();
     fireEvent.click(within(categories).getByRole("button", { name: /Tool definitions/ }));
     expect(within(categories).getByRole("group", { name: "Tool definitions entries" }).textContent).toContain("Bash");
