@@ -82,6 +82,7 @@ export function TwoLineRow({
   leading,
   title,
   second,
+  third,
   meta,
   actions,
   onClick,
@@ -90,6 +91,7 @@ export function TwoLineRow({
   leading?: ReactNode;
   title: ReactNode;
   second: ReactNode;
+  third?: ReactNode;
   meta?: ReactNode;
   actions?: ReactNode;
   onClick?: () => void;
@@ -112,6 +114,9 @@ export function TwoLineRow({
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-sm text-foreground">{title}</span>
         <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">{second}</span>
+        {third === undefined ? null : (
+          <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">{third}</span>
+        )}
       </span>
       <span className="flex h-4.5 shrink-0 items-center">
         <Trailing meta={meta} actions={actions} />
