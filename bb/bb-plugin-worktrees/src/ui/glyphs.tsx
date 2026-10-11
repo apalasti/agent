@@ -102,7 +102,7 @@ export function RunningStatusLine({ label }: { label: string }) {
 }
 
 export function runningSummary(labels: readonly string[]): string | null {
-  return labels.length > 0 ? labels.join(" · ") : null;
+  return labels.length > 0 ? labels.join(", ") : null;
 }
 
 export function RunningRollupGlyph({ labels }: { labels: readonly string[] }) {

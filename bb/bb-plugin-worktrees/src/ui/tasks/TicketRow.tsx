@@ -6,14 +6,18 @@ import type { TaskRow } from "./model";
 import { STATE_STATUS } from "./tone";
 import type { Modifiers } from "./useLaunch";
 
+export const CARD_ROW = "-mx-2 rounded-md px-2";
+
 export function TicketRow({
   row,
   busy,
+  className,
   onOpenThread,
   onRun,
 }: {
   row: TaskRow;
   busy: string | null;
+  className?: string;
   onOpenThread: (threadId: string) => void;
   onRun: (row: TaskRow, event: Modifiers) => void;
 }) {
@@ -22,7 +26,7 @@ export function TicketRow({
 
   return (
     <li>
-      <Row leading={<StatusDot status={STATE_STATUS[row.state]} />} muted={row.state === "done"} title={hint}>
+      <Row leading={<StatusDot status={STATE_STATUS[row.state]} />} muted={row.state === "done"} title={hint} className={className}>
         <Mono className="w-5 shrink-0 tabular-nums text-muted-foreground">{row.number}</Mono>
         {row.type !== null ? <Tag>{row.type}</Tag> : null}
         <RowTitle className={cn(row.state === "blocked" && "text-muted-foreground")} title={hint === undefined ? row.title : undefined}>

@@ -55,14 +55,14 @@ describe("Context panel", () => {
   it("shows the totals, basis and notes", async () => {
     const rendered = await renderPanel(makeReport());
     const header = rendered.container.querySelector("header")!;
-    expect(header.textContent).toContain("26k");
-    expect(header.textContent).toContain("/ 200k tokens");
-    expect(header.textContent).toContain("autocompact at 167k");
-    expect(header.querySelector("[data-basis]")!.textContent).toBe(
-      "Measured by bb · breakdown from Claude Code's /context and the transcript · claude-haiku-4-5-20251001",
-    );
+    expect(within(header).getByRole("button", { name: /Context window/ }).textContent).toBe("Context window26k / 200k (13%)");
+    expect(Array.from(header.querySelector("[data-basis] p")!.children).map((word) => word.textContent)).toEqual([
+      "Measured by bb",
+      "Breakdown from Claude Code's /context and the transcript",
+      "claude-haiku-4-5-20251001",
+      "Autocompact at 167k",
+    ]);
     expect(header.textContent).toContain("No /context snapshot for this session");
-    expect(header.textContent).toContain("13% used");
   });
 
   it("shows category shares of the used context, and free space as a share of the window", async () => {
@@ -72,12 +72,12 @@ describe("Context panel", () => {
       Array.from(categories.children).find((li) => label.test(li.textContent!))!.textContent!;
     expect(row(/Tool results/)).toMatch(/6\.7k26%$/);
     expect(row(/System prompt/)).toMatch(/3\.6k14%$/);
-    expect(row(/Free space/)).toBe("Free space · 70% of window141k");
+    expect(row(/Free space/)).toBe("Free space141k70%");
   });
 
   it("expands categories into entries and tool results into their largest items", async () => {
     const rendered = await renderPanel(makeReport());
-    const categories = rendered.getByRole("list", { name: "Context categories" });
+    const categories = rendered.getByRole("list", { name: "Category details" });
     expect(within(categories).queryByText("Bash")).toBeNull();
     fireEvent.click(within(categories).getByRole("button", { name: /Tool definitions/ }));
     expect(within(categories).getByRole("group", { name: "Tool definitions entries" }).textContent).toContain("Bash");
@@ -93,7 +93,7 @@ describe("Context panel", () => {
 
     const onDemand = rendered.getByRole("list", { name: "Available on demand" });
     expect(onDemand.textContent).toContain("18k");
-    expect(categories.textContent).not.toContain("Available on demand");
+    expect(rendered.getByRole("list", { name: "Context categories" }).textContent).not.toContain("Available on demand");
   });
 
   it("places course-change dividers before the right turn", async () => {
@@ -121,7 +121,7 @@ describe("Context panel", () => {
     const rendered = await renderPanel(makeReport({ turns: [makeTurn(1), makeTurn(2), makeTurn(3)] }));
     fireEvent.click(menuItem(await openTurnMenu(rendered, 2), "Edit from here…"));
     const editor = rendered.getByRole("group", { name: "Edit turn 2" });
-    expect(editor.textContent).toContain("Rewinds to ≈21k (frees 5.1k) · discards turns 2–3");
+    expect(editor.textContent).toContain("Rewinds to ≈21k (frees 5.1k)Discards turns 2–3");
     const textarea = within(editor).getByRole("textbox") as HTMLTextAreaElement;
     expect(textarea.value).toBe("Message 2 full text");
     fireEvent.change(textarea, { target: { value: "Try again, shorter" } });

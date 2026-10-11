@@ -27,8 +27,8 @@ describe("toneFor", () => {
 
 describe("labels", () => {
   it("shows used / window and the share, with ≈ when estimated", () => {
-    expect(usageLabel(makeMeter().window, 27_183)).toBe("27k / 200k · 14%");
-    expect(usageLabel(makeMeter({}, { basis: "estimated" }).window, 27_183)).toBe("≈27k / 200k · 14%");
+    expect(usageLabel(makeMeter().window, 27_183)).toBe("27k / 200k (14%)");
+    expect(usageLabel(makeMeter({}, { basis: "estimated" }).window, 27_183)).toBe("≈27k / 200k (14%)");
     expect(percent(100, 200_000)).toBe("<1%");
   });
 });

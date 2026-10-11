@@ -12,7 +12,7 @@ import { Icon } from "@/components/ui/icon";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { CourseChange, Turn } from "../contract";
-import { Callout, Meter, RowMenuTrigger, StatusWord } from "../kit";
+import { Callout, Meter, RowMenuTrigger, StatusWord, Words } from "../kit";
 import { CourseChangeRow } from "./CourseChangeRow";
 import { formatTokens } from "./format";
 import { FORK_ICON } from "./icon";
@@ -61,11 +61,11 @@ function MiniBar({ tokens, contextWindow }: { tokens: number | null; contextWind
   );
 }
 
-function rewindSummary(turn: Turn, lastIndex: number, current: number | null): string {
-  const discards = turn.index === lastIndex ? `discards turn ${turn.index}` : `discards turns ${turn.index}–${lastIndex}`;
-  if (turn.tokensBefore === null) return `Rewinds to before this message · ${discards}`;
+function rewindSummary(turn: Turn, lastIndex: number, current: number | null): [string, string] {
+  const discards = turn.index === lastIndex ? `Discards turn ${turn.index}` : `Discards turns ${turn.index}–${lastIndex}`;
+  if (turn.tokensBefore === null) return ["Rewinds to before this message", discards];
   const frees = current !== null && current > turn.tokensBefore ? ` (frees ${formatTokens(current - turn.tokensBefore)})` : "";
-  return `Rewinds to ≈${formatTokens(turn.tokensBefore)}${frees} · ${discards}`;
+  return [`Rewinds to ≈${formatTokens(turn.tokensBefore)}${frees}`, discards];
 }
 
 function RewindEditor({
@@ -121,9 +121,13 @@ function RewindEditor({
           This message was too long to load in full; only its beginning is shown and Rerun sends exactly this text.
         </Callout>
       ) : null}
-      <p className="text-xs text-muted-foreground" data-rewind-summary>
-        {rewindSummary(turn, lastIndex, current)}
-      </p>
+      <div data-rewind-summary>
+        <Words className="text-xs">
+          {rewindSummary(turn, lastIndex, current).map((part) => (
+            <span key={part}>{part}</span>
+          ))}
+        </Words>
+      </div>
       <div className="flex items-center justify-end gap-2">
         {blocker === null ? null : <span className="mr-auto text-xs text-subtle-foreground">{blocker}</span>}
         <Button variant="ghost" size="sm" onClick={onClose} disabled={pending}>

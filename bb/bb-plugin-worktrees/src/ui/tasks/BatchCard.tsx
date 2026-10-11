@@ -1,8 +1,9 @@
-import { Group, Mono, Row, RowButton, RowTitle } from "../../kit";
+import { Card, CardHeader, Mono, Row, RowButton, RowTitle, Words } from "../../kit";
 import type { EffortModel } from "./model";
+import { CARD_ROW } from "./TicketRow";
 import type { Modifiers } from "./useLaunch";
 
-export function BatchGroup({
+export function BatchCard({
   slug,
   batch,
   busy,
@@ -18,18 +19,20 @@ export function BatchGroup({
   if (batch.open.length === 0) return null;
   const { threadId } = batch;
   return (
-    <Group label={`${slug} issues`} aside={`${batch.open.length} open · run as one batch`}>
-      <ul>
+    <Card label={`${slug} issues`}>
+      <CardHeader title={`${slug} issues`} aside={`${batch.open.length} open`} />
+      <Words>Run as one batch</Words>
+      <ul className="mt-3">
         {batch.open.map((issue) => (
           <li key={issue.ref}>
-            <Row>
+            <Row className={CARD_ROW}>
               <Mono className="w-5 shrink-0 tabular-nums text-muted-foreground">{issue.number}</Mono>
               <RowTitle title={issue.title}>{issue.title}</RowTitle>
             </Row>
           </li>
         ))}
       </ul>
-      <div className="px-3 py-1">
+      <div className="mt-2">
         {threadId !== null ? (
           <RowButton aria-label={`Open ${slug} batch thread`} onClick={() => onOpenThread(threadId)}>
             Open
@@ -40,6 +43,6 @@ export function BatchGroup({
           </RowButton>
         )}
       </div>
-    </Group>
+    </Card>
   );
 }

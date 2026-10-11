@@ -58,7 +58,7 @@ describe("Context ring", () => {
     expect(button.textContent).toBe("≈8%");
     expect(button.querySelector("svg")!.hasAttribute("data-dashed")).toBe(true);
     const card = await openCard(button);
-    expect(card.querySelector("[data-headline]")!.textContent).toBe("≈16k / 200k tokens · 8%recomputingautocompact at 167k");
+    expect(card.querySelector("[data-headline]")!.textContent).toBe("≈16k / 200k (8%)recomputingautocompact at 167k");
   });
 
   it("renders nothing when there is no basis", async () => {
@@ -110,7 +110,7 @@ describe("Context ring", () => {
     expect(rendered.inspection.rpcCalls.map((call) => call.method)).toEqual(["meter"]);
 
     const card = await openCard(button);
-    expect(card.querySelector("[data-headline]")!.textContent).toBe("26k / 200k tokens · 13%autocompact at 167k");
+    expect(card.querySelector("[data-headline]")!.textContent).toBe("26k / 200k (13%)autocompact at 167k");
     const categories = Array.from(card.querySelectorAll('[aria-label="Used context"] li')).map((li) => li.textContent);
     expect(categories).toEqual([
       "Tool results6.7k26%",

@@ -5,9 +5,10 @@ Shared primitives live once in `bb/kit/src/`; `bb/kit/sync.sh` copies them into 
 (each plugin builds alone, so it carries its own copy). Edit `bb/kit/src/`, never a plugin's `src/kit/`, then
 run the sync.
 
-Settled by a prototype that rendered every surface of context, difftree, pi-subagents and worktrees in two
-variants; the flush variant (A) won over cards (B). Prototype and screenshots: branch `prototype/plugin-style`,
-`bb/bb-plugin-style-prototype/` (`screenshots/a-*.png` are the reference).
+The look follows Claude Code's own panels: filled borderless cards for the things you track, plain words for
+details, strong colours for the context breakdown. The reference pictures are `bb/style-reference/*.png`.
+Replaces the flush variant (A) picked from the `prototype/plugin-style` prototype (commit `e5a2f84`); the
+token, status, state and dialog rules below carried over unchanged.
 
 ## 1. Tokens only
 - Colors come from host tokens. No palette classes (`amber-500`, `slate-500`…), no `oklch()`, no hex.
@@ -23,35 +24,51 @@ variants; the flush variant (A) won over cards (B). Prototype and screenshots: b
 ## 2. Type scale (bb's, no arbitrary sizes)
 | Step | px | Use |
 |---|---|---|
-| `text-2xl font-semibold` | 24 | one hero number per panel (context total) |
 | `text-sm` | 13 | row titles, body, inputs, panel state messages |
 | `text-xs` | 12 | metadata, menus, notes, row buttons |
-| `text-2xs` | 10 | section labels and tags only |
+| `text-2xs` | 10 | tags only |
 - No `text-[10px]`, `text-[11px]`, `text-[13px]`: 13px is `text-sm`; 11px metadata becomes `text-xs`
-  `text-subtle-foreground`; 11px labels/tags become `text-2xs`.
-- Weights: `font-medium` titles, `font-semibold` section labels and the hero number. No `font-bold`.
+  `text-subtle-foreground`; 11px tags become `text-2xs`.
+- Inside cards, title and details are both `text-sm`; the details are `text-muted-foreground`.
+- Weights: `font-medium` section labels. No `font-semibold` hero numbers, no `font-bold`.
 - Sentence case everywhere. No `uppercase`, no `tracking-*`.
 - `font-mono text-xs` for ids, paths, branches, tool calls, shortcuts. `tabular-nums` on every number.
   Minus is U+2212.
 
-## 3. Panel skeleton (flush thread panels)
+## 3. Panel skeleton
 - The host title bar names the panel; a panel never repeats its title.
 - Gutter `px-3` everywhere.
 - Optional toolbar: `PanelToolbar` (`h-10 border-b border-border-hairline px-2`) with `ToolbarButton`s
   (ghost `size-7`, icon `size-3.5`; pressed is the vendored `aria-pressed` style, never a `bg-accent` override).
-- Body: `PanelBody`, edge to edge. Groups are `Group`: a `border-t border-border-hairline` section with an
-  optional `SectionLabel`. No cards inside panels.
+- Body: `PanelBody`. Things you track (agents, workflows, task batches, hand-offs) are `Card`s in a
+  `CardStack` (§3a). Plain lists and breakdowns are `Group`s: a `border-t border-border-hairline` section with
+  an optional `SectionLabel`, or a `DisclosureHeader` when the section collapses.
+- Exceptions that stay lists: difftree's file tree (cards waste width and break its keyboard navigation) and
+  the worktrees sidebar (§5).
 - Optional footer: `PanelFooter` (`border-t border-border-hairline px-3 py-2`).
 - Sub-view (subagents transcript/workflow): `SubViewHeader` with a back button and `text-sm font-medium` title.
 
+## 3a. Cards (`bb/style-reference/workflow-card.png`)
+- `CardStack`: `flex flex-col gap-2 p-3`. `Card`: `<article aria-label>`, `rounded-xl bg-muted/40 px-4 py-3
+  text-sm`, no border, no shadow. Cards never nest.
+- `CardHeader`: title (`text-foreground`, truncates) with the duration or count on the right.
+- Then `Words` lines: details as plain words with `gap-x-3` between them ("Workflow  Completed",
+  "14 agents  1.2M tokens"). No `·`, no leading status icon; the status is a word, toned per §6.
+- Then an optional `CardText` description in `text-muted-foreground`, wrapping.
+- Then optional `CardSection`s ("Phases", "Agents"): a `SectionLabel` and its rows. A phase row is name,
+  `5/5`, chevron, with `Ticks` under it: one `size-2 rounded-sm` square per agent, coloured by its status dot.
+- A card that opens a sub-view has a `RowOpen` title (its hit area covers the card) and `interactive`.
+
 ## 4. Section label
-`SectionLabel`: `px-3 pb-1 pt-3 text-2xs font-semibold text-muted-foreground`, sentence case, optional
-right-aligned `tabular-nums text-subtle-foreground` aside.
+`SectionLabel`: `px-3 pb-1 pt-3 text-sm font-medium text-muted-foreground`, sentence case, optional
+right-aligned `tabular-nums` aside. `inset={false}` inside a card. `CollapsibleLabel` is the same with a leading
+chevron; `DisclosureHeader` is a section title with its aside and a trailing chevron ("Context window
+197.1k / 1M (20%) ⌄").
 
 ## 5. Rows
 - `Row`: `h-7 px-3 text-sm hover:bg-state-hover`, instant hover. Leading glyph `size-3.5` or a `size-1.5` dot;
   title `min-w-0 flex-1 truncate`; trailing meta `text-xs tabular-nums text-subtle-foreground`.
-- `TwoLineRow`: second line `text-xs text-muted-foreground`.
+- `TwoLineRow`: second line `text-xs text-muted-foreground`. Details on any line are `Words`, never `·`.
 - Row actions replace the trailing meta on hover/focus (always visible on coarse pointers): `RowIconButton`
   (ghost `size-6.5`), `RowMoreMenu` (`MoreHorizontal`), `RowButton` (outline `h-6.5 text-xs`; the vendored
   `size=sm` is 32px and does not fit a 28px row).
@@ -78,12 +95,18 @@ right-aligned `tabular-nums text-subtle-foreground` aside.
 - `HeaderPill`: ghost `Button size=sm` `h-7 gap-1.5 px-2 text-xs tabular-nums`, icon `size-3.5`. Used for the
   subagents pill and the tasks button. The context ring keeps its rounded-full composer shape because it
   stands in for bb's native ring.
-- `Meter`: `role="progressbar"`, `h-1.5` track; `size="lg"` (`h-3`) for the single hero gauge (context total).
+- `Meter`: `role="progressbar"`, `h-1.5` track, also for the context total (no hero gauge; the context
+  panel opens with a `DisclosureHeader` "Context window  197.1k / 1M (20%)" over a thin Meter).
 - `CodeWell`: `rounded-md bg-surface-recessed px-2.5 py-2 font-mono text-xs leading-relaxed`.
 - Buttons are always the vendored `Button` (or a kit wrapper of it). No hand-rolled `<button class=…>` chrome.
 - Hover hints use `Hint` (a tooltip), not `title` on buttons; disabled controls get their reason in a `Hint`.
-- Context category fills come from host tokens only (`bg-file-accent`, `bg-success`, `bg-warning`,
-  `bg-attention`, `bg-pr-merged`, `bg-foreground/70`, `/45`, `/25`; `bg-muted` for free space). Every
+- Context breakdown (`bb/style-reference/context.png`): a thin `Meter` across the top; then one row per
+  category: `Swatch` (`size-3 rounded-sm`), name in `text-foreground`, tokens right-aligned in
+  `text-muted-foreground`, share right-aligned in `text-foreground` (`—` when it has no share). No lines
+  between rows. Groups that fold ("MCP tools") use a leading chevron and show an item count instead of a share.
+- Context fills: the big categories get strong, distinct theme colours (`bg-file-accent`, `bg-warning`,
+  `bg-success`, `bg-attention`, `bg-pr-merged`); system-type categories are greys (`bg-foreground/45`), the
+  buffer is `bg-foreground/20`, free space `bg-muted`. Host tokens only, so light and dark both work. Every
   category the user can tell apart today stays distinguishable (tool definitions ≠ tool results). Nothing
   that is not an error uses a red (`bg-diff-removed`, `bg-destructive`).
 

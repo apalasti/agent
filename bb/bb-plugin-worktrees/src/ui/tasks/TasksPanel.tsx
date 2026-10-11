@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { experimental_ProviderModelPicker as ProviderModelPicker, useBbNavigate, type PluginThreadPanelProps } from "@get-bb/plugin-sdk/app";
 import { Icon } from "@/components/ui/icon";
-import { Mono, PanelBody, PanelFooter, PanelState, PanelToolbar, StatusDot } from "../../kit";
+import { CardStack, Mono, PanelBody, PanelFooter, PanelState, PanelToolbar, StatusDot } from "../../kit";
 import { useScratchView, useTasksExpanded, useThreadWorktree, useWorktreesRpc } from "../data";
+import { BatchCard } from "./BatchCard";
 import { ChartFooter } from "./ChartFooter";
-import { EffortSection } from "./EffortSection";
+import { EffortCard } from "./EffortCard";
+import { HandoffCard } from "./HandoffCard";
 import { effortModel, legend, liveThreadMap, type EffortModel, type TaskRow, type TaskState } from "./model";
 import { STATE_LABEL, STATE_STATUS } from "./tone";
 import { needsPiWarning, useLaunch, type Modifiers } from "./useLaunch";
@@ -80,21 +82,30 @@ function WorktreeTasks({ projectId, path, label }: Worktree) {
         ) : models.length === 0 ? (
           <PanelState kind="empty">No maps or issues in this worktree's .scratch yet.</PanelState>
         ) : (
-          <>
+          <CardStack>
             {models.map((model) => (
-              <EffortSection
-                key={model.slug}
-                model={model}
-                busy={busy}
-                doneExpanded={isExpanded(`done:${model.slug}`)}
-                onToggleDone={() => toggle(`done:${model.slug}`)}
-                onOpenThread={navigate.toThread}
-                onRun={run}
-                onOrchestrate={orchestrate}
-                onHandoff={handoff}
-              />
+              <Fragment key={model.slug}>
+                {model.progress.total > 0 || (model.batch.open.length === 0 && !model.handoffReady) ? (
+                  <EffortCard
+                    model={model}
+                    busy={busy}
+                    doneExpanded={isExpanded(`done:${model.slug}`)}
+                    onToggleDone={() => toggle(`done:${model.slug}`)}
+                    onOpenThread={navigate.toThread}
+                    onRun={run}
+                  />
+                ) : null}
+                <BatchCard
+                  slug={model.slug}
+                  batch={model.batch}
+                  busy={busy}
+                  onOpenThread={navigate.toThread}
+                  onOrchestrate={(event) => orchestrate(model, event)}
+                />
+                {model.handoffReady ? <HandoffCard slug={model.slug} busy={busy} onHandoff={(event) => handoff(model.slug, event)} /> : null}
+              </Fragment>
             ))}
-          </>
+          </CardStack>
         )}
       </PanelBody>
 

@@ -8,7 +8,11 @@ Plugin id: `worktrees`. Display name: "Worktrees". Icon: `FolderGit` (was `Folde
 ## User-facing surfaces
 
 Styling follows the repo-wide `bb/STYLE.md` and the shared primitives synced into `src/kit/` (was: a plugin-local
-oklch palette for task states, bordered cards in the Tasks panel, and opacity-faded text).
+oklch palette for task states, bordered cards in the Tasks panel, and opacity-faded text). The Tasks panel is a
+`CardStack`: per effort a ticket card (name, `done/total`, state counts as words, progress meter, Running / Ready /
+Blocked / collapsible Done rows), an issue-batch card and a hand-off card; an effort with no tickets shows only its
+other cards (was: flush hairline-separated groups, the flush variant A). Details are words, never `·`; sidebar
+tooltips join with commas.
 
 1. **Sidebar thread list "Worktrees"** (`app.slots.experimental_threadList`).
    Pinned threads first, then `Project → Worktree → Thread (→ child threads)`.
@@ -21,9 +25,9 @@ oklch palette for task states, bordered cards in the Tasks panel, and opacity-fa
    own group keyed by path; threads without an environment go in a trailing "Other" group.
    - Project row: name, collapse chevron, `+` → **New task** dialog.
    - Worktree row: branch (or dir name plus a "detached" tag when detached), a warning status dot
-     for uncommitted files and the ahead/behind count sharing one tooltip ("3 uncommitted files · 2 ahead of origin/x"),
+     for uncommitted files and the ahead/behind count sharing one tooltip ("3 uncommitted files, 2 ahead of origin/x"),
      thread count when collapsed; a `ListTodo` tag with the count of frontier tickets +
-     open issues + hand-off-ready maps in its `.scratch` (tooltip "3 ready tickets · 2 open
+     open issues + hand-off-ready maps in its `.scratch` (tooltip "3 ready tickets, 2 open
      issues"; not clickable, since no host surface toggles the Tasks panel; there is no `Map` host icon);
      hover `+` → new thread *in this worktree*; `⋯` menu:
      New thread here, Copy path, Copy branch name,
@@ -136,7 +140,7 @@ bb-plugin-worktrees/
                             (a `project-checkout` defaultEnvironment seed still shows the main checkout)
   src/ui/TaskWorktreeInputs.tsx  experimental_environmentProviderInputs chip for task-worktree
   src/ui/RemoveWorktreeDialog.tsx
-  src/ui/tasks/              Tasks panel (threadPanelAction) + TasksHeaderButton: model.ts, useLaunch.ts, TasksPanel, EffortSection, TicketRow, BatchGroup, HandoffGroup, ChartFooter, tone.ts (task state → kit status)
+  src/ui/tasks/              Tasks panel (threadPanelAction) + TasksHeaderButton: model.ts, useLaunch.ts, TasksPanel, EffortCard, TicketRow, BatchCard, HandoffCard, ChartFooter, tone.ts (task state → kit status)
   src/kit/                  shared UI primitives, synced from bb/kit/src — never edit here
   src/scratch.ts            pure .scratch scanner + pi prompt composition (see `.scratch/` workflow)
   src/ui/ProjectSettings.tsx  settingsSection (all projects) + per-project dialog from the project ⋯ menu

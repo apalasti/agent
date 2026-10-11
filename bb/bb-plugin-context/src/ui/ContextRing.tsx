@@ -4,7 +4,7 @@ import { useBbNavigate, useComposer } from "@get-bb/plugin-sdk/app";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 import type { Meter } from "../contract";
-import { Dot, LinkButton, Spinner } from "../kit";
+import { Dot, LinkButton, Spinner, Swatch } from "../kit";
 import { CourseChangeIcon, CourseChangeText } from "./CourseChangeRow";
 import { useMeter, useReport } from "./data";
 import { useFooterSlot } from "./footerSlot";
@@ -133,8 +133,8 @@ function Card({
             {isApproximate(meter) ? "≈" : ""}
             {formatTokens(used)}
           </span>
-          {contextWindow === null ? " tokens" : ` / ${formatTokens(contextWindow)} tokens`}
-          {share === null ? null : ` · ${share}`}
+          {contextWindow === null ? " tokens" : ` / ${formatTokens(contextWindow)}`}
+          {share === null ? null : ` (${share})`}
           {recomputing ? <span className="ml-1.5 text-subtle-foreground">recomputing</span> : null}
         </span>
         {autoCompactAt === null ? null : <span className="shrink-0">autocompact at {formatTokens(autoCompactAt)}</span>}
@@ -143,7 +143,7 @@ function Card({
       <ul aria-label="Used context" className="flex flex-col gap-0.5">
         {categories.map((segment) => (
           <li key={segment.id} className="flex items-center gap-2">
-            <Dot className={CATEGORY_FILL[segment.id]} />
+            <Swatch className={CATEGORY_FILL[segment.id]} />
             <span className="min-w-0 flex-1 truncate">{segment.label}</span>
             <span className="shrink-0 tabular-nums">{formatTokens(segment.tokens)}</span>
             <span className="w-9 shrink-0 text-right tabular-nums text-subtle-foreground">{percent(segment.tokens, used)}</span>

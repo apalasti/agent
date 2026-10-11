@@ -45,7 +45,7 @@ afterEach(cleanup);
 describe("TasksHeaderButton", () => {
   it("shows the runnable count and opens the Tasks panel", async () => {
     const view = await renderButton();
-    const button = await view.findByRole("button", { name: "Open Tasks: 2 ready tickets · 1 open issue" });
+    const button = await view.findByRole("button", { name: "Open Tasks: 2 ready tickets, 1 open issue" });
     expect(button.textContent).toBe("Tasks3");
     fireEvent.click(button);
     expect(view.inspection.navigateCalls).toEqual([{ method: "openThreadPanel", options: { actionId: "tasks" } }]);

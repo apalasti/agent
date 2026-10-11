@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Category, Entry } from "../contract";
-import { ActionRow, Chevron, Dot, Leading, SectionLabel } from "../kit";
+import { ActionRow, Chevron, Swatch } from "../kit";
 import { CATEGORY_FILL, formatTokens, percent } from "./format";
 
 type CategoryEntry = Category["entries"][number];
+
+/** Every row shares these tracks so the token and share columns line up across lists. */
+const GRID = "grid h-7 min-w-0 grid-cols-[0.75rem_minmax(0,1fr)_4rem_3rem] items-center gap-x-2 px-3 text-sm";
+
+function Num({ children, strong = false }: { children: ReactNode; strong?: boolean }) {
+  return <span className={cn("text-right tabular-nums", strong ? "text-foreground" : "text-muted-foreground")}>{children}</span>;
+}
 
 function Detail({ detail }: { detail: string | null }) {
   if (detail === null || detail === "") return null;
@@ -25,7 +32,7 @@ function TurnRef({ entry, onSelectTurn }: { entry: Entry; onSelectTurn: (turnInd
       variant="ghost"
       onClick={() => onSelectTurn(turnIndex)}
       aria-label={`Show turn ${turnIndex}`}
-      className="h-5 shrink-0 px-1 text-xs font-normal tabular-nums text-subtle-foreground"
+      className="ml-auto h-5 shrink-0 px-1 text-xs font-normal tabular-nums text-subtle-foreground"
     >
       #{turnIndex}
     </Button>
@@ -48,22 +55,17 @@ function EntryLine({
   onSelectTurn: (turnIndex: number) => void;
 }) {
   return (
-    <div
-      className="flex h-7 min-w-0 items-center gap-2 pr-3 text-sm hover:bg-state-hover"
-      style={{ paddingLeft: `${2 + depth}rem` }}
-      title={fullName(entry)}
-      data-entry
-    >
-      {label === null ? null : <span className="min-w-0 max-w-[50%] shrink-0 truncate text-foreground">{label}</span>}
-      {label === null && !entry.detail ? (
-        <span className="shrink-0 text-muted-foreground">{entry.label}</span>
-      ) : (
-        <Detail detail={entry.detail} />
-      )}
-      <span className="ml-auto flex shrink-0 items-center gap-1">
+    <div className={GRID} title={fullName(entry)} data-entry>
+      <span className={cn("col-start-2 flex min-w-0 items-center gap-2", depth > 0 && "pl-5")}>
+        {label === null ? null : <span className="min-w-0 max-w-[50%] shrink-0 truncate text-foreground">{label}</span>}
+        {label === null && !entry.detail ? (
+          <span className="shrink-0 text-muted-foreground">{entry.label}</span>
+        ) : (
+          <Detail detail={entry.detail} />
+        )}
         <TurnRef entry={entry} onSelectTurn={onSelectTurn} />
-        <span className="w-12 text-right text-xs tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
       </span>
+      <Num>{formatTokens(entry.tokens)}</Num>
     </div>
   );
 }
@@ -77,14 +79,14 @@ function EntryRow({ entry, onSelectTurn }: { entry: CategoryEntry; onSelectTurn:
   }
   return (
     <div>
-      <ActionRow aria-expanded={open} onClick={() => setOpen((value) => !value)} className="pl-5">
-        <Chevron open={open} />
-        <span className="min-w-0 max-w-[50%] shrink-0 truncate">{entry.label}</span>
-        <Detail detail={entry.detail} />
-        <span className="ml-auto hidden shrink-0 text-xs text-subtle-foreground @[20rem]:inline">
-          {entry.children.length} largest
+      <ActionRow aria-expanded={open} onClick={() => setOpen((value) => !value)} className={GRID}>
+        <span className="col-start-2 flex min-w-0 items-center gap-2">
+          <Chevron open={open} />
+          <span className="min-w-0 max-w-[50%] shrink-0 truncate text-muted-foreground">{entry.label}</span>
+          <Detail detail={entry.detail} />
         </span>
-        <span className="ml-auto w-12 shrink-0 @[20rem]:ml-0 text-right text-xs tabular-nums text-muted-foreground">{formatTokens(entry.tokens)}</span>
+        <Num>{formatTokens(entry.tokens)}</Num>
+        <Num>{entry.children.length}</Num>
       </ActionRow>
       {open ? (
         <div role="group" aria-label={`${entry.label} items`}>
@@ -97,11 +99,11 @@ function EntryRow({ entry, onSelectTurn }: { entry: CategoryEntry; onSelectTurn:
   );
 }
 
-/** Used rows are shares of the used context; free and reserved space are shares of the window, said so in the label. */
-export function shareOf(category: Category, used: number, contextWindow: number | null): { used: string; window: string | null } {
-  if (category.kind === "used") return { used: percent(category.tokens, used) ?? "", window: null };
-  const share = category.kind === "deferred" ? null : percent(category.tokens, contextWindow);
-  return { used: "", window: share === null ? null : `${share} of window` };
+/** Used rows are shares of the used context; free and reserved space are shares of the window; deferred rows have none. */
+export function shareOf(category: Category, used: number, contextWindow: number | null): string | null {
+  if (category.kind === "used") return percent(category.tokens, used);
+  if (category.kind === "deferred") return null;
+  return percent(category.tokens, contextWindow);
 }
 
 const CATEGORY_HINT: Partial<Record<Category["id"], { short: string; full: string }>> = {
@@ -109,47 +111,42 @@ const CATEGORY_HINT: Partial<Record<Category["id"], { short: string; full: strin
   reserved: { short: "kept free", full: "Reserved so automatic compaction has room to run" },
 };
 
-function CategoryRow({
-  category,
-  used,
-  contextWindow,
-  onSelectTurn,
-}: {
-  category: Category;
-  used: number;
-  contextWindow: number | null;
-  onSelectTurn: (turnIndex: number) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const expandable = category.entries.length > 0;
-  const muted = category.kind !== "used";
+function categoryTitle(category: Category, share: string | null): string {
+  const scope =
+    category.kind === "deferred"
+      ? "Not counted: loaded on demand"
+      : share === null || category.kind === "used"
+        ? null
+        : `${share} of the window`;
+  return [category.label, scope, CATEGORY_HINT[category.id]?.full].filter(Boolean).join("\n");
+}
+
+function LegendRow({ category, used, contextWindow }: { category: Category; used: number; contextWindow: number | null }) {
   const share = shareOf(category, used, contextWindow);
   const hint = CATEGORY_HINT[category.id];
-  const suffix = share.window ?? hint?.short ?? null;
-  const content = (
-    <>
-      <Leading>{expandable ? <Chevron open={open} /> : null}</Leading>
-      <Dot className={cn(CATEGORY_FILL[category.id], category.id === "free" && "border border-border")} />
-      <span
-        className={cn("min-w-0 flex-1 truncate", muted ? "text-muted-foreground" : "text-foreground")}
-        title={[category.label, share.window, hint?.full].filter(Boolean).join(" · ")}
-      >
-        {category.label}
-        {suffix === null ? null : <span className="text-xs tabular-nums text-subtle-foreground"> · {suffix}</span>}
+  return (
+    <li className={GRID} title={categoryTitle(category, share)}>
+      <Swatch className={cn(CATEGORY_FILL[category.id], category.id === "free" && "border border-border")} />
+      <span className="flex min-w-0 items-baseline gap-3">
+        <span className="min-w-0 truncate text-foreground">{category.label}</span>
+        {hint === undefined ? null : <span className="shrink-0 text-xs text-subtle-foreground">{hint.short}</span>}
       </span>
-      <span className="w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{formatTokens(category.tokens)}</span>
-      <span className="hidden w-10 shrink-0 text-right text-xs tabular-nums text-subtle-foreground @[17rem]:inline">{share.used}</span>
-    </>
+      <Num>{formatTokens(category.tokens)}</Num>
+      <Num strong>{share ?? "—"}</Num>
+    </li>
   );
+}
+
+function CategoryGroup({ category, onSelectTurn }: { category: Category; onSelectTurn: (turnIndex: number) => void }) {
+  const [open, setOpen] = useState(false);
   return (
     <li>
-      {expandable ? (
-        <ActionRow aria-expanded={open} onClick={() => setOpen((value) => !value)}>
-          {content}
-        </ActionRow>
-      ) : (
-        <div className="flex h-7 min-w-0 items-center gap-2 px-3 text-sm hover:bg-state-hover">{content}</div>
-      )}
+      <ActionRow aria-expanded={open} onClick={() => setOpen((value) => !value)} className={GRID}>
+        <Chevron open={open} />
+        <span className="min-w-0 truncate text-muted-foreground">{category.label}</span>
+        <Num>{formatTokens(category.tokens)}</Num>
+        <Num>{category.entries.length}</Num>
+      </ActionRow>
       {open ? (
         <div role="group" aria-label={`${category.label} entries`} className="pb-1">
           {category.entries.map((entry) => (
@@ -174,28 +171,27 @@ export function Breakdown({
 }) {
   const counted = categories.filter((category) => category.kind !== "deferred" && category.tokens > 0);
   const deferred = categories.filter((category) => category.kind === "deferred" && category.tokens > 0);
+  const itemized = [...counted, ...deferred].filter((category) => category.entries.length > 0);
   return (
     <div>
       <ul aria-label="Context categories">
         {counted.map((category) => (
-          <CategoryRow
-            key={category.id}
-            category={category}
-            used={used}
-            contextWindow={contextWindow}
-            onSelectTurn={onSelectTurn}
-          />
+          <LegendRow key={category.id} category={category} used={used} contextWindow={contextWindow} />
         ))}
       </ul>
       {deferred.length === 0 ? null : (
-        <div className="mt-1 border-t border-border-hairline">
-          <SectionLabel>Available on demand (not counted)</SectionLabel>
-          <ul aria-label="Available on demand">
-            {deferred.map((category) => (
-              <CategoryRow key={category.id} category={category} used={used} contextWindow={null} onSelectTurn={onSelectTurn} />
-            ))}
-          </ul>
-        </div>
+        <ul aria-label="Available on demand">
+          {deferred.map((category) => (
+            <LegendRow key={category.id} category={category} used={used} contextWindow={null} />
+          ))}
+        </ul>
+      )}
+      {itemized.length === 0 ? null : (
+        <ul aria-label="Category details" className="mt-1">
+          {itemized.map((category) => (
+            <CategoryGroup key={category.id} category={category} onSelectTurn={onSelectTurn} />
+          ))}
+        </ul>
       )}
     </div>
   );

@@ -152,7 +152,7 @@ describe("Worktrees thread list", () => {
 
   it("badges a worktree with runnable .scratch work", async () => {
     const slot = await renderList();
-    await slot.findByRole("img", { name: "3 ready tickets · 2 open issues" });
+    await slot.findByRole("img", { name: "3 ready tickets, 2 open issues" });
   });
 
   it("orders worktrees: main first, then by activity, then by name", async () => {
@@ -186,7 +186,7 @@ describe("Worktrees thread list", () => {
 
   it("asks the backend for the status of on-screen worktrees and shows dirty/ahead", async () => {
     const slot = await renderList();
-    await slot.findByLabelText("2 uncommitted files · 1 ahead of origin/feat/a");
+    await slot.findByLabelText("2 uncommitted files, 1 ahead of origin/feat/a");
     expect(slot.inspection.rpcCalls.some((call) => call.method === "worktreeStatus")).toBe(true);
     expect(slot.getAllByText("↑1").length).toBeGreaterThan(0);
   });

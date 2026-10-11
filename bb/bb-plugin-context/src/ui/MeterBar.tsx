@@ -8,13 +8,11 @@ export function MeterBar({
   segments,
   total,
   autoCompactAt,
-  size = "sm",
   className,
 }: {
   segments: readonly Segment[];
   total: number | null;
   autoCompactAt: number | null;
-  size?: "sm" | "lg";
   className?: string;
 }) {
   const used = segments.filter((segment) => segment.id !== "reserved");
@@ -38,7 +36,6 @@ export function MeterBar({
         max={denominator}
         tick={tick}
         label="Context used"
-        size={size}
         className={cn(total === null && "opacity-50")}
       />
     </div>

@@ -46,34 +46,34 @@ export function usableLimit(window: Pick<ContextWindow, "autoCompactAt" | "conte
 }
 
 export const CATEGORY_FILL: Record<CategoryId, string> = {
-  system: "bg-foreground/70",
-  tools: "bg-foreground/45",
-  memory: "bg-pr-merged/50",
-  skills: "bg-pr-merged",
-  user: "bg-success",
-  assistant: "bg-attention",
-  thinking: "bg-attention/50",
+  system: "bg-foreground/45",
+  tools: "bg-warning",
+  memory: "bg-foreground/35",
+  skills: "bg-attention",
+  user: "bg-pr-merged",
+  assistant: "bg-success",
+  thinking: "bg-success/50",
   toolCalls: "bg-file-accent/50",
   toolResults: "bg-file-accent",
-  summary: "bg-success/50",
+  summary: "bg-pr-merged/50",
   other: "bg-foreground/25",
   unattributed: "bg-foreground/25",
-  reserved: "bg-warning/50",
+  reserved: "bg-foreground/20",
   free: "bg-muted",
-  deferred: "bg-foreground/25",
+  deferred: "bg-foreground/20",
 };
 
 export function usedTotal(window: ContextWindow, segments: readonly Segment[]): number {
   return window.usedTokens ?? segments.filter((s) => s.id !== "reserved").reduce((sum, s) => sum + s.tokens, 0);
 }
 
-/** `27k / 200k · 14%`, with a leading `≈` when the plugin estimated the total. */
+/** `27k / 200k (14%)`, with a leading `≈` when the plugin estimated the total. */
 export function usageLabel(window: ContextWindow, used: number): string {
   const approx = window.basis === "estimated" ? "≈" : "";
   const parts = [`${approx}${formatTokens(used)}`];
   if (window.contextWindow !== null) parts.push(` / ${formatTokens(window.contextWindow)}`);
   const share = percent(used, window.contextWindow);
-  return share === null ? parts.join("") : `${parts.join("")} · ${share}`;
+  return share === null ? parts.join("") : `${parts.join("")} (${share})`;
 }
 
 export function plural(count: number, word: string): string {

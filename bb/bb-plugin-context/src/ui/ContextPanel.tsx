@@ -14,21 +14,24 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { cn } from "@/lib/utils";
 import type { ContextReport } from "../contract";
-import { ActionRow, Callout, Dot, Group, Hint, PanelBody, PanelFooter, PanelState, Spinner } from "../kit";
+import {
+  ActionRow,
+  Callout,
+  DisclosureHeader,
+  Dot,
+  Group,
+  Hint,
+  PanelBody,
+  PanelFooter,
+  PanelState,
+  SectionLabel,
+  Spinner,
+  Words,
+} from "../kit";
 import { Breakdown } from "./Breakdown";
 import { useReport } from "./data";
-import {
-  CATEGORY_FILL,
-  formatTokens,
-  isBusy,
-  percent,
-  TONE_TEXT,
-  toneFor,
-  usableLimit,
-  usedTotal,
-} from "./format";
+import { CATEGORY_FILL, formatTokens, isBusy, TONE_TEXT, toneFor, usableLimit, usageLabel, usedTotal } from "./format";
 import { CLEAR_ICON, COMPACT_ICON } from "./icon";
 import { MeterBar } from "./MeterBar";
 import { Turns, type TurnFlash } from "./Turns";
@@ -38,71 +41,61 @@ function message(cause: unknown): string {
 }
 
 const SOURCE_NOTE: Record<ContextReport["source"]["kind"], string> = {
-  "pi-session": "breakdown from the pi session",
-  "claude-transcript": "breakdown from the Claude Code transcript",
-  "claude-snapshot": "breakdown from Claude Code's /context and the transcript",
-  "bb-only": "no breakdown available",
+  "pi-session": "Breakdown from the pi session",
+  "claude-transcript": "Breakdown from the Claude Code transcript",
+  "claude-snapshot": "Breakdown from Claude Code's /context and the transcript",
+  "bb-only": "No breakdown available",
 };
 
-export function basisLine(report: ContextReport): string {
-  return [report.window.basis === "measured" ? "Measured by bb" : "Estimated by this plugin", SOURCE_NOTE[report.source.kind]].join(" · ");
-}
-
-function Header({ report, used }: { report: ContextReport; used: number }) {
+function ContextWindowSection({
+  report,
+  used,
+  onSelectTurn,
+}: {
+  report: ContextReport;
+  used: number;
+  onSelectTurn: (turnIndex: number) => void;
+}) {
+  const [open, setOpen] = useState(true);
   const { window } = report;
   const tone = toneFor(used, usableLimit(window));
-  const tickShare = window.autoCompactAt !== null && window.contextWindow ? window.autoCompactAt / window.contextWindow : null;
+  const aside = <span className={TONE_TEXT[tone]}>{usageLabel(window, used)}</span>;
+  const hasBreakdown = report.categories.length > 0;
   return (
-    <header className="space-y-2 px-3 pb-3 pt-4">
-      <div className="flex flex-wrap items-baseline gap-x-2">
-        <span className={cn("text-2xl font-semibold tabular-nums", tone === "muted" ? "text-foreground" : TONE_TEXT[tone])}>
-          {window.basis === "estimated" ? "≈" : ""}
-          {formatTokens(used)}
-        </span>
-        {window.contextWindow === null ? null : (
-          <span className="text-sm tabular-nums text-muted-foreground">/ {formatTokens(window.contextWindow)} tokens</span>
+    <section aria-label="Context window" className="pb-2">
+      <header className="space-y-2 pb-1">
+        {hasBreakdown ? (
+          <DisclosureHeader title="Context window" aside={aside} open={open} onToggle={() => setOpen((value) => !value)} />
+        ) : (
+          <SectionLabel aside={aside}>Context window</SectionLabel>
         )}
-        <span className={cn("ml-auto text-sm tabular-nums", TONE_TEXT[tone])}>
-          {percent(used, window.contextWindow) ?? ""} used
-        </span>
-      </div>
-      <div className="pb-4">
-        <div className="relative">
-          <MeterBar segments={report.segments} total={window.contextWindow} autoCompactAt={window.autoCompactAt} size="lg" />
-          {tickShare === null || tickShare >= 1 ? null : (
-            <span
-              className={cn(
-                "absolute top-5 whitespace-nowrap text-xs tabular-nums text-subtle-foreground",
-                tickShare > 0.5 && "-translate-x-full",
-              )}
-              style={{ left: `${tickShare * 100}%` }}
-            >
-              autocompact at {formatTokens(window.autoCompactAt!)}
-            </span>
+        <div className="space-y-2 px-3">
+          <MeterBar segments={report.segments} total={window.contextWindow} autoCompactAt={window.autoCompactAt} />
+          <div data-basis>
+            <Words className="text-xs">
+              <span>{window.basis === "measured" ? "Measured by bb" : "Estimated by this plugin"}</span>
+              <span>{SOURCE_NOTE[report.source.kind]}</span>
+              {window.model === null ? null : <span className="font-mono">{window.model}</span>}
+              {window.autoCompactAt === null ? null : <span>Autocompact at {formatTokens(window.autoCompactAt)}</span>}
+              {window.recomputing ? <span className="text-subtle-foreground">Recomputing after a course change</span> : null}
+            </Words>
+          </div>
+          {report.notes.length === 0 ? null : (
+            <ul className="space-y-0.5 text-xs text-muted-foreground">
+              {report.notes.map((note) => (
+                <li key={note} className="flex gap-1.5">
+                  <Icon name="Info" aria-hidden className="mt-px size-3.5 shrink-0" />
+                  {note}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      </div>
-      <p className="text-xs text-muted-foreground" data-basis>
-        {basisLine(report)}
-        {window.model === null ? null : (
-          <>
-            {" · "}
-            <span className="font-mono">{window.model}</span>
-          </>
-        )}
-        {window.recomputing ? <span className="text-subtle-foreground"> · recomputing after a course change</span> : null}
-      </p>
-      {report.notes.length === 0 ? null : (
-        <ul className="space-y-0.5 text-xs text-muted-foreground">
-          {report.notes.map((note) => (
-            <li key={note} className="flex gap-1.5">
-              <Icon name="Info" aria-hidden className="mt-px size-3.5 shrink-0" />
-              {note}
-            </li>
-          ))}
-        </ul>
-      )}
-    </header>
+      </header>
+      {hasBreakdown && open ? (
+        <Breakdown categories={report.categories} used={used} contextWindow={window.contextWindow} onSelectTurn={onSelectTurn} />
+      ) : null}
+    </section>
   );
 }
 
@@ -131,7 +124,7 @@ function LargestItems({ report, onSelectTurn }: { report: ContextReport; onSelec
         return (
           <li key={`${item.categoryId}-${item.id}`}>
             {turnIndex === null ? (
-              <div className="flex h-7 min-w-0 items-center gap-2 px-3 text-sm hover:bg-state-hover">{content}</div>
+              <div className="flex h-7 min-w-0 items-center gap-2 px-3 text-sm">{content}</div>
             ) : (
               <Hint label={`Show turn ${turnIndex}`}>
                 <ActionRow onClick={() => onSelectTurn(turnIndex)}>{content}</ActionRow>
@@ -283,17 +276,7 @@ function ReportView({
             Couldn't refresh: {error}
           </Callout>
         )}
-        <Header report={report} used={used} />
-        {report.categories.length === 0 ? null : (
-          <Group label="What's in it" aria-label="What's in it">
-            <Breakdown
-              categories={report.categories}
-              used={used}
-              contextWindow={report.window.contextWindow}
-              onSelectTurn={selectTurn}
-            />
-          </Group>
-        )}
+        <ContextWindowSection report={report} used={used} onSelectTurn={selectTurn} />
         {report.largest.length === 0 ? null : (
           <Group label="Largest items" aria-label="Largest items">
             <LargestItems report={report} onSelectTurn={selectTurn} />

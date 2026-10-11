@@ -300,7 +300,7 @@ export function statusSummary({ dirtyFiles, ahead, behind, upstream }: WorktreeS
   if (ahead > 0 && behind > 0) parts.push(`${ahead} ahead, ${behind} behind ${target}`);
   else if (ahead > 0) parts.push(`${ahead} ahead of ${target}`);
   else if (behind > 0) parts.push(`${behind} behind ${target}`);
-  return parts.length > 0 ? parts.join(" · ") : null;
+  return parts.length > 0 ? parts.join(", ") : null;
 }
 
 export function scratchSummaryText({ readyTickets, openIssues, handoffs }: ScratchSummary): string | null {
@@ -308,7 +308,7 @@ export function scratchSummaryText({ readyTickets, openIssues, handoffs }: Scrat
   if (readyTickets > 0) parts.push(plural(readyTickets, "ready ticket"));
   if (openIssues > 0) parts.push(plural(openIssues, "open issue"));
   if (handoffs > 0) parts.push(`${plural(handoffs, "map")} ready to hand off`);
-  return parts.length > 0 ? parts.join(" · ") : null;
+  return parts.length > 0 ? parts.join(", ") : null;
 }
 
 function ScratchBadge({ summary }: { summary: ScratchSummary }) {

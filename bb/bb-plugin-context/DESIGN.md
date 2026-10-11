@@ -170,10 +170,15 @@ display name "Context".
 ## Surfaces
 
 Visual style follows `bb/STYLE.md` and its shared kit (`src/kit/`, synced from `bb/kit/src/`): host tokens only,
-flush sections under sentence-case section labels, kit rows, `PanelState` / `Callout` states and a pinned
-`PanelFooter`. Category fills are host tokens (`CATEGORY_FILL` in `src/ui/format.ts`); tool definitions and
-tool results differ, and the autocompact buffer is a muted warning tint, never red. (Revised: was a
-14-colour Tailwind palette, uppercase section titles, dashed status boxes and `px-4` gutters.)
+sentence-case section labels, kit rows, details as `Words` (never `·`), `PanelState` / `Callout` states and a
+pinned `PanelFooter`. Category fills are host tokens (`CATEGORY_FILL` in `src/ui/format.ts`): the categories that
+are usually largest get the strong theme colours (tool results blue `file-accent`, tool definitions orange
+`warning`, assistant text green `success`, skills yellow `attention`, your messages `pr-merged`; tool calls,
+thinking and summaries are half tints of those), system prompt and memory are greys, the autocompact buffer is
+`bg-foreground/20` and free space `bg-muted`. Tool definitions and tool results differ, and nothing is red.
+(Revised: was a 14-colour Tailwind palette, uppercase section titles, dashed status boxes and `px-4` gutters;
+then flush variant A with tinted fills and a warning-tinted buffer, replaced by the Claude look of
+`bb/style-reference/context.png`.)
 
 - **Context ring** (replaces bb's ring at the bottom-right of the composer footer).
   (Revised: this was a one-line meter banner above the prompt; the user preferred one richer
@@ -199,10 +204,10 @@ tool results differ, and the autocompact buffer is a muted warning tint, never r
     dashed ring while the basis is estimated or recomputing. Renders nothing while
     `window.basis === "none"`.
   - **Hover card** (opens on hover and on keyboard focus; Radix hover card, about 320 px):
-    1. `22k / 200k tokens · 11%`, with `≈` when estimated, "recomputing" when recomputing,
+    1. `22k / 200k (11%)`, with `≈` when estimated, "recomputing" when recomputing,
        and "autocompact at 167k" when known.
     2. The segmented `MeterBar` with the autocompact tick.
-    3. Every used category from `meter.segments` (dot, label, tokens, % of used), largest
+    3. Every used category from `meter.segments` (swatch, label, tokens, % of used), largest
        first.
     4. From `useReport`, mounted only while the card is open: the 3 largest items (label,
        detail, `#turn`) and the most recent course change as one line (same wording as the
@@ -210,13 +215,22 @@ tool results differ, and the autocompact buffer is a muted warning tint, never r
     5. "Show details" opens the Context panel. Clicking the ring opens it too
        (`useBbNavigate().openThreadPanel({ actionId: "context" })`).
 - **Thread panel "Context"** (`threadPanelAction`, id `context`, layout flush):
-  1. Header: used / window, a large segmented bar, the autoCompact tick, and a note on the
-     basis ("measured by bb · breakdown estimated from the pi session").
-  2. **What's in it**: the categories as rows (dot, label, tokens, and % of the *used*
-     context; Free space shows % of the window). They expand to entries (per tool, per
-     section, per file, per tool name), and toolResults entries expand to the largest single
-     results, showing only the detail (`…/SKILL.md · 4.1k`). (Revised: % was of the window,
-     which read "<1%" for nearly every row.)
+  1. **Context window** (`bb/style-reference/context.png`): a `DisclosureHeader` "Context window" with
+     `26k / 200k (13%)` on the right (tone-coloured from 60% of the usable limit), which collapses the
+     breakdown. Under it a thin segmented `MeterBar` with the reserved buffer at the right end and the
+     autocompact tick, then the basis as `Words` ("Measured by bb  Breakdown from the pi session  model
+     Autocompact at 167k"), then the caveat notes. (Revised: was a large used number, a large bar with the
+     autocompact label under its tick, and a "What's in it" section.)
+  2. **Breakdown**, open by default, on one grid so the number columns align:
+     - A legend row per counted category: swatch, label, tokens (muted), share (foreground): % of the
+       *used* context for used rows, % of the window for the buffer and free space (said in the row's
+       tooltip). Deferred categories follow with `—` as share; they are not counted. (Revised: % was of the
+       window, which read "<1%" for nearly every row. Then the free and buffer rows said "70% of window" in
+       the label, and deferred rows sat under their own "Available on demand (not counted)" label.)
+     - Then one folding group per category that has entries: chevron, muted label, tokens and its entry
+       count instead of a share. Groups expand to entries (per tool, per section, per file, per tool
+       name), and toolResults entries expand to the largest single results, showing only the detail
+       (`…/SKILL.md  #2  4.1k`). (Revised: the legend rows themselves expanded.)
   3. **Largest items**: the top 10 *conversation* items (messages, thinking, tool calls and
      results, summaries; never system, tools, memory, skills, or `other` harness context such
      as Claude Code's injected reminders), each with its turn number.
@@ -270,10 +284,10 @@ bb-plugin-context/
   src/collect.ts       createCollector(deps: { sdk: CollectSdk; fs: CollectFs; roots }): Collector
   src/ui/format.ts     formatTokens(n): string; percent(n, d); toneFor(used, limit); CATEGORY_FILL
   src/ui/data.ts       useMeter(threadId); useReport(threadId)
-  src/ui/MeterBar.tsx  <MeterBar segments total autoCompactAt size /> (kit Meter, reserved buffer at the right end)
+  src/ui/MeterBar.tsx  <MeterBar segments total autoCompactAt /> (kit Meter, reserved buffer at the right end)
   src/ui/ContextRing.tsx     composer action: anchor + portal into bb's footer, ring button, hover card
   src/ui/footerSlot.ts       useFooterSlot(anchor): HTMLElement | null (insert span, observe, re-insert)
-  src/ui/ContextPanel.tsx    panel shell: header, Breakdown, LargestItems, Turns, footer
+  src/ui/ContextPanel.tsx    panel shell: context window section (header + Breakdown), LargestItems, Turns, footer
   src/ui/Breakdown.tsx, src/ui/Turns.tsx (+ RewindEditor), src/ui/CourseChangeRow.tsx
   skills/context/SKILL.md
   test/*.test.ts       fixtures trimmed from real files (test/fixtures/)

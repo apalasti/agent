@@ -84,7 +84,8 @@ describe("TasksPanel", () => {
     expect(view.getByText("Ship it")).toBeTruthy();
     expect(view.queryByText("Name it")).toBeNull();
     expect(view.getByText("1/3")).toBeTruthy();
-    expect(view.getByText("2 open · run as one batch")).toBeTruthy();
+    expect(view.getByText("2 open")).toBeTruthy();
+    expect(view.getByText("Run as one batch")).toBeTruthy();
     expect(view.getByText("Build A")).toBeTruthy();
     expect(view.queryByText("Build C")).toBeNull();
     expect(view.getAllByRole("button", { name: "Run" })).toHaveLength(1);
